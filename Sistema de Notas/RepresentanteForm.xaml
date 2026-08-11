@@ -1,0 +1,135 @@
+<Window x:Class="SistemaLiceo.Presentacion.RepresentanteForm"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Registrar Representante" Height="520" Width="640"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="#F3F4F6">
+
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="White" CornerRadius="12" Margin="15" Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Registrar Representante" FontSize="18" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,15"/>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <UniformGrid Columns="2">
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Nacionalidad"/>
+                        <ComboBox x:Name="cmbNacionalidad" SelectedIndex="0">
+                            <ComboBoxItem Content="V"/>
+                            <ComboBoxItem Content="E"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Cédula de Identidad *"/>
+                        <TextBox x:Name="txtCedula"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Primer Nombre *"/>
+                        <TextBox x:Name="txtNombre1"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Segundo Nombre"/>
+                        <TextBox x:Name="txtNombre2"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Primer Apellido *"/>
+                        <TextBox x:Name="txtApellido1"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Segundo Apellido"/>
+                        <TextBox x:Name="txtApellido2"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Fecha de Nacimiento"/>
+                        <DatePicker x:Name="dpFechaNacimiento" Height="30" Margin="0,0,0,8"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Sexo"/>
+                        <ComboBox x:Name="cmbSexo" SelectedIndex="0">
+                            <ComboBoxItem Content="F"/>
+                            <ComboBoxItem Content="M"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Parentesco *"/>
+                        <TextBox x:Name="txtParentesco"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Estado Civil"/>
+                        <ComboBox x:Name="cmbEstadoCivil" SelectedIndex="0">
+                            <ComboBoxItem Content="Soltera/o"/>
+                            <ComboBoxItem Content="Casada/o"/>
+                            <ComboBoxItem Content="Divorciada/o"/>
+                            <ComboBoxItem Content="Viuda/o"/>
+                            <ComboBoxItem Content="Concubinato"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Teléfono Móvil"/>
+                        <TextBox x:Name="txtTelefonoMovil"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Teléfono de Habitación"/>
+                        <TextBox x:Name="txtTelefonoHabitacion"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Correo Electrónico"/>
+                        <TextBox x:Name="txtCorreo"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Profesión"/>
+                        <TextBox x:Name="txtProfesion"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Ingreso Mensual"/>
+                        <TextBox x:Name="txtIngresoMensual"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Empresa donde trabaja"/>
+                        <TextBox x:Name="txtEmpresa"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Teléfono de la Empresa"/>
+                        <TextBox x:Name="txtTelefonoEmpresa"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Dirección de la Empresa"/>
+                        <TextBox x:Name="txtDireccionEmpresa"/>
+                    </StackPanel>
+                </UniformGrid>
+            </ScrollViewer>
+
+            <Grid Grid.Row="2" HorizontalAlignment="Right" Width="220" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="btnCancelar" Content="Cancelar" Grid.Column="0" Height="32" Background="#9CA3AF" Foreground="White" FontWeight="Bold" BorderThickness="0" Click="btnCancelar_Click"/>
+                <Button x:Name="btnGuardar" Content="Guardar" Grid.Column="2" Height="32" Background="#10B981" Foreground="White" FontWeight="Bold" BorderThickness="0" Click="btnGuardar_Click"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
