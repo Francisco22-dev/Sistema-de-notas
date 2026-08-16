@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,20 +8,29 @@ using SistemaLiceo.Negocio;
 
 namespace SistemaLiceo.Presentacion
 {
-    /// <summary>Ficha de inscripcion adaptada a la base de datos db_carabobo.</summary>
     public partial class EstudianteForm : Window
     {
         private readonly CatalogoDatos _catalogos = new CatalogoDatos();
         private readonly RepresentanteDatos _representantes = new RepresentanteDatos();
         private readonly InscripcionNegocio _negocio = new InscripcionNegocio();
 
-        /// <summary>Id en PERSONA_REPRESENTANTE cuando la secretaria reutiliza un representante existente.</summary>
         private int _idRepresentanteSeleccionado;
+        private readonly int _estudianteId;
+        private Estudiante? _estudianteActual;
+        private Inscripcion? _inscripcionActual;
 
-        public EstudianteForm()
+        public EstudianteForm(int estudianteId = 0)
         {
             InitializeComponent();
+            _estudianteId = estudianteId;
             CargarCatalogos();
+
+            if (_estudianteId > 0)
+            {
+                this.Title = "Editar Ficha de Estudiante";
+                btnGuardar.Content = "Guardar Cambios";
+                CargarDatosEstudiante();
+            }
         }
 
         private void CargarCatalogos()
@@ -47,7 +55,87 @@ namespace SistemaLiceo.Presentacion
             }
         }
 
-        // ===================== Combos en cascada =====================
+        private void CargarDatosEstudiante()
+        {
+            try
+            {
+                _estudianteActual = _negocio.ObtenerEstudiantePorId(_estudianteId);
+                if (_estudianteActual == null)
+                {
+                    Alerta.Mostrar("Error", "No se encontró el estudiante.", true);
+                    Close();
+                    return;
+                }
+
+                // 1. Alumno
+                cmbNacionalidad.SelectedIndex = _estudianteActual.Persona.Nacionalidad == "E" ? 1 : 0;
+                txtCedula.Text = _estudianteActual.Persona.CedulaIdentidad ?? string.Empty;
+                txtCedulaEscolar.Text = _estudianteActual.CedulaEscolar;
+                txtNombre1.Text = _estudianteActual.Persona.Nombre1;
+                txtNombre2.Text = _estudianteActual.Persona.Nombre2 ?? string.Empty;
+                txtApellido1.Text = _estudianteActual.Persona.Apellido1;
+                txtApellido2.Text = _estudianteActual.Persona.Apellido2 ?? string.Empty;
+                dpFechaNacimiento.SelectedDate = _estudianteActual.Persona.FechaNacimiento;
+                cmbSexo.SelectedIndex = _estudianteActual.Persona.Sexo == "F" ? 1 : 0;
+                cmbLateralidad.Text = _estudianteActual.Lateralidad;
+                txtNumeroHijo.Text = _estudianteActual.NumeroHijo.ToString();
+                cmbPaisNacimiento.SelectedValue = _estudianteActual.PaisNacimientoId;
+
+                // 2. Dirección
+                if (_estudianteActual.Persona.Direccion != null)
+                {
+                    chkRegistrarDireccion.IsChecked = true;
+                    txtSector.Text = _estudianteActual.Persona.Direccion.Sector ?? string.Empty;
+                    txtAvenida.Text = _estudianteActual.Persona.Direccion.Avenida ?? string.Empty;
+                    txtCalle.Text = _estudianteActual.Persona.Direccion.Calle ?? string.Empty;
+                    txtManzana.Text = _estudianteActual.Persona.Direccion.Manzana ?? string.Empty;
+                    txtVereda.Text = _estudianteActual.Persona.Direccion.Vereda ?? string.Empty;
+                    txtNumeroVivienda.Text = _estudianteActual.Persona.Direccion.NumeroVivienda ?? string.Empty;
+                    cmbTipoVivienda.Text = _estudianteActual.Persona.Direccion.TipoVivienda;
+                    cmbCondicionVivienda.Text = _estudianteActual.Persona.Direccion.CondicionVivienda;
+                    cmbInfraestructuraVivienda.Text = _estudianteActual.Persona.Direccion.InfraestructuraVivienda;
+                }
+                else
+                {
+                    chkRegistrarDireccion.IsChecked = false;
+                }
+
+                // 3. Salud & Antropométricos
+                txtEstatura.Text = _estudianteActual.Antropometricos.Estatura?.ToString();
+                txtPeso.Text = _estudianteActual.Antropometricos.Peso?.ToString();
+                txtTallaCamisa.Text = _estudianteActual.Antropometricos.TallaCamisa ?? string.Empty;
+                txtTallaPantalon.Text = _estudianteActual.Antropometricos.TallaPantalon ?? string.Empty;
+                txtTallaZapato.Text = _estudianteActual.Antropometricos.TallaZapato?.ToString();
+
+                cmbAlergias.Text = _estudianteActual.Salud.ReaccionesAlergicas;
+                txtCualesAlergias.Text = _estudianteActual.Salud.CualesAlergias ?? string.Empty;
+                txtEnfermedades.Text = _estudianteActual.Salud.EnfermedadesPadecidas ?? string.Empty;
+                cmbAtencionEspecial.Text = _estudianteActual.Salud.AtencionEspecial;
+                txtHorarioTratamiento.Text = _estudianteActual.Salud.HorarioTratamiento ?? string.Empty;
+                cmbAtendidoEspecialista.Text = _estudianteActual.Salud.AtendidoPorEspecialista;
+                txtNombreEspecialista.Text = _estudianteActual.Salud.NombreEspecialista ?? string.Empty;
+                dpFechaEspecialista.SelectedDate = _estudianteActual.Salud.FechaInicioEspecialista;
+                txtCondicionAtencion.Text = _estudianteActual.Salud.CondicionAtencion ?? string.Empty;
+
+                // Extra Curricular
+                cmbDeportes.Text = _estudianteActual.ExtraCurricular.RealizaDeportes;
+                txtCualesDeportes.Text = _estudianteActual.ExtraCurricular.CualesDeportes ?? string.Empty;
+                cmbPoseeCanaima.Text = _estudianteActual.ExtraCurricular.PoseeCanaima;
+                dpFechaCanaima.SelectedDate = _estudianteActual.ExtraCurricular.FechaAsignacionCanaima;
+                txtSerialCanaima.Text = _estudianteActual.ExtraCurricular.SerialCanaima ?? string.Empty;
+                cmbEstadoCanaima.Text = _estudianteActual.ExtraCurricular.EstadoCanaima ?? "Operativa";
+                txtFallaCanaima.Text = _estudianteActual.ExtraCurricular.FallaCanaima ?? string.Empty;
+                cmbPoseeCargador.Text = _estudianteActual.ExtraCurricular.PoseeCargador;
+                cmbEstadoCargador.Text = _estudianteActual.ExtraCurricular.EstadoCargador ?? "Operativo";
+
+                // 4. Representante
+                _idRepresentanteSeleccionado = _estudianteActual.RepresentantePrincipalId;
+            }
+            catch (Exception ex)
+            {
+                Alerta.Mostrar("Error", "Error al cargar los datos del estudiante: " + ex.Message, true);
+            }
+        }
 
         private void cmbPaisNacimiento_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -94,8 +182,6 @@ namespace SistemaLiceo.Presentacion
             cmbCiudadDireccion.ItemsSource = estadoId == 0 ? null : _catalogos.ListarCiudades(estadoId);
         }
 
-        // ===================== Representante =====================
-
         private void btnBuscarRep_Click(object sender, RoutedEventArgs e)
         {
             string cedula = txtCedulaRep.Text.Trim();
@@ -140,8 +226,6 @@ namespace SistemaLiceo.Presentacion
             }
         }
 
-        // ===================== Guardar =====================
-
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -150,11 +234,30 @@ namespace SistemaLiceo.Presentacion
                 Estudiante estudiante = ArmarEstudiante();
                 Inscripcion inscripcion = ArmarInscripcion();
 
-                _negocio.RegistrarInscripcionCompleta(representante, estudiante, inscripcion);
+                if (_estudianteId > 0)
+                {
+                    estudiante.Id = _estudianteId;
+                    estudiante.PersonaId = _estudianteActual!.PersonaId;
+                    estudiante.Persona.Id = _estudianteActual.Persona.Id;
+                    estudiante.Persona.DireccionId = _estudianteActual.Persona.DireccionId;
+                    estudiante.AntropometricoId = _estudianteActual.AntropometricoId;
+                    estudiante.Antropometricos.Id = _estudianteActual.AntropometricoId;
+                    estudiante.SaludId = _estudianteActual.SaludId;
+                    estudiante.Salud.Id = _estudianteActual.SaludId;
+                    estudiante.ExtraCurricularId = _estudianteActual.ExtraCurricularId;
+                    estudiante.ExtraCurricular.Id = _estudianteActual.ExtraCurricularId;
 
-                Alerta.Mostrar("Listo", "¡Matrícula registrada con éxito!", false);
-                this.DialogResult = true;
-                this.Close();
+                    _negocio.ActualizarInscripcionCompleta(representante, estudiante, inscripcion);
+                    Alerta.Mostrar("Listo", "¡Ficha del estudiante actualizada con éxito!", false);
+                }
+                else
+                {
+                    _negocio.RegistrarInscripcionCompleta(representante, estudiante, inscripcion);
+                    Alerta.Mostrar("Listo", "¡Matrícula registrada con éxito!", false);
+                }
+
+                DialogResult = true;
+                Close();
             }
             catch (Exception ex)
             {
@@ -164,7 +267,7 @@ namespace SistemaLiceo.Presentacion
 
         private Representante ArmarRepresentante()
         {
-            Representante representante = new Representante
+            Representante rep = new Representante
             {
                 Id = _idRepresentanteSeleccionado,
                 Parentesco = txtParentesco.Text.Trim(),
@@ -179,7 +282,7 @@ namespace SistemaLiceo.Presentacion
                 DireccionEmpresa = txtDireccionEmpresaRep.Text.Trim()
             };
 
-            representante.Persona = new Persona
+            rep.Persona = new Persona
             {
                 Nacionalidad = TextoCombo(cmbNacionalidadRep, "V"),
                 CedulaIdentidad = txtCedulaRep.Text.Trim(),
@@ -191,12 +294,12 @@ namespace SistemaLiceo.Presentacion
                 Sexo = TextoCombo(cmbSexoRep, "F")
             };
 
-            return representante;
+            return rep;
         }
 
         private Estudiante ArmarEstudiante()
         {
-            Estudiante estudiante = new Estudiante
+            Estudiante est = new Estudiante
             {
                 CedulaEscolar = txtCedulaEscolar.Text.Trim(),
                 NumeroHijo = AEntero(txtNumeroHijo.Text) ?? 1,
@@ -205,7 +308,7 @@ namespace SistemaLiceo.Presentacion
                 ParroquiaNacimientoId = ValorSeleccionadoOpcional(cmbParroquiaNacimiento)
             };
 
-            estudiante.Persona = new Persona
+            est.Persona = new Persona
             {
                 Nacionalidad = TextoCombo(cmbNacionalidad, "V"),
                 CedulaIdentidad = txtCedula.Text.Trim(),
@@ -218,7 +321,7 @@ namespace SistemaLiceo.Presentacion
                 Direccion = ArmarDireccion()
             };
 
-            estudiante.Antropometricos = new Antropometricos
+            est.Antropometricos = new Antropometricos
             {
                 Estatura = ADecimal(txtEstatura.Text),
                 Peso = ADecimal(txtPeso.Text),
@@ -227,7 +330,7 @@ namespace SistemaLiceo.Presentacion
                 TallaZapato = AEntero(txtTallaZapato.Text)
             };
 
-            estudiante.Salud = new Salud
+            est.Salud = new Salud
             {
                 ReaccionesAlergicas = TextoCombo(cmbAlergias, "No"),
                 CualesAlergias = txtCualesAlergias.Text.Trim(),
@@ -240,7 +343,7 @@ namespace SistemaLiceo.Presentacion
                 CondicionAtencion = txtCondicionAtencion.Text.Trim()
             };
 
-            estudiante.ExtraCurricular = new ExtraCurricular
+            est.ExtraCurricular = new ExtraCurricular
             {
                 RealizaDeportes = TextoCombo(cmbDeportes, "No"),
                 CualesDeportes = txtCualesDeportes.Text.Trim(),
@@ -253,7 +356,7 @@ namespace SistemaLiceo.Presentacion
                 EstadoCargador = TextoCombo(cmbEstadoCargador, "Operativo")
             };
 
-            return estudiante;
+            return est;
         }
 
         private Direccion? ArmarDireccion()
@@ -299,36 +402,10 @@ namespace SistemaLiceo.Presentacion
             };
         }
 
-        private void btnCancelar_Click(object sender, RoutedEventArgs e)
-        {
-            bool tieneDatos = !string.IsNullOrWhiteSpace(txtCedulaEscolar.Text) ||
-                              !string.IsNullOrWhiteSpace(txtNombre1.Text) ||
-                              !string.IsNullOrWhiteSpace(txtCedulaRep.Text);
+        private void btnCancelar_Click(object sender, RoutedEventArgs e) => Close();
 
-            if (!tieneDatos)
-            {
-                this.Close();
-                return;
-            }
-
-            MessageBoxResult resultado = MessageBox.Show(
-                "¿Está seguro de que desea cancelar? Se perderán todos los datos introducidos en este formulario.",
-                "Confirmar Cancelación",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (resultado == MessageBoxResult.Yes)
-                this.Close();
-        }
-
-        // ===================== Ayudantes =====================
-
-        private static int ValorSeleccionado(ComboBox combo) =>
-            combo.SelectedValue is int valor ? valor : 0;
-
-        private static int? ValorSeleccionadoOpcional(ComboBox combo) =>
-            combo.SelectedValue is int valor ? valor : (int?)null;
-
+        private static int ValorSeleccionado(ComboBox combo) => combo.SelectedValue is int valor ? valor : 0;
+        private static int? ValorSeleccionadoOpcional(ComboBox combo) => combo.SelectedValue is int valor ? valor : (int?)null;
         private static string TextoCombo(ComboBox combo, string porDefecto)
         {
             if (combo.SelectedItem is ComboBoxItem item && item.Content != null)
@@ -339,16 +416,12 @@ namespace SistemaLiceo.Presentacion
         private static decimal? ADecimal(string texto)
         {
             texto = texto.Trim().Replace(',', '.');
-            if (texto.Length == 0)
-                return null;
             return decimal.TryParse(texto, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal valor) ? valor : null;
         }
 
         private static int? AEntero(string texto)
         {
             texto = texto.Trim();
-            if (texto.Length == 0)
-                return null;
             return int.TryParse(texto, out int valor) ? valor : null;
         }
     }

@@ -66,5 +66,33 @@ namespace SistemaLiceo.Negocio
             if (inscripcion.GradoSeccionId == 0)
                 throw new Exception("Seleccione el grado y la seccion.");
         }
+        public Estudiante? ObtenerEstudiantePorId(int estudianteId)
+        {
+            if (estudianteId <= 0)
+                throw new ArgumentException("ID de estudiante no válido.");
+
+            return _datos.ObtenerPorId(estudianteId);
+        }
+
+        public void ActualizarInscripcionCompleta(Representante representante, Estudiante estudiante, Inscripcion? inscripcion)
+        {
+            if (estudiante.Id <= 0)
+                throw new Exception("El estudiante a actualizar no cuenta con un identificador válido.");
+
+            Validar(representante, estudiante, inscripcion ?? new Inscripcion { PeriodoId = 1, GradoSeccionId = 1 });
+
+            if (_datos.ExisteCedulaEscolar(estudiante.CedulaEscolar, estudiante.Id))
+                throw new Exception("La cédula escolar " + estudiante.CedulaEscolar + " ya pertenece a otro estudiante registrado.");
+
+            _datos.ActualizarInscripcionCompleta(representante, estudiante, inscripcion);
+        }
+
+        public void RetirarEstudiante(int estudianteId)
+        {
+            if (estudianteId <= 0)
+                throw new ArgumentException("ID de estudiante no válido.");
+
+            _datos.CambiarEstado(estudianteId, "Retirado");
+        }
     }
 }

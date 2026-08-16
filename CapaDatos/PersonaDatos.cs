@@ -87,6 +87,86 @@ namespace SistemaLiceo.Datos
                 }
             }
         }
+        /// <summary>Actualiza los datos personales de una persona.</summary>
+        public static void ActualizarPersona(Persona persona, MySqlConnection conexion, MySqlTransaction transaccion)
+        {
+            if (persona.Direccion != null)
+            {
+                if (persona.DireccionId.HasValue && persona.DireccionId.Value > 0)
+                {
+                    persona.Direccion.Id = persona.DireccionId.Value;
+                    ActualizarDireccion(persona.Direccion, conexion, transaccion);
+                }
+                else
+                {
+                    persona.DireccionId = InsertarDireccion(persona.Direccion, conexion, transaccion);
+                }
+            }
+
+            const string consulta = @"
+        UPDATE PERSONA 
+        SET nacionalidad = @nacionalidad, 
+            cedula_identidad = @cedula, 
+            nombre_1 = @nombre1, 
+            nombre_2 = @nombre2,
+            apellido_1 = @apellido1, 
+            apellido_2 = @apellido2, 
+            fecha_nacimiento = @fechaNacimiento, 
+            sexo = @sexo, 
+            direccion_id = @direccion
+        WHERE id = @id;";
+
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
+            {
+                comando.Parameters.AddWithValue("@id", persona.Id);
+                comando.Parameters.AddWithValue("@nacionalidad", persona.Nacionalidad);
+                comando.Parameters.AddWithValue("@cedula", Nulo(persona.CedulaIdentidad));
+                comando.Parameters.AddWithValue("@nombre1", persona.Nombre1);
+                comando.Parameters.AddWithValue("@nombre2", Nulo(persona.Nombre2));
+                comando.Parameters.AddWithValue("@apellido1", persona.Apellido1);
+                comando.Parameters.AddWithValue("@apellido2", Nulo(persona.Apellido2));
+                comando.Parameters.AddWithValue("@fechaNacimiento", (object?)persona.FechaNacimiento ?? DBNull.Value);
+                comando.Parameters.AddWithValue("@sexo", persona.Sexo);
+                comando.Parameters.AddWithValue("@direccion", (object?)persona.DireccionId ?? DBNull.Value);
+
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>Actualiza una dirección existente.</summary>
+        public static void ActualizarDireccion(Direccion direccion, MySqlConnection conexion, MySqlTransaction transaccion)
+        {
+            const string consulta = @"
+        UPDATE DIRECCION 
+        SET ciudad_id = @ciudad, 
+            sector = @sector, 
+            avenida = @avenida, 
+            calle = @calle, 
+            manzana = @manzana, 
+            vereda = @vereda,
+            numero_vivienda = @numero, 
+            tipo_vivienda = @tipo, 
+            condicion_vivienda = @condicion, 
+            infraestructura_vivienda = @infraestructura
+        WHERE id = @id;";
+
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
+            {
+                comando.Parameters.AddWithValue("@id", direccion.Id);
+                comando.Parameters.AddWithValue("@ciudad", direccion.CiudadId);
+                comando.Parameters.AddWithValue("@sector", Nulo(direccion.Sector));
+                comando.Parameters.AddWithValue("@avenida", Nulo(direccion.Avenida));
+                comando.Parameters.AddWithValue("@calle", Nulo(direccion.Calle));
+                comando.Parameters.AddWithValue("@manzana", Nulo(direccion.Manzana));
+                comando.Parameters.AddWithValue("@vereda", Nulo(direccion.Vereda));
+                comando.Parameters.AddWithValue("@numero", Nulo(direccion.NumeroVivienda));
+                comando.Parameters.AddWithValue("@tipo", direccion.TipoVivienda);
+                comando.Parameters.AddWithValue("@condicion", direccion.CondicionVivienda);
+                comando.Parameters.AddWithValue("@infraestructura", direccion.InfraestructuraVivienda);
+
+                comando.ExecuteNonQuery();
+            }
+        }
 
         internal static Persona Mapear(MySqlDataReader lector, string prefijo = "")
         {

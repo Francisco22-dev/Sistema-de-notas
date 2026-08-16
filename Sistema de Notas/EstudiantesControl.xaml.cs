@@ -3,6 +3,7 @@ using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using SistemaLiceo.Datos;
+using SistemaLiceo.Negocio;
 
 namespace SistemaLiceo.Presentacion
 {
@@ -10,6 +11,7 @@ namespace SistemaLiceo.Presentacion
     {
         private readonly EstudianteDatos _estudiantes = new EstudianteDatos();
         private readonly CatalogoDatos _catalogos = new CatalogoDatos();
+        private readonly InscripcionNegocio _negocio = new InscripcionNegocio();
         private bool _cargando;
 
         public EstudiantesControl()
@@ -62,9 +64,58 @@ namespace SistemaLiceo.Presentacion
 
         private void btnNuevoEstudiante_Click(object sender, RoutedEventArgs e)
         {
-            EstudianteForm ventanaInscripcion = new EstudianteForm();
-            ventanaInscripcion.ShowDialog();
-            CargarDatos();
+            EstudianteForm ventana = new EstudianteForm();
+            if (ventana.ShowDialog() == true)
+                CargarDatos();
+        }
+
+        private int? ObtenerIdSeleccionado()
+        {
+            if (gridEstudiantes.SelectedItem is DataRowView fila)
+            {
+                if (fila.Row.Table.Columns.Contains("Codigo"))
+                    return Convert.ToInt32(fila["Codigo"]);
+            }
+
+            Alerta.Mostrar("Selección Requerida", "Por favor seleccione un estudiante de la tabla.", true);
+            return null;
+        }
+
+        private void btnEditarEstudiante_Click(object sender, RoutedEventArgs e)
+        {
+            int? estudianteId = ObtenerIdSeleccionado();
+            if (estudianteId.HasValue)
+            {
+                EstudianteForm ventana = new EstudianteForm(estudianteId.Value);
+                if (ventana.ShowDialog() == true)
+                    CargarDatos();
+            }
+        }
+
+        private void btnRetirarEstudiante_Click(object sender, RoutedEventArgs e)
+        {
+            int? estudianteId = ObtenerIdSeleccionado();
+            if (!estudianteId.HasValue) return;
+
+            MessageBoxResult resultado = MessageBox.Show(
+                "¿Está seguro de que desea cambiar el estado del estudiante a 'Retirado'?",
+                "Confirmar Retiro",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (resultado == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    _negocio.RetirarEstudiante(estudianteId.Value);
+                    Alerta.Mostrar("Éxito", "Estudiante retirado correctamente.", false);
+                    CargarDatos();
+                }
+                catch (Exception ex)
+                {
+                    Alerta.Mostrar("Error", "No se pudo retirar el estudiante: " + ex.Message, true);
+                }
+            }
         }
     }
 }
