@@ -1,0 +1,46 @@
+﻿<Window x:Class="SistemaLiceo.Presentacion.AsignarCargaForm"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Asignación de Carga Académica" Height="430" Width="520"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="#F3F4F6">
+    <Border Background="White" CornerRadius="12" Margin="15" Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Asignar Materia y Sección a Docente" FontSize="18" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,15"/>
+
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="Período Académico *" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <ComboBox x:Name="cmbPeriodo" Height="30" Margin="0,0,0,10" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
+
+                <TextBlock Text="Profesor Docente *" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <ComboBox x:Name="cmbProfesor" Height="30" Margin="0,0,0,10" DisplayMemberPath="Profesor" SelectedValuePath="Codigo"/>
+
+                <TextBlock Text="Materia *" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <ComboBox x:Name="cmbMateria" Height="30" Margin="0,0,0,10" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
+
+                <UniformGrid Columns="2">
+                    <StackPanel Margin="0,0,8,0">
+                        <TextBlock Text="Año / Grado *" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbGrado" Height="30" Margin="0,0,0,10" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Sección *" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbSeccion" Height="30" Margin="0,0,0,10" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
+                    </StackPanel>
+                </UniformGrid>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button x:Name="btnCancelar" Content="Cancelar" Width="100" Height="32" Margin="0,0,10,0"
+                        Background="#9CA3AF" Foreground="White" FontWeight="Bold" BorderThickness="0" Click="btnCancelar_Click"/>
+                <Button x:Name="btnGuardar" Content="Asignar Carga" Width="140" Height="32"
+                        Background="#10B981" Foreground="White" FontWeight="Bold" BorderThickness="0" Click="btnGuardar_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

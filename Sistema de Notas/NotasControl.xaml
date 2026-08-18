@@ -1,0 +1,91 @@
+﻿<UserControl x:Class="SistemaLiceo.Presentacion.NotasControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="White">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Título -->
+        <TextBlock Grid.Row="0" Text="Carga y Registro de Calificaciones" FontSize="24" FontWeight="Bold" Foreground="#1F2937" Margin="0,0,0,15"/>
+
+        <!-- Filtros Superiores de Selección -->
+        <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <UniformGrid Grid.Row="0" Columns="3" Margin="0,0,0,10">
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Período Académico:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbPeriodo" Height="30" DisplayMemberPath="Nombre" SelectedValuePath="Id" SelectionChanged="cmbPeriodo_SelectionChanged"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Carga Académica (Materia / Sección / Docente):" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbCargaAcademica" Height="30" SelectedValuePath="Id"/>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="Lapso Académico:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbLapso" Height="30" SelectedIndex="0">
+                            <ComboBoxItem Content="1er lapso"/>
+                            <ComboBoxItem Content="2do lapso"/>
+                            <ComboBoxItem Content="3er lapso"/>
+                            <ComboBoxItem Content="Reparacion"/>
+                        </ComboBox>
+                    </StackPanel>
+                </UniformGrid>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Descripción de la Evaluación (Ej: Taller 1, Prueba Parcial):" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBox x:Name="txtDescripcionEvaluacion" Height="30" Text="Evaluación 1" VerticalContentAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                        <TextBlock Text="Ponderación (%):" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBox x:Name="txtPorcentaje" Height="30" Text="20" VerticalContentAlignment="Center"/>
+                    </StackPanel>
+
+                    <Button x:Name="btnCargarEstudiantes" Grid.Column="2" Content="🔍 Cargar Estudiantes" Height="30" Width="160"
+                            VerticalAlignment="Bottom" Background="#3B82F6" Foreground="White" FontWeight="Bold"
+                            BorderThickness="0" Cursor="Hand" Click="btnCargarEstudiantes_Click"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Grilla de Notas -->
+        <DataGrid x:Name="gridNotas" Grid.Row="2" AutoGenerateColumns="False"
+                  CanUserAddRows="False" HeadersVisibility="Column"
+                  Background="White" BorderBrush="#D1D5DB" BorderThickness="1"
+                  RowHeight="35" FontSize="14" AlternatingRowBackground="#F9FAFB">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Cédula Escolar" Binding="{Binding CedulaEscolar}" IsReadOnly="True" Width="140"/>
+                <DataGridTextColumn Header="Cédula" Binding="{Binding Cedula}" IsReadOnly="True" Width="120"/>
+                <DataGridTextColumn Header="Estudiante" Binding="{Binding NombreCompleto}" IsReadOnly="True" Width="*"/>
+                <DataGridTextColumn Header="Nota Evaluación (0-20)" Binding="{Binding NotaEvaluacion, UpdateSourceTrigger=PropertyChanged}" Width="160"/>
+                <DataGridTextColumn Header="Definitiva Lapso" Binding="{Binding NotaDefinitivaLapso}" IsReadOnly="True" Width="140"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Botón Guardar -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button x:Name="btnGuardarNotas" Content="💾 Guardar Calificaciones" Width="200" Height="38"
+                    Background="#10B981" Foreground="White" FontSize="15" FontWeight="Bold"
+                    BorderThickness="0" Cursor="Hand" Click="btnGuardarNotas_Click"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,5 +1,5 @@
 ﻿using System.Windows;
-using SistemaLiceo.Negocio; 
+using SistemaLiceo.Negocio;
 
 namespace SistemaLiceo.Presentacion
 {
@@ -18,17 +18,24 @@ namespace SistemaLiceo.Presentacion
 
         private void btnEstudiantes_Click(object sender, RoutedEventArgs e)
         {
-            // Limpiamos el contenedor y le metemos nuestra nueva pantalla de estudiantes
             ContenedorPrincipal.Content = new EstudiantesControl();
+        }
+
+        private void btnProfesores_Click(object sender, RoutedEventArgs e)
+        {
+            ContenedorPrincipal.Content = new ProfesoresControl();
+        }
+
+        private void btnNotas_Click(object sender, RoutedEventArgs e)
+        {
+            ContenedorPrincipal.Content = new NotasControl();
         }
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             SesionActual.LimpiarSesion();
-
             MainWindow login = new MainWindow();
             login.Show();
-
             this.Close();
         }
     }
