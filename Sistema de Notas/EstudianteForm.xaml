@@ -40,12 +40,12 @@
                         </StackPanel>
 
                         <StackPanel>
-                            <TextBlock Text="Cédula de Identidad (opcional)" Style="{StaticResource Etiqueta}"/>
+                            <TextBlock Text="Cédula de Identidad *" Style="{StaticResource Etiqueta}"/>
                             <TextBox x:Name="txtCedula"/>
                         </StackPanel>
 
                         <StackPanel>
-                            <TextBlock Text="Cédula Escolar *" Style="{StaticResource Etiqueta}"/>
+                            <TextBlock Text="Cédula Escolar (opcional)" Style="{StaticResource Etiqueta}"/>
                             <TextBox x:Name="txtCedulaEscolar"/>
                         </StackPanel>
 

@@ -24,13 +24,35 @@ namespace SistemaLiceo.Datos
             {
                 try
                 {
-                    if (profesor.PersonaId == 0)
+                    // 1. Verificar si la persona ya existe en la base de datos (Ej. es Representante)
+                    Persona? personaExistente = PersonaDatos.BuscarPorCedula(profesor.Persona.CedulaIdentidad ?? string.Empty, conexion, transaccion);
+                    if (personaExistente != null)
+                    {
+                        profesor.PersonaId = personaExistente.Id;
+                        profesor.Persona.Id = personaExistente.Id;
+                        profesor.Persona.DireccionId = personaExistente.DireccionId;
+                        PersonaDatos.ActualizarPersona(profesor.Persona, conexion, transaccion);
+                    }
+                    else
+                    {
                         profesor.PersonaId = PersonaDatos.InsertarPersona(profesor.Persona, conexion, transaccion);
+                    }
 
+                    // 2. Verificar que no esté ya duplicado en la tabla PROFESOR
+                    const string busquedaProf = "SELECT id FROM PROFESOR WHERE persona_id = @p LIMIT 1;";
+                    using (MySqlCommand cmdCheck = new MySqlCommand(busquedaProf, conexion, transaccion))
+                    {
+                        cmdCheck.Parameters.AddWithValue("@p", profesor.PersonaId);
+                        object? res = cmdCheck.ExecuteScalar();
+                        if (res != null && res != DBNull.Value)
+                            throw new Exception("Esta persona ya se encuentra registrada en la plantilla de profesores.");
+                    }
+
+                    // 3. Insertar el registro en PROFESOR
                     const string consulta = @"
-                        INSERT INTO PROFESOR (tipo_nivel, persona_id, ESTADO)
-                        VALUES (@tipoNivel, @personaId, @estado);
-                        SELECT LAST_INSERT_ID();";
+                INSERT INTO PROFESOR (tipo_nivel, persona_id, ESTADO)
+                VALUES (@tipoNivel, @personaId, @estado);
+                SELECT LAST_INSERT_ID();";
 
                     using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
                     {
@@ -97,12 +119,20 @@ namespace SistemaLiceo.Datos
         public Profesor? BuscarPorId(int profesorId)
         {
             const string consulta = @"
-                SELECT pr.id, pr.tipo_nivel, pr.persona_id, pr.ESTADO,
-                       p.id AS p_id, p.nacionalidad, p.cedula_identidad, p.nombre_1, p.nombre_2,
-                       p.apellido_1, p.apellido_2, p.fecha_nacimiento, p.sexo, p.direccion_id
-                FROM PROFESOR pr
-                INNER JOIN PERSONA p ON p.id = pr.persona_id
-                WHERE pr.id = @id LIMIT 1;";
+        SELECT pr.id, pr.tipo_nivel, pr.persona_id, pr.ESTADO,
+               p.id AS p_id, 
+               p.nacionalidad, 
+               p.cedula_identidad, 
+               p.nombre_1, 
+               p.nombre_2,
+               p.apellido_1, 
+               p.apellido_2, 
+               p.fecha_nacimiento, 
+               p.sexo, 
+               p.direccion_id
+        FROM PROFESOR pr
+        INNER JOIN PERSONA p ON p.id = pr.persona_id
+        WHERE pr.id = @id LIMIT 1;";
 
             using (MySqlConnection conexion = _conexion.AbrirConexion())
             using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
@@ -118,7 +148,19 @@ namespace SistemaLiceo.Datos
                         TipoNivel = lector.GetString("tipo_nivel"),
                         PersonaId = lector.GetInt32("persona_id"),
                         Estado = lector.GetString("ESTADO"),
-                        Persona = PersonaDatos.Mapear(lector, "p_")
+                        Persona = new Persona
+                        {
+                            Id = lector.GetInt32("p_id"),
+                            Nacionalidad = lector.GetString("nacionalidad"),
+                            CedulaIdentidad = lector.IsDBNull(lector.GetOrdinal("cedula_identidad")) ? null : lector.GetString("cedula_identidad"),
+                            Nombre1 = lector.GetString("nombre_1"),
+                            Nombre2 = lector.IsDBNull(lector.GetOrdinal("nombre_2")) ? null : lector.GetString("nombre_2"),
+                            Apellido1 = lector.GetString("apellido_1"),
+                            Apellido2 = lector.IsDBNull(lector.GetOrdinal("apellido_2")) ? null : lector.GetString("apellido_2"),
+                            FechaNacimiento = lector.IsDBNull(lector.GetOrdinal("fecha_nacimiento")) ? null : lector.GetDateTime("fecha_nacimiento"),
+                            Sexo = lector.GetString("sexo"),
+                            DireccionId = lector.IsDBNull(lector.GetOrdinal("direccion_id")) ? null : lector.GetInt32("direccion_id")
+                        }
                     };
                 }
             }

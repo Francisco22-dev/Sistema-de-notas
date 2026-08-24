@@ -13,13 +13,17 @@
             <TextBlock Text="Gestión del Personal Docente" FontSize="24" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Left"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="btnEditarProfesor" Content="✏️ Editar Docente" Width="140" Height="35"
+            Background="#F59E0B" Foreground="White" FontWeight="Bold" Margin="0,0,10,0"
+            BorderThickness="0" Cursor="Hand" Click="btnEditarProfesor_Click"/>
+
                 <Button x:Name="btnAsignarCarga" Content="📚 Asignar Carga Académica" Width="190" Height="35"
-                        Background="#6366F1" Foreground="White" FontWeight="Bold" Margin="0,0,10,0"
-                        BorderThickness="0" Cursor="Hand" Click="btnAsignarCarga_Click"/>
+            Background="#6366F1" Foreground="White" FontWeight="Bold" Margin="0,0,10,0"
+            BorderThickness="0" Cursor="Hand" Click="btnAsignarCarga_Click"/>
 
                 <Button x:Name="btnNuevoProfesor" Content="+ Nuevo Profesor" Width="150" Height="35"
-                        Background="#3B82F6" Foreground="White" FontWeight="Bold"
-                        BorderThickness="0" Cursor="Hand" Click="btnNuevoProfesor_Click"/>
+            Background="#3B82F6" Foreground="White" FontWeight="Bold"
+            BorderThickness="0" Cursor="Hand" Click="btnNuevoProfesor_Click"/>
             </StackPanel>
         </Grid>
 

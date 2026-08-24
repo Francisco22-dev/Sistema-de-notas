@@ -25,10 +25,18 @@ namespace SistemaLiceo.Presentacion
         {
             ContenedorPrincipal.Content = new ProfesoresControl();
         }
+        private void btnMaterias_Click(object sender, RoutedEventArgs e)
+        {
+            ContenedorPrincipal.Content = new MateriasControl();
+        }
 
         private void btnNotas_Click(object sender, RoutedEventArgs e)
         {
             ContenedorPrincipal.Content = new NotasControl();
+        }
+        private void btnReportes_Click(object sender, RoutedEventArgs e)
+        {
+            ContenedorPrincipal.Content = new ReportesControl();
         }
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)

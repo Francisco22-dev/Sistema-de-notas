@@ -1,0 +1,72 @@
+﻿<UserControl x:Class="SistemaLiceo.Presentacion.ReportesControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="White">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Emisión de Constancias y Reportes Académicos" FontSize="24" FontWeight="Bold" Foreground="#1F2937" Margin="0,0,0,15"/>
+
+        <!-- Barra de Configuración y Filtros -->
+        <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <UniformGrid Grid.Row="0" Columns="3" Margin="0,0,0,10">
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Tipo de Documento / Reporte:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbTipoReporte" Height="30" SelectedIndex="0" SelectionChanged="cmbTipoReporte_SelectionChanged">
+                            <ComboBoxItem Content="📄 Constancia de Estudio"/>
+                            <ComboBoxItem Content="🏅 Constancia de Buena Conducta"/>
+                            <ComboBoxItem Content="📊 Boleta / Boletín de Calificaciones"/>
+                            <ComboBoxItem Content="📋 Nómina de Matrícula por Sección"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Período Académico:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbPeriodo" Height="30" DisplayMemberPath="Nombre" SelectedValuePath="Id" SelectionChanged="Filtro_SelectionChanged"/>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="Año y Sección:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbGradoSeccion" Height="30" DisplayMemberPath="Display" SelectedValuePath="Id" SelectionChanged="cmbGradoSeccion_SelectionChanged"/>
+                    </StackPanel>
+                </UniformGrid>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel x:Name="panelEstudiante" Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Seleccionar Estudiante:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cmbEstudiantes" Height="30" DisplayMemberPath="Display" SelectedValuePath="Codigo"/>
+                    </StackPanel>
+
+                    <Button x:Name="btnGenerar" Grid.Column="1" Content="🔍 Generar Vista Previa" Width="170" Height="30"
+                            VerticalAlignment="Bottom" Background="#3B82F6" Foreground="White" FontWeight="Bold"
+                            BorderThickness="0" Cursor="Hand" Margin="0,0,10,0" Click="btnGenerar_Click"/>
+
+                    <Button x:Name="btnImprimir" Grid.Column="2" Content="🖨️ Imprimir / Guardar PDF" Width="180" Height="30"
+                            VerticalAlignment="Bottom" Background="#10B981" Foreground="White" FontWeight="Bold"
+                            BorderThickness="0" Cursor="Hand" Click="btnImprimir_Click"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Vista Previa del Documento (FlowDocumentScrollViewer) -->
+        <Border Grid.Row="2" Background="#94A3B8" CornerRadius="8" Padding="15">
+            <FlowDocumentScrollViewer x:Name="docViewer" Background="White" MaxZoom="150" MinZoom="80"/>
+        </Border>
+    </Grid>
+</UserControl>

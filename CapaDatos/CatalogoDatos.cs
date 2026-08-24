@@ -116,5 +116,67 @@ namespace SistemaLiceo.Datos
 
             return lista;
         }
+        public int RegistrarMateria(string nombre)
+        {
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            {
+                const string consulta = "INSERT INTO MATERIA (nombre) VALUES (@nombre); SELECT LAST_INSERT_ID();";
+                using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+                {
+                    comando.Parameters.AddWithValue("@nombre", nombre.Trim());
+                    return Convert.ToInt32(comando.ExecuteScalar());
+                }
+            }
+        }
+
+        public void ActualizarMateria(int id, string nombre)
+        {
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            {
+                const string consulta = "UPDATE MATERIA SET nombre = @nombre WHERE id = @id;";
+                using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+                {
+                    comando.Parameters.AddWithValue("@id", id);
+                    comando.Parameters.AddWithValue("@nombre", nombre.Trim());
+                    comando.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void EliminarMateria(int id)
+        {
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            {
+                try
+                {
+                    const string consulta = "DELETE FROM MATERIA WHERE id = @id;";
+                    using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+                    {
+                        comando.Parameters.AddWithValue("@id", id);
+                        comando.ExecuteNonQuery();
+                    }
+                }
+                catch (MySqlException ex)
+                {
+                    if (ex.Number == 1451) // Foreign Key Constraint
+                        throw new Exception("No se puede eliminar la materia porque ya está asignada a un pensum académico o a un docente.");
+                    throw new Exception(ConexionBD.TraducirError(ex), ex);
+                }
+            }
+        }
+
+        public bool ExisteMateria(string nombre, int idExcluir = 0)
+        {
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            {
+                const string consulta = "SELECT 1 FROM MATERIA WHERE nombre = @nombre AND id <> @id LIMIT 1;";
+                using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+                {
+                    comando.Parameters.AddWithValue("@nombre", nombre.Trim());
+                    comando.Parameters.AddWithValue("@id", idExcluir);
+                    return comando.ExecuteScalar() != null;
+                }
+            }
+        }
     }
 }

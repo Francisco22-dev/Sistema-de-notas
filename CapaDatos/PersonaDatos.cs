@@ -167,6 +167,25 @@ namespace SistemaLiceo.Datos
                 comando.ExecuteNonQuery();
             }
         }
+        /// <summary>Busca una persona por su cédula dentro de una transacción en curso.</summary>
+        public static Persona? BuscarPorCedula(string cedula, MySqlConnection conexion, MySqlTransaction transaccion)
+        {
+            const string consulta = @"
+        SELECT id, nacionalidad, cedula_identidad, nombre_1, nombre_2,
+               apellido_1, apellido_2, fecha_nacimiento, sexo, direccion_id
+        FROM PERSONA
+        WHERE cedula_identidad = @cedula
+        LIMIT 1;";
+
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
+            {
+                comando.Parameters.AddWithValue("@cedula", cedula.Trim());
+                using (MySqlDataReader lector = comando.ExecuteReader())
+                {
+                    return lector.Read() ? Mapear(lector) : null;
+                }
+            }
+        }
 
         internal static Persona Mapear(MySqlDataReader lector, string prefijo = "")
         {

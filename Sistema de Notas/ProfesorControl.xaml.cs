@@ -41,5 +41,20 @@ namespace SistemaLiceo.Presentacion
             AsignarCargaForm form = new AsignarCargaForm();
             form.ShowDialog();
         }
+
+        private void btnEditarProfesor_Click(object sender, RoutedEventArgs e)
+        {
+            if (gridProfesores.SelectedItem is DataRowView fila && fila.Row.Table.Columns.Contains("Codigo"))
+            {
+                int profesorId = Convert.ToInt32(fila["Codigo"]);
+                ProfesorForm form = new ProfesorForm(profesorId);
+                if (form.ShowDialog() == true)
+                    CargarProfesores();
+            }
+            else
+            {
+                Alerta.Mostrar("Selección Requerida", "Seleccione un profesor de la tabla para editarlo.", true);
+            }
+        }
     }
 }

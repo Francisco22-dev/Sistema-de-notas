@@ -40,16 +40,29 @@ namespace SistemaLiceo.Datos
         public static int Insertar(Representante representante, MySqlConnection conexion, MySqlTransaction transaccion)
         {
             if (representante.PersonaId == 0)
-                representante.PersonaId = PersonaDatos.InsertarPersona(representante.Persona, conexion, transaccion);
+            {
+                Persona? personaExistente = PersonaDatos.BuscarPorCedula(representante.Persona.CedulaIdentidad ?? string.Empty, conexion, transaccion);
+                if (personaExistente != null)
+                {
+                    representante.PersonaId = personaExistente.Id;
+                    representante.Persona.Id = personaExistente.Id;
+                    representante.Persona.DireccionId = personaExistente.DireccionId;
+                    PersonaDatos.ActualizarPersona(representante.Persona, conexion, transaccion);
+                }
+                else
+                {
+                    representante.PersonaId = PersonaDatos.InsertarPersona(representante.Persona, conexion, transaccion);
+                }
+            }
 
             const string consulta = @"
-                INSERT INTO PERSONA_REPRESENTANTE (parentesco, estado_civil, ingreso_mensual, telefono_movil,
-                                                   telefono_habitacion, correo_electronico, profesion,
-                                                   empresa_trabajo, telefono_empresa, direccion_empresa,
-                                                   persona_id, ESTADO)
-                VALUES (@parentesco, @estadoCivil, @ingreso, @movil, @habitacion, @correo, @profesion,
-                        @empresa, @telefonoEmpresa, @direccionEmpresa, @persona, @estado);
-                SELECT LAST_INSERT_ID();";
+        INSERT INTO PERSONA_REPRESENTANTE (parentesco, estado_civil, ingreso_mensual, telefono_movil,
+                                           telefono_habitacion, correo_electronico, profesion,
+                                           empresa_trabajo, telefono_empresa, direccion_empresa,
+                                           persona_id, ESTADO)
+        VALUES (@parentesco, @estadoCivil, @ingreso, @movil, @habitacion, @correo, @profesion,
+                @empresa, @telefonoEmpresa, @direccionEmpresa, @persona, @estado);
+        SELECT LAST_INSERT_ID();";
 
             using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
             {

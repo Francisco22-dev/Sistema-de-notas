@@ -299,9 +299,16 @@ namespace SistemaLiceo.Presentacion
 
         private Estudiante ArmarEstudiante()
         {
+            string cedulaIdentidad = txtCedula.Text.Trim();
+            string cedulaEscolar = txtCedulaEscolar.Text.Trim();
+
+            // Si la cédula escolar se deja en blanco, toma automáticamente la cédula de identidad
+            if (string.IsNullOrWhiteSpace(cedulaEscolar))
+                cedulaEscolar = cedulaIdentidad;
+
             Estudiante est = new Estudiante
             {
-                CedulaEscolar = txtCedulaEscolar.Text.Trim(),
+                CedulaEscolar = cedulaEscolar,
                 NumeroHijo = AEntero(txtNumeroHijo.Text) ?? 1,
                 Lateralidad = TextoCombo(cmbLateralidad, "Derecha"),
                 PaisNacimientoId = ValorSeleccionado(cmbPaisNacimiento),
@@ -311,7 +318,7 @@ namespace SistemaLiceo.Presentacion
             est.Persona = new Persona
             {
                 Nacionalidad = TextoCombo(cmbNacionalidad, "V"),
-                CedulaIdentidad = txtCedula.Text.Trim(),
+                CedulaIdentidad = cedulaIdentidad,
                 Nombre1 = txtNombre1.Text.Trim(),
                 Nombre2 = txtNombre2.Text.Trim(),
                 Apellido1 = txtApellido1.Text.Trim(),

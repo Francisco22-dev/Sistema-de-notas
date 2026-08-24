@@ -19,8 +19,9 @@
                 <!-- En el StackPanel izquierdo de MenuPrincipal.xaml -->
                 <Button x:Name="btnEstudiantes" Click="btnEstudiantes_Click" Content="👨‍🎓 Estudiantes" Height="45" Margin="0,5" Background="Transparent" Foreground="White" FontSize="16" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
                 <Button x:Name="btnProfesores" Click="btnProfesores_Click" Content="👩‍🏫 Profesores" Height="45" Margin="0,5" Background="Transparent" Foreground="White" FontSize="16" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
+                <Button x:Name="btnMaterias" Click="btnMaterias_Click" Content="📖 Materias" Height="45" Margin="0,5" Background="Transparent" Foreground="White" FontSize="16" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
                 <Button x:Name="btnNotas" Click="btnNotas_Click" Content="📝 Notas y Lapsos" Height="45" Margin="0,5" Background="Transparent" Foreground="White" FontSize="16" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
-                <Button Content="📊 Reportes SAZE" Height="45" Margin="0,5" Background="Transparent" Foreground="White" FontSize="16" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
+                <Button x:Name="btnReportes" Click="btnReportes_Click" Content="📊 Reportes y Constancias" Height="45" Margin="0,5" Background="Transparent" Foreground="White" FontSize="16" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
 
                 <Border Height="1" Background="#3B82F6" Margin="20,50,20,20"/>
 
