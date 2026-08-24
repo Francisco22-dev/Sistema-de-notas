@@ -27,6 +27,8 @@
                             <ComboBoxItem Content="🏅 Constancia de Buena Conducta"/>
                             <ComboBoxItem Content="📊 Boleta / Boletín de Calificaciones"/>
                             <ComboBoxItem Content="📋 Nómina de Matrícula por Sección"/>
+                            <ComboBoxItem Content="📑 Reporte SAZE: Registro de Matrícula Inicial"/>
+                            <ComboBoxItem Content="📈 Reporte SAZE: Resumen de Rendimiento Escolar"/>
                         </ComboBox>
                     </StackPanel>
 

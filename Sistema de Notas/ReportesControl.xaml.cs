@@ -14,6 +14,11 @@ namespace SistemaLiceo.Presentacion
 {
     public partial class ReportesControl : UserControl
     {
+        // 🏛️ EPÓNIMO INSTITUCIONAL FORMAL
+        private const string EponimoLiceo = "UNIDAD EDUCATIVA «LICEO BOLIVARIANO DR. ENRIQUE TEJERA»";
+        private const string CodigoDea = "CÓDIGO DEA: OD05280804 | CIRCUITO EDUCATIVO Nº 4";
+        private const string UbicacionPlantel = "PARROQUIA RAFAEL URDANETA, VALENCIA - ESTADO CARABOBO";
+
         private readonly CatalogoDatos _catalogos = new CatalogoDatos();
         private readonly EstudianteDatos _estudiantes = new EstudianteDatos();
         private readonly ReportesDatos _reportes = new ReportesDatos();
@@ -44,8 +49,9 @@ namespace SistemaLiceo.Presentacion
         private void cmbTipoReporte_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!IsLoaded) return;
-            bool esNomina = cmbTipoReporte.SelectedIndex == 3;
-            panelEstudiante.Visibility = esNomina ? Visibility.Collapsed : Visibility.Visible;
+            // Oculta selector individual de estudiante para reportes globales de sección y SAZE (índices 3, 4 y 5)
+            bool esGlobal = cmbTipoReporte.SelectedIndex >= 3;
+            panelEstudiante.Visibility = esGlobal ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void Filtro_SelectionChanged(object sender, SelectionChangedEventArgs e) => CargarEstudiantesSeccion();
@@ -73,42 +79,34 @@ namespace SistemaLiceo.Presentacion
 
         private void btnGenerar_Click(object sender, RoutedEventArgs e)
         {
-            if (cmbPeriodo.SelectedValue == null)
+            if (cmbPeriodo.SelectedValue == null || cmbGradoSeccion.SelectedValue == null)
             {
-                Alerta.Mostrar("Advertencia", "Seleccione el período académico.", true);
+                Alerta.Mostrar("Advertencia", "Seleccione el período académico y la sección.", true);
                 return;
             }
 
             int periodoId = Convert.ToInt32(cmbPeriodo.SelectedValue);
+            int gradoSeccionId = Convert.ToInt32(cmbGradoSeccion.SelectedValue);
             int tipo = cmbTipoReporte.SelectedIndex;
 
-            if (tipo != 3 && cmbEstudiantes.SelectedValue == null)
+            if (tipo < 3 && cmbEstudiantes.SelectedValue == null)
             {
-                Alerta.Mostrar("Advertencia", "Seleccione un estudiante.", true);
+                Alerta.Mostrar("Advertencia", "Seleccione un estudiante para emitir este documento.", true);
                 return;
             }
 
-            int estudianteId = tipo != 3 ? Convert.ToInt32(cmbEstudiantes.SelectedValue) : 0;
-            int gradoSeccionId = cmbGradoSeccion.SelectedValue != null ? Convert.ToInt32(cmbGradoSeccion.SelectedValue) : 0;
+            int estudianteId = tipo < 3 ? Convert.ToInt32(cmbEstudiantes.SelectedValue) : 0;
 
-            FlowDocument doc;
-            switch (tipo)
+            FlowDocument doc = tipo switch
             {
-                case 0:
-                    doc = GenerarDocumentoConstancia(estudianteId, periodoId, "CONSTANCIA DE ESTUDIO", false);
-                    break;
-                case 1:
-                    doc = GenerarDocumentoConstancia(estudianteId, periodoId, "CONSTANCIA DE BUENA CONDUCTA", true);
-                    break;
-                case 2:
-                    doc = GenerarDocumentoBoleta(estudianteId, periodoId);
-                    break;
-                case 3:
-                    doc = GenerarDocumentoNomina(gradoSeccionId, periodoId);
-                    break;
-                default:
-                    return;
-            }
+                0 => GenerarDocumentoConstancia(estudianteId, periodoId, "CONSTANCIA DE ESTUDIO", false),
+                1 => GenerarDocumentoConstancia(estudianteId, periodoId, "CONSTANCIA DE BUENA CONDUCTA", true),
+                2 => GenerarDocumentoBoleta(estudianteId, periodoId),
+                3 => GenerarDocumentoNomina(gradoSeccionId, periodoId),
+                4 => GenerarDocumentoSazeMatricula(gradoSeccionId, periodoId),
+                5 => GenerarDocumentoSazeRendimiento(gradoSeccionId, periodoId),
+                _ => CrearDocumentoBase()
+            };
 
             docViewer.Document = doc;
         }
@@ -117,12 +115,7 @@ namespace SistemaLiceo.Presentacion
         {
             ConstanciaEstudioDto? datos = _reportes.ObtenerDatosConstancia(estudianteId, periodoId);
             FlowDocument doc = CrearDocumentoBase();
-
-            if (datos == null)
-            {
-                doc.Blocks.Add(new Paragraph(new Run("No se encontraron registros del estudiante en este período.")) { Foreground = Brushes.Red });
-                return doc;
-            }
+            if (datos == null) return DocumentoVacio(doc);
 
             AgregarMembrete(doc);
 
@@ -136,8 +129,8 @@ namespace SistemaLiceo.Presentacion
             doc.Blocks.Add(pTitulo);
 
             string cuerpo = esConducta
-                ? $"Quien suscribe, la Dirección de la institución, hace constar por medio de la presente que el/la estudiante {datos.EstudianteNombreCompleto}, titular de la Cédula de Identidad Nº {datos.Cedula}, cursante del {datos.Grado}, Sección \"{datos.Seccion}\", durante el año escolar {datos.Periodo}, ha demostrado una EXCELENTE CONDUCTA, acatando las normas de convivencia escolar y demostrando respeto y colaboración."
-                : $"Quien suscribe, la Dirección de la institución, hace constar por medio de la presente que el/la estudiante {datos.EstudianteNombreCompleto}, titular de la Cédula de Identidad Nº {datos.Cedula} (Cédula Escolar Nº {datos.CedulaEscolar}), se encuentra debidamente inscrito(a) en este plantel cursando el {datos.Grado}, Sección \"{datos.Seccion}\" de Educación {datos.NivelAcademico}, durante el Año Escolar {datos.Periodo}.";
+                ? $"Quien suscribe, la Dirección de la institución {EponimoLiceo}, hace constar por medio de la presente que el/la estudiante {datos.EstudianteNombreCompleto}, titular de la Cédula de Identidad Nº {datos.Cedula}, cursante del {datos.Grado}, Sección \"{datos.Seccion}\", durante el año escolar {datos.Periodo}, ha demostrado una EXCELENTE CONDUCTA, acatando las normas de convivencia escolar y demostrando respeto y colaboración."
+                : $"Quien suscribe, la Dirección de la institución {EponimoLiceo}, hace constar por medio de la presente que el/la estudiante {datos.EstudianteNombreCompleto}, titular de la Cédula de Identidad Nº {datos.Cedula} (Cédula Escolar Nº {datos.CedulaEscolar}), se encuentra debidamente inscrito(a) en este plantel cursando el {datos.Grado}, Sección \"{datos.Seccion}\" de Educación {datos.NivelAcademico}, durante el Año Escolar {datos.Periodo}.";
 
             Paragraph pCuerpo = new Paragraph(new Run(cuerpo))
             {
@@ -161,21 +154,137 @@ namespace SistemaLiceo.Presentacion
             return doc;
         }
 
+        private FlowDocument GenerarDocumentoSazeMatricula(int gradoSeccionId, int periodoId)
+        {
+            List<FilaSazeMatriculaDto> lista = _reportes.ObtenerSazeMatriculaInicial(gradoSeccionId, periodoId);
+            FlowDocument doc = CrearDocumentoBase();
+            AgregarMembrete(doc);
+
+            Paragraph pTitulo = new Paragraph(new Run("FORMATO OFICIAL SAZE - REGISTRO DE MATRÍCULA INICIAL"))
+            {
+                FontSize = 15,
+                FontWeight = FontWeights.Bold,
+                TextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 15)
+            };
+            doc.Blocks.Add(pTitulo);
+
+            int totalM = lista.Count(x => x.Sexo == "M");
+            int totalF = lista.Count(x => x.Sexo == "F");
+
+            Paragraph pResumen = new Paragraph(new Run($"Total Inscritos: {lista.Count}   |   Varones (M): {totalM}   |   Hembras (F): {totalF}"))
+            {
+                FontWeight = FontWeights.SemiBold,
+                TextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            doc.Blocks.Add(pResumen);
+
+            Table tabla = new Table { CellSpacing = 0, BorderBrush = Brushes.Black, BorderThickness = new Thickness(1) };
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(30) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(90) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(180) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(35) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(45) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(110) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(90) });
+
+            TableRowGroup grupo = new TableRowGroup();
+            TableRow cab = new TableRow { Background = Brushes.LightGray };
+            cab.Cells.Add(CrearCelda("Nº", true));
+            cab.Cells.Add(CrearCelda("Cédula", true));
+            cab.Cells.Add(CrearCelda("Apellidos y Nombres", true));
+            cab.Cells.Add(CrearCelda("Sexo", true));
+            cab.Cells.Add(CrearCelda("Edad", true));
+            cab.Cells.Add(CrearCelda("Lugar Nacimiento", true));
+            cab.Cells.Add(CrearCelda("Condición", true));
+            grupo.Rows.Add(cab);
+
+            foreach (var r in lista)
+            {
+                TableRow fila = new TableRow();
+                fila.Cells.Add(CrearCelda(r.Numero.ToString()));
+                fila.Cells.Add(CrearCelda(r.Cedula));
+                fila.Cells.Add(CrearCelda($"{r.Apellidos} {r.Nombres}"));
+                fila.Cells.Add(CrearCelda(r.Sexo));
+                fila.Cells.Add(CrearCelda(r.Edad.ToString()));
+                fila.Cells.Add(CrearCelda(r.LugarNacimiento));
+                fila.Cells.Add(CrearCelda(r.TipoIngreso));
+                grupo.Rows.Add(fila);
+            }
+
+            tabla.RowGroups.Add(grupo);
+            doc.Blocks.Add(tabla);
+            doc.Blocks.Add(new Paragraph(new Run("\n")));
+            AgregarFirmas(doc);
+            return doc;
+        }
+
+        private FlowDocument GenerarDocumentoSazeRendimiento(int gradoSeccionId, int periodoId)
+        {
+            List<FilaSazeRendimientoDto> lista = _reportes.ObtenerSazeRendimiento(gradoSeccionId, periodoId);
+            FlowDocument doc = CrearDocumentoBase();
+            AgregarMembrete(doc);
+
+            Paragraph pTitulo = new Paragraph(new Run("FORMATO OFICIAL SAZE - RESUMEN ESTADÍSTICO DE RENDIMIENTO"))
+            {
+                FontSize = 15,
+                FontWeight = FontWeights.Bold,
+                TextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 15)
+            };
+            doc.Blocks.Add(pTitulo);
+
+            Table tabla = new Table { CellSpacing = 0, BorderBrush = Brushes.Black, BorderThickness = new Thickness(1) };
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(170) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(130) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(60) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(65) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(65) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(65) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(65) });
+
+            TableRowGroup grupo = new TableRowGroup();
+            TableRow cab = new TableRow { Background = Brushes.LightGray };
+            cab.Cells.Add(CrearCelda("Asignatura", true));
+            cab.Cells.Add(CrearCelda("Docente", true));
+            cab.Cells.Add(CrearCelda("Matrícula", true));
+            cab.Cells.Add(CrearCelda("Evaluados", true));
+            cab.Cells.Add(CrearCelda("Aprobados", true));
+            cab.Cells.Add(CrearCelda("Aplazados", true));
+            cab.Cells.Add(CrearCelda("% Aprob.", true));
+            grupo.Rows.Add(cab);
+
+            foreach (var r in lista)
+            {
+                TableRow fila = new TableRow();
+                fila.Cells.Add(CrearCelda(r.Materia));
+                fila.Cells.Add(CrearCelda(r.Docente));
+                fila.Cells.Add(CrearCelda(r.Inscritos.ToString()));
+                fila.Cells.Add(CrearCelda(r.Evaluados.ToString()));
+                fila.Cells.Add(CrearCelda(r.Aprobados.ToString()));
+                fila.Cells.Add(CrearCelda(r.Aplazados.ToString()));
+                fila.Cells.Add(CrearCelda($"{r.PorcentajeAprobados}%", true));
+                grupo.Rows.Add(fila);
+            }
+
+            tabla.RowGroups.Add(grupo);
+            doc.Blocks.Add(tabla);
+            doc.Blocks.Add(new Paragraph(new Run("\n")));
+            AgregarFirmas(doc);
+            return doc;
+        }
+
         private FlowDocument GenerarDocumentoBoleta(int estudianteId, int periodoId)
         {
             ConstanciaEstudioDto? est = _reportes.ObtenerDatosConstancia(estudianteId, periodoId);
             List<FilaBoletaDto> notas = _reportes.ObtenerBoletaNotas(estudianteId, periodoId);
             FlowDocument doc = CrearDocumentoBase();
-
-            if (est == null)
-            {
-                doc.Blocks.Add(new Paragraph(new Run("No se encontraron datos del estudiante.")) { Foreground = Brushes.Red });
-                return doc;
-            }
+            if (est == null) return DocumentoVacio(doc);
 
             AgregarMembrete(doc);
 
-            Paragraph pTitulo = new Paragraph(new Run("INFORME DE CALIFICACIONES"))
+            Paragraph pTitulo = new Paragraph(new Run("BOLETÍN INFORMATIVO DE CALIFICACIONES"))
             {
                 FontSize = 16,
                 FontWeight = FontWeights.Bold,
@@ -191,7 +300,7 @@ namespace SistemaLiceo.Presentacion
             pDatos.Inlines.Add(new Run($"{est.Cedula}\n"));
             pDatos.Inlines.Add(new Bold(new Run("Año/Grado: ")));
             pDatos.Inlines.Add(new Run($"{est.Grado} \"{est.Seccion}\"    "));
-            pDatos.Inlines.Add(new Bold(new Run("Período: ")));
+            pDatos.Inlines.Add(new Bold(new Run("Año Escolar: ")));
             pDatos.Inlines.Add(new Run($"{est.Periodo}"));
             pDatos.Margin = new Thickness(0, 0, 0, 15);
             doc.Blocks.Add(pDatos);
@@ -226,7 +335,7 @@ namespace SistemaLiceo.Presentacion
             tabla.RowGroups.Add(grupo);
             doc.Blocks.Add(tabla);
 
-            doc.Blocks.Add(new Paragraph(new Run("\n\n")));
+            doc.Blocks.Add(new Paragraph(new Run("\n")));
             AgregarFirmas(doc);
             return doc;
         }
@@ -235,10 +344,9 @@ namespace SistemaLiceo.Presentacion
         {
             List<FilaNominaSeccionDto> lista = _reportes.ObtenerNominaSeccion(gradoSeccionId, periodoId);
             FlowDocument doc = CrearDocumentoBase();
-
             AgregarMembrete(doc);
 
-            Paragraph pTitulo = new Paragraph(new Run("NÓMINA DE ESTUDIANTES POR SECCIÓN"))
+            Paragraph pTitulo = new Paragraph(new Run("NÓMINA DE MATRÍCULA POR SECCIÓN"))
             {
                 FontSize = 16,
                 FontWeight = FontWeights.Bold,
@@ -276,6 +384,8 @@ namespace SistemaLiceo.Presentacion
 
             tabla.RowGroups.Add(grupo);
             doc.Blocks.Add(tabla);
+            doc.Blocks.Add(new Paragraph(new Run("\n")));
+            AgregarFirmas(doc);
             return doc;
         }
 
@@ -283,11 +393,17 @@ namespace SistemaLiceo.Presentacion
         {
             return new FlowDocument
             {
-                PagePadding = new Thickness(50),
+                PagePadding = new Thickness(45),
                 FontFamily = new FontFamily("Segoe UI"),
                 FontSize = 12,
-                PageWidth = 800
+                PageWidth = 820
             };
+        }
+
+        private static FlowDocument DocumentoVacio(FlowDocument doc)
+        {
+            doc.Blocks.Add(new Paragraph(new Run("No se encontraron registros para los criterios seleccionados.")) { Foreground = Brushes.Red, FontSize = 14 });
+            return doc;
         }
 
         private static void AgregarMembrete(FlowDocument doc)
@@ -295,26 +411,27 @@ namespace SistemaLiceo.Presentacion
             Paragraph pMembrete = new Paragraph
             {
                 TextAlignment = TextAlignment.Center,
-                LineHeight = 16,
+                LineHeight = 15,
                 Margin = new Thickness(0, 0, 0, 10)
             };
             pMembrete.Inlines.Add(new Bold(new Run("REPÚBLICA BOLIVARIANA DE VENEZUELA\n")));
             pMembrete.Inlines.Add(new Run("MINISTERIO DEL PODER POPULAR PARA LA EDUCACIÓN\n"));
-            pMembrete.Inlines.Add(new Run("UNIDAD EDUCATIVA LICEO BOLIVARIANO\n"));
-            pMembrete.Inlines.Add(new Run("VALENCIA - ESTADO CARABOBO\n"));
+            pMembrete.Inlines.Add(new Bold(new Run($"{EponimoLiceo}\n")));
+            pMembrete.Inlines.Add(new Run($"{CodigoDea}\n"));
+            pMembrete.Inlines.Add(new Run($"{UbicacionPlantel}\n"));
             doc.Blocks.Add(pMembrete);
         }
 
         private static void AgregarFirmas(FlowDocument doc)
         {
-            Table tFirmas = new Table { Margin = new Thickness(0, 40, 0, 0) };
-            tFirmas.Columns.Add(new TableColumn { Width = new GridLength(300) });
-            tFirmas.Columns.Add(new TableColumn { Width = new GridLength(300) });
+            Table tFirmas = new Table { Margin = new Thickness(0, 30, 0, 0) };
+            tFirmas.Columns.Add(new TableColumn { Width = new GridLength(310) });
+            tFirmas.Columns.Add(new TableColumn { Width = new GridLength(310) });
 
             TableRowGroup grp = new TableRowGroup();
             TableRow f1 = new TableRow();
-            f1.Cells.Add(new TableCell(new Paragraph(new Run("_____________________________\nDirector(a)\nSello del Plantel")) { TextAlignment = TextAlignment.Center }));
-            f1.Cells.Add(new TableCell(new Paragraph(new Run("_____________________________\nControl de Estudios\ny Evaluación")) { TextAlignment = TextAlignment.Center }));
+            f1.Cells.Add(new TableCell(new Paragraph(new Run("_____________________________\nLcda. Directora General\nSello del Plantel")) { TextAlignment = TextAlignment.Center }));
+            f1.Cells.Add(new TableCell(new Paragraph(new Run("_____________________________\nDivisión de Control de Estudios\ny Evaluación")) { TextAlignment = TextAlignment.Center }));
             grp.Rows.Add(f1);
 
             tFirmas.RowGroups.Add(grp);
@@ -344,7 +461,7 @@ namespace SistemaLiceo.Presentacion
             if (printDialog.ShowDialog() == true)
             {
                 IDocumentPaginatorSource dps = docViewer.Document;
-                printDialog.PrintDocument(dps.DocumentPaginator, "Documento Liceo");
+                printDialog.PrintDocument(dps.DocumentPaginator, "Reporte Oficial Liceo");
             }
         }
     }

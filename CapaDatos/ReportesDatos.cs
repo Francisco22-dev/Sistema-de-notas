@@ -105,6 +105,108 @@ namespace SistemaLiceo.Datos
 
             return filas;
         }
+        public List<FilaSazeMatriculaDto> ObtenerSazeMatriculaInicial(int gradoSeccionId, int periodoId)
+        {
+            List<FilaSazeMatriculaDto> lista = new List<FilaSazeMatriculaDto>();
+
+            const string consulta = @"
+        SELECT pe.cedula_escolar AS CedulaEscolar,
+               CONCAT(p.nacionalidad, '-', IFNULL(p.cedula_identidad, 'S/C')) AS Cedula,
+               p.nombre_1 AS Nombre1, p.nombre_2 AS Nombre2,
+               p.apellido_1 AS Apellido1, p.apellido_2 AS Apellido2,
+               p.sexo AS Sexo,
+               p.fecha_nacimiento AS FechaNacimiento,
+               TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS Edad,
+               IFNULL(parr.nombre, pais.nombre) AS LugarNacimiento,
+               i.tipo_ingreso AS TipoIngreso
+        FROM INSCRIPCION i
+        INNER JOIN PERSONA_ESTUDIANTE pe ON pe.id = i.estudiante_id
+        INNER JOIN PERSONA p ON p.id = pe.persona_id
+        LEFT JOIN PARROQUIA parr ON parr.id = pe.parroquia_nacimiento_id
+        INNER JOIN PAIS pais ON pais.id = pe.pais_nacimiento_id
+        WHERE i.grado_seccion_id = @gsId AND i.periodo_id = @perId AND pe.ESTADO = 'Activo'
+        ORDER BY p.apellido_1, p.nombre_1;";
+
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+            {
+                comando.Parameters.AddWithValue("@gsId", gradoSeccionId);
+                comando.Parameters.AddWithValue("@perId", periodoId);
+
+                using (MySqlDataReader lector = comando.ExecuteReader())
+                {
+                    int nro = 1;
+                    while (lector.Read())
+                    {
+                        DateTime? fn = lector.IsDBNull(lector.GetOrdinal("FechaNacimiento")) ? null : lector.GetDateTime("FechaNacimiento");
+                        lista.Add(new FilaSazeMatriculaDto
+                        {
+                            Numero = nro++,
+                            Cedula = lector.GetString("Cedula"),
+                            CedulaEscolar = lector.GetString("CedulaEscolar"),
+                            Nombres = $"{lector.GetString("Nombre1")} {lector.GetString("Nombre2")}".Trim(),
+                            Apellidos = $"{lector.GetString("Apellido1")} {lector.GetString("Apellido2")}".Trim(),
+                            Sexo = lector.GetString("Sexo"),
+                            FechaNacimiento = fn,
+                            Edad = lector.IsDBNull(lector.GetOrdinal("Edad")) ? 0 : lector.GetInt32("Edad"),
+                            LugarNacimiento = lector.GetString("LugarNacimiento"),
+                            TipoIngreso = lector.GetString("TipoIngreso")
+                        });
+                    }
+                }
+            }
+
+            return lista;
+        }
+
+        public List<FilaSazeRendimientoDto> ObtenerSazeRendimiento(int gradoSeccionId, int periodoId)
+        {
+            List<FilaSazeRendimientoDto> lista = new List<FilaSazeRendimientoDto>();
+
+            const string consulta = @"
+        SELECT m.nombre AS Materia,
+               CONCAT_WS(' ', p.nombre_1, p.apellido_1) AS Docente,
+               COUNT(DISTINCT i.id) AS Inscritos,
+               COUNT(DISTINCT npi.id) AS Evaluados,
+               SUM(CASE WHEN npi.nota >= 10 THEN 1 ELSE 0 END) AS Aprobados,
+               SUM(CASE WHEN npi.nota < 10 AND npi.nota IS NOT NULL THEN 1 ELSE 0 END) AS Aplazados
+        FROM MATERIA_PROFESOR_PERIODO mpp
+        INNER JOIN GRADO_MATERIA gm ON gm.id = mpp.grado_materia_id
+        INNER JOIN MATERIA m ON m.id = gm.materia_id
+        INNER JOIN MATERIA_PROFESOR mp ON mp.id = mpp.materia_profesor_id
+        INNER JOIN PROFESOR prof ON prof.id = mp.profesor_id
+        INNER JOIN PERSONA p ON p.id = prof.persona_id
+        INNER JOIN INSCRIPCION i ON i.grado_seccion_id = mpp.grado_seccion_id AND i.periodo_id = mpp.periodo_id
+        LEFT JOIN NOTA_PERIODO_INSCRIPCION npi ON npi.inscripcion_id = i.id AND npi.materia_profe_periodo_id = mpp.id
+        WHERE mpp.grado_seccion_id = @gsId AND mpp.periodo_id = @perId
+        GROUP BY m.id, m.nombre, p.id
+        ORDER BY m.nombre;";
+
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+            {
+                comando.Parameters.AddWithValue("@gsId", gradoSeccionId);
+                comando.Parameters.AddWithValue("@perId", periodoId);
+
+                using (MySqlDataReader lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lista.Add(new FilaSazeRendimientoDto
+                        {
+                            Materia = lector.GetString("Materia"),
+                            Docente = lector.GetString("Docente"),
+                            Inscritos = Convert.ToInt32(lector["Inscritos"]),
+                            Evaluados = Convert.ToInt32(lector["Evaluados"]),
+                            Aprobados = Convert.ToInt32(lector["Aprobados"]),
+                            Aplazados = Convert.ToInt32(lector["Aplazados"])
+                        });
+                    }
+                }
+            }
+
+            return lista;
+        }
 
         public List<FilaNominaSeccionDto> ObtenerNominaSeccion(int gradoSeccionId, int periodoId)
         {

@@ -38,6 +38,10 @@ namespace SistemaLiceo.Presentacion
         {
             ContenedorPrincipal.Content = new ReportesControl();
         }
+        private void btnUsuarios_Click(object sender, RoutedEventArgs e)
+        {
+            ContenedorPrincipal.Content = new UsuariosControl();
+        }
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {

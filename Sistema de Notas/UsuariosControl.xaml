@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="SistemaLiceo.Presentacion.UsuariosControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="White">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,15">
+            <TextBlock Text="Gestión de Cuentas y Accesos de Usuario" FontSize="24" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Left"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="btnAlternarEstado" Content="🔄 Cambiar Estado" Width="140" Height="35"
+                        Background="#64748B" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
+                        BorderThickness="0" Cursor="Hand" Click="btnAlternarEstado_Click"/>
+
+                <Button x:Name="btnEditarUsuario" Content="✏️ Editar Usuario" Width="130" Height="35"
+                        Background="#F59E0B" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
+                        BorderThickness="0" Cursor="Hand" Click="btnEditarUsuario_Click"/>
+
+                <Button x:Name="btnNuevoUsuario" Content="+ Nuevo Usuario" Width="140" Height="35"
+                        Background="#3B82F6" Foreground="White" FontWeight="Bold"
+                        BorderThickness="0" Cursor="Hand" Click="btnNuevoUsuario_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <DataGrid x:Name="gridUsuarios" Grid.Row="1" AutoGenerateColumns="True"
+                  IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
+                  Background="White" BorderBrush="#D1D5DB" BorderThickness="1"
+                  RowHeight="35" FontSize="14" AlternatingRowBackground="#F9FAFB"/>
+    </Grid>
+</UserControl>
