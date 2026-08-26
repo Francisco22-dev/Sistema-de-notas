@@ -14,7 +14,21 @@ namespace SistemaLiceo.Negocio
             if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(clave))
                 return null;
 
-            return _datos.Autenticar(nombre.Trim(), Seguridad.CifrarClave(clave));
+            string usuarioLimpio = nombre.Trim();
+
+            if (Seguridad.EstaBloqueado(usuarioLimpio, out int minutos))
+                throw new Exception($"Usuario bloqueado por múltiples intentos fallidos. Espere {minutos} minuto(s).");
+
+            Usuario? usuario = _datos.Autenticar(usuarioLimpio, Seguridad.CifrarClave(clave.Trim()));
+
+            if (usuario == null)
+            {
+                Seguridad.RegistrarIntentoFallido(usuarioLimpio);
+                return null;
+            }
+
+            Seguridad.LimpiarIntentos(usuarioLimpio);
+            return usuario;
         }
 
         public Usuario? BuscarPorId(int id) => _datos.BuscarPorId(id);

@@ -1,23 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using MySqlConnector;
 
 namespace SistemaLiceo.Datos
 {
-    /// <summary>
-    /// Fabrica de conexiones hacia la base de datos db_carabobo (MariaDB / MySQL).
-    /// Los parametros se leen del archivo "conexion.config" que se copia junto al
-    /// ejecutable; asi la PC de cada usuario puede apuntar al servidor del liceo
-    /// sin recompilar el programa.
-    /// </summary>
     public class ConexionBD
     {
         private const string ArchivoConfiguracion = "conexion.config";
         private static readonly object Candado = new object();
         private static string? _cadenaConexion;
 
-        /// <summary>Cadena de conexion en uso. Se puede sobrescribir desde el arranque de la aplicacion.</summary>
         public static string CadenaConexion
         {
             get
@@ -43,14 +37,17 @@ namespace SistemaLiceo.Datos
                 Server = Obtener(valores, "Server", "127.0.0.1"),
                 Port = Convert.ToUInt32(Obtener(valores, "Port", "3306")),
                 Database = Obtener(valores, "Database", "db_carabobo"),
-                UserID = Obtener(valores, "Uid", "root"),
+                UserID = Obtener(valores, "Uid", "usuario_secretaria"),
                 Password = Obtener(valores, "Pwd", ""),
 
-                ConnectionTimeout = 5,   // Si el switch falla, avisa en 5 segundos
-                Keepalive = 10,          // Mantiene viva la conexion en la red local
+                // ⚡ PARÁMETROS CRÍTICOS PARA RED LOCAL (SWITCH)
+                ConnectionTimeout = 6,          // No congela la UI si el switch se desconecta
+                DefaultCommandTimeout = 30,     // Timeout para consultas pesadas
+                Keepalive = 5,                  // Envía paquetes TCP cada 5 segs para no perder la conexión
                 Pooling = true,
-                MinimumPoolSize = 1,
-                MaximumPoolSize = 50,
+                MinimumPoolSize = 2,            // Mantiene 2 conexiones calientes por PC
+                MaximumPoolSize = 30,           // Límite prudente por cliente
+                ConnectionIdleTimeout = 180,    // Libera conexiones inactivas
                 CharacterSet = "utf8mb4",
                 AllowUserVariables = true,
                 ConvertZeroDateTime = true
@@ -88,13 +85,8 @@ namespace SistemaLiceo.Datos
             return valores.TryGetValue(clave, out string? valor) && valor.Length > 0 ? valor : porDefecto;
         }
 
-        /// <summary>Devuelve una conexion cerrada, lista para abrirse.</summary>
-        public MySqlConnection ObtenerConexion()
-        {
-            return new MySqlConnection(CadenaConexion);
-        }
+        public MySqlConnection ObtenerConexion() => new MySqlConnection(CadenaConexion);
 
-        /// <summary>Devuelve una conexion ya abierta.</summary>
         public MySqlConnection AbrirConexion()
         {
             MySqlConnection conexion = new MySqlConnection(CadenaConexion);
@@ -103,8 +95,37 @@ namespace SistemaLiceo.Datos
         }
 
         /// <summary>
-        /// Verifica la red y el servicio de MariaDB. Ideal al abrir la aplicacion.
+        /// Ejecuta una acción transaccional con reintento automático en caso de micro-cortes o Deadlocks de red.
         /// </summary>
+        public static T EjecutarConReintento<T>(Func<T> accion, int maxReintentos = 3)
+        {
+            int intento = 0;
+            while (true)
+            {
+                try
+                {
+                    intento++;
+                    return accion();
+                }
+                catch (MySqlException ex) when (EsErrorTransitorio(ex) && intento < maxReintentos)
+                {
+                    Thread.Sleep(intento * 300); // Espera progresiva: 300ms, 600ms...
+                }
+            }
+        }
+
+        private static bool EsErrorTransitorio(MySqlException ex)
+        {
+            return ex.Number switch
+            {
+                1213 => true, // Deadlock found (dos PCs guardando la misma tabla a la vez)
+                1205 => true, // Lock wait timeout exceeded
+                1042 => true, // Unable to connect to server (micro-corte)
+                0 => true,    // Connection timeout
+                _ => false
+            };
+        }
+
         public bool ProbarRedYConexion(out string mensajeError)
         {
             mensajeError = string.Empty;
@@ -123,33 +144,25 @@ namespace SistemaLiceo.Datos
             }
             catch (Exception ex)
             {
-                mensajeError = "Error inesperado en la red: " + ex.Message;
+                mensajeError = "Error inesperado en la red física: " + ex.Message;
                 return false;
             }
         }
 
-        /// <summary>Convierte los errores mas comunes de MariaDB en mensajes entendibles.</summary>
         public static string TraducirError(MySqlException ex)
         {
-            switch (ex.Number)
+            return ex.Number switch
             {
-                case 1042:
-                case 1043:
-                    return "No se puede alcanzar el servidor. Verifique que la PC principal este encendida y el cable de red conectado al switch.";
-                case 1045:
-                    return "Acceso denegado. Verifique el usuario y la contrasena de la base de datos en el archivo conexion.config.";
-                case 1049:
-                    return "La base de datos db_carabobo no existe en el servidor. Ejecute el script db_carabobo.sql.";
-                case 1062:
-                    return "Registro duplicado: la cedula o el codigo ya existen en el sistema.";
-                case 1452:
-                    return "Se intento guardar un registro con una referencia inexistente (grado, seccion, periodo o parroquia).";
-                case 4025:
-                case 3819:
-                    return "Los datos no cumplen una regla de la base de datos. Si el estudiante nacio en Venezuela debe indicar la parroquia; si nacio en el extranjero no debe indicarla.";
-                default:
-                    return "Error de base de datos (" + ex.Number + "): " + ex.Message;
-            }
+                1042 or 1043 => "No se puede alcanzar la PC Servidor. Verifique que esté encendida y los cables conectados al Switch.",
+                1045 => "Acceso denegado. Verifique las credenciales en el archivo conexion.config.",
+                1049 => "La base de datos 'db_carabobo' no existe en el servidor.",
+                1062 => "Registro duplicado: la cédula o código ya existe en el sistema.",
+                1205 => "El servidor tardó en responder porque otro usuario está guardando en la misma tabla. Intente de nuevo.",
+                1213 => "Conflicto de concurrencia temporal. El sistema reintentó la operación.",
+                1451 => "No se puede eliminar el registro porque tiene datos vinculados (notas o asignaciones).",
+                1452 => "Referencia inválida (el grado, sección o período seleccionado no existe).",
+                _ => $"Error de base de datos ({ex.Number}): {ex.Message}"
+            };
         }
     }
 }
