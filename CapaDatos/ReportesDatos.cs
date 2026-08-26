@@ -254,5 +254,80 @@ namespace SistemaLiceo.Datos
 
             return lista;
         }
+
+        public List<FilaNotaCertificadaDto> ObtenerNotasCertificadas(int estudianteId, int periodoId)
+        {
+            List<FilaNotaCertificadaDto> lista = new List<FilaNotaCertificadaDto>();
+
+            const string consulta = @"
+        SELECT g.nombre AS Grado,
+               m.nombre AS Materia,
+               pa.nombre AS Periodo,
+               npi.nota AS Definitiva
+        FROM INSCRIPCION i
+        INNER JOIN PERIODO_ACADEMICO pa ON pa.id = i.periodo_id
+        INNER JOIN MATERIA_PROFESOR_PERIODO mpp ON mpp.grado_seccion_id = i.grado_seccion_id AND mpp.periodo_id = i.periodo_id
+        INNER JOIN GRADO_MATERIA gm ON gm.id = mpp.grado_materia_id
+        INNER JOIN GRADO g ON g.id = gm.grado_id
+        INNER JOIN MATERIA m ON m.id = gm.materia_id
+        LEFT JOIN NOTA_PERIODO_INSCRIPCION npi ON npi.inscripcion_id = i.id AND npi.materia_profe_periodo_id = mpp.id
+        WHERE i.estudiante_id = @estId AND i.periodo_id = @perId
+        ORDER BY g.id, m.nombre;";
+
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+            {
+                comando.Parameters.AddWithValue("@estId", estudianteId);
+                comando.Parameters.AddWithValue("@perId", periodoId);
+
+                using (MySqlDataReader lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        int? nota = lector.IsDBNull(lector.GetOrdinal("Definitiva")) ? null : lector.GetInt32("Definitiva");
+                        lista.Add(new FilaNotaCertificadaDto
+                        {
+                            Grado = lector.GetString("Grado"),
+                            Materia = lector.GetString("Materia"),
+                            Periodo = lector.GetString("Periodo"),
+                            NotaNumero = nota,
+                            NotaLetras = ConvertirNotaEnLetras(nota)
+                        });
+                    }
+                }
+            }
+
+            return lista;
+        }
+
+        private static string ConvertirNotaEnLetras(int? nota)
+        {
+            if (!nota.HasValue) return "PENDIENTE";
+            return nota.Value switch
+            {
+                0 => "CERO CERO",
+                1 => "CERO UNO",
+                2 => "CERO DOS",
+                3 => "CERO TRES",
+                4 => "CERO CUATRO",
+                5 => "CERO CINCO",
+                6 => "CERO SEIS",
+                7 => "CERO SIETE",
+                8 => "CERO OCHO",
+                9 => "CERO NUEVE",
+                10 => "DIEZ",
+                11 => "ONCE",
+                12 => "DOCE",
+                13 => "TRECE",
+                14 => "CATORCE",
+                15 => "QUINCE",
+                16 => "DIECISÉIS",
+                17 => "DIECISIETE",
+                18 => "DIECIOCHO",
+                19 => "DIECINUEVE",
+                20 => "VEINTE",
+                _ => nota.Value.ToString()
+            };
+        }
     }
 }

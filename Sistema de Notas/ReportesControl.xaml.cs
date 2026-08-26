@@ -89,26 +89,116 @@ namespace SistemaLiceo.Presentacion
             int gradoSeccionId = Convert.ToInt32(cmbGradoSeccion.SelectedValue);
             int tipo = cmbTipoReporte.SelectedIndex;
 
-            if (tipo < 3 && cmbEstudiantes.SelectedValue == null)
+            // Los reportes individuales (índices 0, 1, 2 y 3) exigen seleccionar estudiante
+            if (tipo < 4 && cmbEstudiantes.SelectedValue == null)
             {
                 Alerta.Mostrar("Advertencia", "Seleccione un estudiante para emitir este documento.", true);
                 return;
             }
 
-            int estudianteId = tipo < 3 ? Convert.ToInt32(cmbEstudiantes.SelectedValue) : 0;
+            int estudianteId = tipo < 4 ? Convert.ToInt32(cmbEstudiantes.SelectedValue) : 0;
 
             FlowDocument doc = tipo switch
             {
                 0 => GenerarDocumentoConstancia(estudianteId, periodoId, "CONSTANCIA DE ESTUDIO", false),
                 1 => GenerarDocumentoConstancia(estudianteId, periodoId, "CONSTANCIA DE BUENA CONDUCTA", true),
-                2 => GenerarDocumentoBoleta(estudianteId, periodoId),
-                3 => GenerarDocumentoNomina(gradoSeccionId, periodoId),
-                4 => GenerarDocumentoSazeMatricula(gradoSeccionId, periodoId),
-                5 => GenerarDocumentoSazeRendimiento(gradoSeccionId, periodoId),
+                2 => GenerarDocumentoNotasCertificadas(estudianteId, periodoId),
+                3 => GenerarDocumentoBoleta(estudianteId, periodoId),
+                4 => GenerarDocumentoNomina(gradoSeccionId, periodoId),
+                5 => GenerarDocumentoSazeMatricula(gradoSeccionId, periodoId),
+                6 => GenerarDocumentoSazeRendimiento(gradoSeccionId, periodoId),
                 _ => CrearDocumentoBase()
             };
 
             docViewer.Document = doc;
+        }
+
+        private FlowDocument GenerarDocumentoNotasCertificadas(int estudianteId, int periodoId)
+        {
+            ConstanciaEstudioDto? est = _reportes.ObtenerDatosConstancia(estudianteId, periodoId);
+            List<FilaNotaCertificadaDto> notas = _reportes.ObtenerNotasCertificadas(estudianteId, periodoId);
+            FlowDocument doc = CrearDocumentoBase();
+
+            if (est == null) return DocumentoVacio(doc);
+
+            AgregarMembrete(doc);
+
+            Paragraph pTitulo = new Paragraph(new Run("CERTIFICACIÓN DE CALIFICACIONES\n(EDUCACIÓN MEDIA GENERAL)"))
+            {
+                FontSize = 15,
+                FontWeight = FontWeights.Bold,
+                TextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 15)
+            };
+            doc.Blocks.Add(pTitulo);
+
+            Paragraph pDatos = new Paragraph
+            {
+                FontSize = 12,
+                LineHeight = 18,
+                Margin = new Thickness(0, 0, 0, 12)
+            };
+            pDatos.Inlines.Add(new Bold(new Run("Apellidos y Nombres: ")));
+            pDatos.Inlines.Add(new Run($"{est.EstudianteNombreCompleto}    "));
+            pDatos.Inlines.Add(new Bold(new Run("Cédula de Identidad: ")));
+            pDatos.Inlines.Add(new Run($"{est.Cedula}\n"));
+            pDatos.Inlines.Add(new Bold(new Run("Cédula Escolar: ")));
+            pDatos.Inlines.Add(new Run($"{est.CedulaEscolar}    "));
+            pDatos.Inlines.Add(new Bold(new Run("Año que Cursó: ")));
+            pDatos.Inlines.Add(new Run($"{est.Grado}    "));
+            pDatos.Inlines.Add(new Bold(new Run("Año Escolar: ")));
+            pDatos.Inlines.Add(new Run($"{est.Periodo}"));
+            doc.Blocks.Add(pDatos);
+
+            Table tabla = new Table { CellSpacing = 0, BorderBrush = Brushes.Black, BorderThickness = new Thickness(1) };
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(240) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(80) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(160) });
+            tabla.Columns.Add(new TableColumn { Width = new GridLength(100) });
+
+            TableRowGroup grupo = new TableRowGroup();
+            TableRow cabecera = new TableRow { Background = Brushes.LightGray };
+            cabecera.Cells.Add(CrearCelda("Área de Formación / Asignatura", true));
+            cabecera.Cells.Add(CrearCelda("Calificación\n(Número)", true));
+            cabecera.Cells.Add(CrearCelda("Calificación\n(En Letras)", true));
+            cabecera.Cells.Add(CrearCelda("Año Escolar", true));
+            grupo.Rows.Add(cabecera);
+
+            foreach (var n in notas)
+            {
+                TableRow fila = new TableRow();
+                fila.Cells.Add(CrearCelda(n.Materia));
+                fila.Cells.Add(CrearCelda(n.NotaNumero.HasValue ? n.NotaNumero.Value.ToString("D2") : "--", true));
+                fila.Cells.Add(CrearCelda(n.NotaLetras));
+                fila.Cells.Add(CrearCelda(n.Periodo));
+                grupo.Rows.Add(fila);
+            }
+
+            tabla.RowGroups.Add(grupo);
+            doc.Blocks.Add(tabla);
+
+            Paragraph pCertificacion = new Paragraph(new Run(
+                $"Quienes suscriben, Director(a) y Coordinador(a) de Control de Estudios y Evaluación de la {EponimoLiceo}, " +
+                "certifican por medio de la presente que las calificaciones aquí registradas concuerdan exactamente con las actas " +
+                "probatorias de evaluación que reposan en el archivo oficial de este plantel educativo."))
+            {
+                FontSize = 11,
+                TextAlignment = TextAlignment.Justify,
+                Margin = new Thickness(0, 15, 0, 10)
+            };
+            doc.Blocks.Add(pCertificacion);
+
+            string fechaHoy = DateTime.Now.ToString("dd 'días del mes de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
+            Paragraph pFecha = new Paragraph(new Run($"Certificación que se expide en Valencia, a los {fechaHoy}."))
+            {
+                FontSize = 11,
+                TextAlignment = TextAlignment.Right,
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+            doc.Blocks.Add(pFecha);
+
+            AgregarFirmas(doc);
+            return doc;
         }
 
         private FlowDocument GenerarDocumentoConstancia(int estudianteId, int periodoId, string titulo, bool esConducta)
@@ -464,5 +554,6 @@ namespace SistemaLiceo.Presentacion
                 printDialog.PrintDocument(dps.DocumentPaginator, "Reporte Oficial Liceo");
             }
         }
+
     }
 }

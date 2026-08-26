@@ -25,6 +25,7 @@
                         <ComboBox x:Name="cmbTipoReporte" Height="30" SelectedIndex="0" SelectionChanged="cmbTipoReporte_SelectionChanged">
                             <ComboBoxItem Content="📄 Constancia de Estudio"/>
                             <ComboBoxItem Content="🏅 Constancia de Buena Conducta"/>
+                            <ComboBoxItem Content="📜 Certificación de Calificaciones (Notas Certificadas)"/>
                             <ComboBoxItem Content="📊 Boleta / Boletín de Calificaciones"/>
                             <ComboBoxItem Content="📋 Nómina de Matrícula por Sección"/>
                             <ComboBoxItem Content="📑 Reporte SAZE: Registro de Matrícula Inicial"/>

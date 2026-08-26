@@ -59,4 +59,12 @@ namespace Entidades
         public int Aplazados { get; set; }
         public decimal PorcentajeAprobados => Evaluados > 0 ? Math.Round((decimal)Aprobados / Evaluados * 100, 1) : 0;
     }
+    public class FilaNotaCertificadaDto
+    {
+        public string Grado { get; set; } = string.Empty;
+        public string Materia { get; set; } = string.Empty;
+        public string Periodo { get; set; } = string.Empty;
+        public int? NotaNumero { get; set; }
+        public string NotaLetras { get; set; } = string.Empty;
+    }
 }

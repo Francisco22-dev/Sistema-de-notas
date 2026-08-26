@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Entidades;
+using SistemaLiceo.Datos;
+using SistemaLiceo.Negocio;
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using Entidades;
-using SistemaLiceo.Datos;
 
 namespace SistemaLiceo.Presentacion
 {
@@ -82,6 +83,12 @@ namespace SistemaLiceo.Presentacion
 
         private void btnEliminarMateria_Click(object sender, RoutedEventArgs e)
         {
+            if (!SesionActual.EsAdministrador)
+            {
+                Alerta.Mostrar("Permiso Denegado", "Solo un usuario con rol de Administrador puede eliminar materias del pensum general.", true);
+                return;
+            }
+
             if (_idMateriaSeleccionada == 0)
             {
                 Alerta.Mostrar("Selección Requerida", "Seleccione una materia de la tabla para eliminarla.", true);
