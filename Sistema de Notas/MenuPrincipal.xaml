@@ -26,7 +26,7 @@
 
                 <Border Height="1" Background="#3B82F6" Margin="20,50,20,20"/>
 
-                <Button x:Name="btnCerrarSesion" Content="🚪 Cerrar Sesión" Height="45" Background="#EF4444" Foreground="White" FontSize="16" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnCerrarSesion_Click">
+                <Button x:Name="btnCerrarSesion" Content="🚪 Cerrar Sesión" IsCancel="True" Height="45" Background="#EF4444" Foreground="White" FontSize="16" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnCerrarSesion_Click">
                     <Button.Resources>
                         <Style TargetType="Border">
                             <Setter Property="CornerRadius" Value="8"/>

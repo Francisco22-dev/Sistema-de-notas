@@ -21,7 +21,7 @@
 
             <TextBlock x:Name="txtMensaje" Text="Mensaje de notificación..." TextWrapping="Wrap" Foreground="#4B5563" FontSize="14" Grid.Row="1" Margin="0,15,0,15" VerticalAlignment="Center"/>
 
-            <Button x:Name="btnAceptar" Content="Aceptar" Grid.Row="2" Height="35" Width="100" HorizontalAlignment="Right" Foreground="White" FontWeight="Bold" Cursor="Hand" Click="btnAceptar_Click">
+            <Button x:Name="btnAceptar" Content="Aceptar" IsDefault="True" Grid.Row="2" Height="35" Width="100" HorizontalAlignment="Right" Foreground="White" FontWeight="Bold" Cursor="Hand" Click="btnAceptar_Click">
                 <Button.Resources>
                     <Style TargetType="Border">
                         <Setter Property="CornerRadius" Value="6"/>

@@ -9,21 +9,27 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Margin="0,0,0,15">
-            <TextBlock Text="Gestión de Cuentas y Accesos de Usuario" FontSize="24" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Left"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="Gestión de Cuentas y Accesos de Usuario" FontSize="24" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Left"/>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="btnAlternarEstado" Content="🔄 Cambiar Estado" Width="140" Height="35"
+                <StackPanel  Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="btnAlternarEstado" Content="🔄 Cambiar Estado" Width="140" Height="35"
                         Background="#64748B" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
                         BorderThickness="0" Cursor="Hand" Click="btnAlternarEstado_Click"/>
 
-                <Button x:Name="btnEditarUsuario" Content="✏️ Editar Usuario" Width="130" Height="35"
+                    <Button x:Name="btnEditarUsuario" Content="✏️ Editar Usuario" Width="130" Height="35"
                         Background="#F59E0B" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
                         BorderThickness="0" Cursor="Hand" Click="btnEditarUsuario_Click"/>
 
-                <Button x:Name="btnNuevoUsuario" Content="+ Nuevo Usuario" Width="140" Height="35"
+                    <Button x:Name="btnNuevoUsuario" Content="+ Nuevo Usuario" Width="140" Height="35"
                         Background="#3B82F6" Foreground="White" FontWeight="Bold"
                         BorderThickness="0" Cursor="Hand" Click="btnNuevoUsuario_Click"/>
-            </StackPanel>
+                </StackPanel>
+            </Grid>
         </Grid>
 
         <DataGrid x:Name="gridUsuarios" Grid.Row="1" AutoGenerateColumns="True"

@@ -21,7 +21,7 @@
             <TextBlock Text="Contraseña" FontWeight="SemiBold" Foreground="#374151" Margin="0,0,0,5"/>
             <PasswordBox x:Name="txtClave" Height="35" Padding="5" FontSize="14" Margin="0,0,0,25" BorderBrush="#D1D5DB" BorderThickness="1"/>
 
-            <Button x:Name="btnIngresar" Content="Ingresar" Height="40" Background="#1E3A8A" Foreground="White" FontSize="16" FontWeight="Bold" Cursor="Hand" Click="btnIngresar_Click">
+            <Button x:Name="btnIngresar" Content="Ingresar" IsDefault="True" Height="40" Background="#1E3A8A" Foreground="White" FontSize="16" FontWeight="Bold" Cursor="Hand" Click="btnIngresar_Click">
                 <Button.Resources>
                     <Style TargetType="Border">
                         <Setter Property="CornerRadius" Value="8"/>

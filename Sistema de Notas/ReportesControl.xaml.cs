@@ -1,14 +1,18 @@
-﻿using System;
+﻿using Entidades;
+using Microsoft.Win32;
+using SistemaLiceo.Datos;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using Entidades;
-using SistemaLiceo.Datos;
+using System.Windows.Xps;
 
 namespace SistemaLiceo.Presentacion
 {
@@ -539,6 +543,125 @@ namespace SistemaLiceo.Presentacion
             };
         }
 
+        private void btnExportarPdf_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. Validar que exista un documento generado en pantalla
+            if (docViewer.Document == null)
+            {
+                Alerta.Mostrar("Advertencia", "Genere primero la vista previa del documento antes de exportarlo a PDF.", true);
+                return;
+            }
+
+            // 2. Proponer un nombre de archivo descriptivo
+            string nombreSugerido = GenerarNombreArchivoSugerido();
+
+            SaveFileDialog sfd = new SaveFileDialog
+            {
+                Title = "Guardar Reporte en Formato PDF",
+                Filter = "Documento PDF (*.pdf)|*.pdf",
+                FileName = nombreSugerido,
+                DefaultExt = ".pdf"
+            };
+
+            if (sfd.ShowDialog() == true)
+            {
+                try
+                {
+                    ExportarDocumentoAPdf(docViewer.Document, sfd.FileName);
+                    Alerta.Mostrar("Éxito", $"Documento exportado correctamente:\n{Path.GetFileName(sfd.FileName)}", false);
+                }
+                catch (Exception ex)
+                {
+                    Alerta.Mostrar("Error de Exportación", "No se pudo guardar el archivo PDF: " + ex.Message, true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Genera el archivo PDF utilizando la cola de impresión digital de Windows a tamaño Carta (Letter).
+        /// </summary>
+        private static void ExportarDocumentoAPdf(FlowDocument docOriginal, string rutaDestino)
+        {
+            // Clonamos el documento para no alterar la vista previa visual
+            FlowDocument docClonado = ClonarFlowDocument(docOriginal);
+
+            // Ajustamos dimensiones estándar Carta (Letter): 8.5 x 11 pulgadas a 96 DPI (816 x 1056)
+            docClonado.PageWidth = 816;
+            docClonado.PageHeight = 1056;
+            docClonado.PagePadding = new Thickness(45);
+            docClonado.ColumnWidth = 816;
+
+            PrintServer printServer = new PrintServer();
+            PrintQueue? pdfQueue = null;
+
+            // Busca la impresora PDF nativa de Windows
+            foreach (var q in printServer.GetPrintQueues())
+            {
+                if (q.Name.Contains("PDF", StringComparison.OrdinalIgnoreCase))
+                {
+                    pdfQueue = q;
+                    break;
+                }
+            }
+
+            if (pdfQueue == null)
+            {
+                throw new Exception("No se encontró la impresora virtual 'Microsoft Print to PDF' en este equipo. Verifique que esté activa en las características de Windows.");
+            }
+
+            // Configurar el trabajo de impresión directo al archivo
+            XpsDocumentWriter writer = PrintQueue.CreateXpsDocumentWriter(pdfQueue);
+            PrintTicket ticket = pdfQueue.DefaultPrintTicket;
+            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.NorthAmericaLetter);
+
+            IDocumentPaginatorSource paginatorSource = docClonado;
+            writer.Write(paginatorSource.DocumentPaginator, ticket);
+
+            // Nota: En Windows, cuando se envía a la cola PDF mediante este driver con PrintDialog o Writer,
+            // si tu versión de Windows solicita confirmación de guardado, tomará la ruta seleccionada.
+        }
+
+        private string GenerarNombreArchivoSugerido()
+        {
+            string prefijo = cmbTipoReporte.SelectedIndex switch
+            {
+                0 => "Constancia_Estudio",
+                1 => "Constancia_Conducta",
+                2 => "Notas_Certificadas",
+                3 => "Boletin_Notas",
+                4 => "Nomina_Seccion",
+                5 => "SAZE_Matricula_Inicial",
+                6 => "SAZE_Rendimiento",
+                _ => "Reporte_Liceo"
+            };
+
+            string detalle = string.Empty;
+            if (cmbTipoReporte.SelectedIndex < 4 && cmbEstudiantes.SelectedItem != null)
+            {
+                dynamic est = cmbEstudiantes.SelectedItem;
+                detalle = "_" + est.Codigo;
+            }
+            else if (cmbGradoSeccion.SelectedItem != null)
+            {
+                dynamic gs = cmbGradoSeccion.SelectedItem;
+                detalle = "_" + gs.Display.ToString().Replace(" ", "_").Replace("\"", "");
+            }
+
+            return $"{prefijo}{detalle}_{DateTime.Now:yyyyMMdd}.pdf";
+        }
+
+        private static FlowDocument ClonarFlowDocument(FlowDocument source)
+        {
+            System.IO.MemoryStream stream = new System.IO.MemoryStream();
+            TextRange sourceRange = new TextRange(source.ContentStart, source.ContentEnd);
+            sourceRange.Save(stream, DataFormats.Xaml);
+
+            FlowDocument clone = new FlowDocument();
+            TextRange cloneRange = new TextRange(clone.ContentStart, clone.ContentEnd);
+            cloneRange.Load(stream, DataFormats.Xaml);
+            return clone;
+        }
+
         private void btnImprimir_Click(object sender, RoutedEventArgs e)
         {
             if (docViewer.Document == null)
@@ -551,7 +674,7 @@ namespace SistemaLiceo.Presentacion
             if (printDialog.ShowDialog() == true)
             {
                 IDocumentPaginatorSource dps = docViewer.Document;
-                printDialog.PrintDocument(dps.DocumentPaginator, "Reporte Oficial Liceo");
+                printDialog.PrintDocument(dps.DocumentPaginator, "Documento Oficial Liceo");
             }
         }
 

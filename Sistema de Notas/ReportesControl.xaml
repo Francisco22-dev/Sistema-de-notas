@@ -49,6 +49,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <StackPanel x:Name="panelEstudiante" Grid.Column="0" Margin="0,0,10,0">
@@ -56,13 +57,17 @@
                         <ComboBox x:Name="cmbEstudiantes" Height="30" DisplayMemberPath="Display" SelectedValuePath="Codigo"/>
                     </StackPanel>
 
-                    <Button x:Name="btnGenerar" Grid.Column="1" Content="🔍 Generar Vista Previa" Width="170" Height="30"
-                            VerticalAlignment="Bottom" Background="#3B82F6" Foreground="White" FontWeight="Bold"
-                            BorderThickness="0" Cursor="Hand" Margin="0,0,10,0" Click="btnGenerar_Click"/>
+                    <Button x:Name="btnGenerar" Grid.Column="1" Content="🔍 Vista Previa" Width="130" Height="30"
+            VerticalAlignment="Bottom" Background="#3B82F6" Foreground="White" FontWeight="Bold"
+            BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="btnGenerar_Click"/>
 
-                    <Button x:Name="btnImprimir" Grid.Column="2" Content="🖨️ Imprimir / Guardar PDF" Width="180" Height="30"
-                            VerticalAlignment="Bottom" Background="#10B981" Foreground="White" FontWeight="Bold"
-                            BorderThickness="0" Cursor="Hand" Click="btnImprimir_Click"/>
+                    <Button x:Name="btnExportarPdf" Grid.Column="2" Content="📄 Exportar a PDF" Width="145" Height="30"
+            VerticalAlignment="Bottom" Background="#0284C7" Foreground="White" FontWeight="Bold"
+            BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="btnExportarPdf_Click"/>
+
+                    <Button x:Name="btnImprimir" Grid.Column="3" Content="🖨️ Imprimir" Width="110" Height="30"
+            VerticalAlignment="Bottom" Background="#10B981" Foreground="White" FontWeight="Bold"
+            BorderThickness="0" Cursor="Hand" Click="btnImprimir_Click"/>
                 </Grid>
             </Grid>
         </Border>
