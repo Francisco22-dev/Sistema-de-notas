@@ -19,9 +19,9 @@ namespace SistemaLiceo.Presentacion
     public partial class ReportesControl : UserControl
     {
         // 🏛️ EPÓNIMO INSTITUCIONAL FORMAL
-        private const string EponimoLiceo = "UNIDAD EDUCATIVA «LICEO BOLIVARIANO DR. ENRIQUE TEJERA»";
+        private const string EponimoLiceo = "UNIDAD EDUCATIVA «CARABOBO»";
         private const string CodigoDea = "CÓDIGO DEA: OD05280804 | CIRCUITO EDUCATIVO Nº 4";
-        private const string UbicacionPlantel = "PARROQUIA RAFAEL URDANETA, VALENCIA - ESTADO CARABOBO";
+        private const string UbicacionPlantel = "PARROQUIA SAN JOSÉ, VALENCIA - ESTADO CARABOBO";
 
         private readonly CatalogoDatos _catalogos = new CatalogoDatos();
         private readonly EstudianteDatos _estudiantes = new EstudianteDatos();

@@ -274,5 +274,202 @@ namespace SistemaLiceo.Datos
                 comando.ExecuteNonQuery();
             }
         }
+        public List<FilaPlanillaNotasDto> ObtenerPlanillaLapso(int materiaProfePeriodoId, string lapsoNombre)
+        {
+            List<FilaPlanillaNotasDto> lista = new List<FilaPlanillaNotasDto>();
+
+            const string consulta = @"
+        SELECT i.id AS InscripcionId,
+               pe.id AS EstudianteId,
+               CONCAT(p.nacionalidad, '-', IFNULL(p.cedula_identidad, 'S/C')) AS Cedula,
+               CONCAT_WS(' ', p.apellido_1, p.apellido_2, p.nombre_1, p.nombre_2) AS Estudiante
+        FROM MATERIA_PROFESOR_PERIODO mpp
+        INNER JOIN INSCRIPCION i ON i.grado_seccion_id = mpp.grado_seccion_id AND i.periodo_id = mpp.periodo_id
+        INNER JOIN PERSONA_ESTUDIANTE pe ON pe.id = i.estudiante_id
+        INNER JOIN PERSONA p ON p.id = pe.persona_id
+        WHERE mpp.id = @mppId AND pe.ESTADO = 'Activo'
+        ORDER BY p.apellido_1, p.nombre_1;";
+
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+            {
+                comando.Parameters.AddWithValue("@mppId", materiaProfePeriodoId);
+                using (MySqlDataReader lector = comando.ExecuteReader())
+                {
+                    int nro = 1;
+                    while (lector.Read())
+                    {
+                        lista.Add(new FilaPlanillaNotasDto
+                        {
+                            NroLista = nro++,
+                            InscripcionId = lector.GetInt32("InscripcionId"),
+                            EstudianteId = lector.GetInt32("EstudianteId"),
+                            Cedula = lector.GetString("Cedula"),
+                            ApellidosYNombres = lector.GetString("Estudiante").ToUpper()
+                        });
+                    }
+                }
+            }
+
+            // Cargar las notas existentes de cada evaluación en este lapso
+            foreach (var fila in lista)
+            {
+                CargarNotasEvaluacionesAlumno(fila, materiaProfePeriodoId, lapsoNombre);
+                fila.Recalcular();
+            }
+
+            return lista;
+        }
+
+        private void CargarNotasEvaluacionesAlumno(FilaPlanillaNotasDto fila, int mppId, string lapsoNombre)
+        {
+            const string consulta = @"
+        SELECT ev.descripcion, ev.nota, nel.porcentaje
+        FROM NOTA_PERIODO_INSCRIPCION npi
+        INNER JOIN NOTA_LAPSO_PERIODO nlp ON nlp.nota_periodo_id = npi.id
+        INNER JOIN NOTA_EVALUACION_LAPSO nel ON nel.nota_lapso_id = nlp.id
+        INNER JOIN EVALUACION ev ON ev.id = nel.evaluacion_id
+        WHERE npi.inscripcion_id = @insId AND npi.materia_profe_periodo_id = @mppId AND nlp.nombre = @lapso
+        ORDER BY ev.id ASC LIMIT 6;";
+
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+            {
+                comando.Parameters.AddWithValue("@insId", fila.InscripcionId);
+                comando.Parameters.AddWithValue("@mppId", mppId);
+                comando.Parameters.AddWithValue("@lapso", lapsoNombre);
+
+                using (MySqlDataReader lector = comando.ExecuteReader())
+                {
+                    int idx = 1;
+                    while (lector.Read())
+                    {
+                        decimal nota = Convert.ToDecimal(lector["nota"]);
+                        switch (idx)
+                        {
+                            case 1: fila.Eval1 = nota; break;
+                            case 2: fila.Eval2 = nota; break;
+                            case 3: fila.Eval3 = nota; break;
+                            case 4: fila.Eval4 = nota; break;
+                            case 5: fila.Eval5 = nota; break;
+                            case 6: fila.Eval6 = nota; break;
+                        }
+                        idx++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Guarda toda la planilla matricial (evaluaciones 1 a 6 + notas definitivas) en una sola transacción.
+        /// </summary>
+        public void GuardarPlanillaCompleta(
+            int materiaProfePeriodoId,
+            string lapsoNombre,
+            string[] nombresEvaluaciones,
+            decimal[] ponderaciones,
+            List<FilaPlanillaNotasDto> filas)
+        {
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlTransaction transaccion = conexion.BeginTransaction())
+            {
+                try
+                {
+                    foreach (var fila in filas)
+                    {
+                        // 1. Cabeceras
+                        int notaPeriodoId = ObtenerOCrearNotaPeriodo(fila.InscripcionId, materiaProfePeriodoId, conexion, transaccion);
+                        int notaLapsoId = ObtenerOCrearNotaLapso(notaPeriodoId, lapsoNombre, conexion, transaccion);
+
+                        // 2. Guardar cada evaluación no nula
+                        decimal?[] notas = new decimal?[] { fila.Eval1, fila.Eval2, fila.Eval3, fila.Eval4, fila.Eval5, fila.Eval6 };
+
+                        for (int i = 0; i < notas.Length; i++)
+                        {
+                            if (notas[i].HasValue)
+                            {
+                                string desc = (i < nombresEvaluaciones.Length && !string.IsNullOrWhiteSpace(nombresEvaluaciones[i]))
+                                    ? nombresEvaluaciones[i]
+                                    : $"Evaluación {i + 1}";
+
+                                int porc = (i < ponderaciones.Length) ? (int)ponderaciones[i] : 20;
+                                int notaEntera = (int)Math.Round(notas[i]!.Value);
+
+                                int evalId = GuardarOActualizarEvaluacionPorDescripcion(notaLapsoId, desc, notaEntera, conexion, transaccion);
+                                VincularEvaluacionLapso(notaLapsoId, evalId, porc, conexion, transaccion);
+                            }
+                        }
+
+                        // 3. Fijar la Definitiva del Lapso directamente de la sumatoria calculada
+                        const string updateLapso = "UPDATE NOTA_LAPSO_PERIODO SET nota = @def WHERE id = @id;";
+                        using (MySqlCommand cmdLapso = new MySqlCommand(updateLapso, conexion, transaccion))
+                        {
+                            cmdLapso.Parameters.AddWithValue("@def", fila.Definitiva);
+                            cmdLapso.Parameters.AddWithValue("@id", notaLapsoId);
+                            cmdLapso.ExecuteNonQuery();
+                        }
+
+                        // 4. Actualizar la Definitiva Anual del Período (Promedio de los lapsos)
+                        const string updatePeriodo = @"
+                    UPDATE NOTA_PERIODO_INSCRIPCION npi
+                    SET npi.nota = ROUND((SELECT AVG(nlp.nota) FROM NOTA_LAPSO_PERIODO nlp WHERE nlp.nota_periodo_id = npi.id AND nlp.nombre <> 'Reparacion'))
+                    WHERE npi.id = @npId;";
+                        using (MySqlCommand cmdPer = new MySqlCommand(updatePeriodo, conexion, transaccion))
+                        {
+                            cmdPer.Parameters.AddWithValue("@npId", notaPeriodoId);
+                            cmdPer.ExecuteNonQuery();
+                        }
+                    }
+
+                    transaccion.Commit();
+                }
+                catch (MySqlException ex)
+                {
+                    transaccion.Rollback();
+                    throw new Exception(ConexionBD.TraducirError(ex), ex);
+                }
+                catch
+                {
+                    transaccion.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        private static int GuardarOActualizarEvaluacionPorDescripcion(int notaLapsoId, string descripcion, int nota, MySqlConnection conexion, MySqlTransaction transaccion)
+        {
+            const string busqueda = @"
+        SELECT ev.id FROM EVALUACION ev
+        INNER JOIN NOTA_EVALUACION_LAPSO nel ON nel.evaluacion_id = ev.id
+        WHERE nel.nota_lapso_id = @lapsoId AND ev.descripcion = @desc LIMIT 1;";
+
+            using (MySqlCommand cmd = new MySqlCommand(busqueda, conexion, transaccion))
+            {
+                cmd.Parameters.AddWithValue("@lapsoId", notaLapsoId);
+                cmd.Parameters.AddWithValue("@desc", descripcion);
+                object? res = cmd.ExecuteScalar();
+
+                if (res != null && res != DBNull.Value)
+                {
+                    int idExistente = Convert.ToInt32(res);
+                    const string update = "UPDATE EVALUACION SET nota = @nota WHERE id = @id;";
+                    using (MySqlCommand cmdUp = new MySqlCommand(update, conexion, transaccion))
+                    {
+                        cmdUp.Parameters.AddWithValue("@nota", nota);
+                        cmdUp.Parameters.AddWithValue("@id", idExistente);
+                        cmdUp.ExecuteNonQuery();
+                    }
+                    return idExistente;
+                }
+            }
+
+            const string insert = "INSERT INTO EVALUACION (descripcion, nota) VALUES (@desc, @nota); SELECT LAST_INSERT_ID();";
+            using (MySqlCommand cmdIn = new MySqlCommand(insert, conexion, transaccion))
+            {
+                cmdIn.Parameters.AddWithValue("@desc", descripcion);
+                cmdIn.Parameters.AddWithValue("@nota", nota);
+                return Convert.ToInt32(cmdIn.ExecuteScalar());
+            }
+        }
     }
 }
