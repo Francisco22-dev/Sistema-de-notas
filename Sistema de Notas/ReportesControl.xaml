@@ -11,7 +11,7 @@
 
         <TextBlock Grid.Row="0" Text="Emisión de Constancias y Reportes Académicos" FontSize="24" FontWeight="Bold" Foreground="#1F2937" Margin="0,0,0,15"/>
 
-        <!-- Barra de Configuración y Filtros -->
+        <!-- Barra de Configuración, Filtros y Formato -->
         <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,15">
             <Grid>
                 <Grid.RowDefinitions>
@@ -19,7 +19,8 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <UniformGrid Grid.Row="0" Columns="3" Margin="0,0,0,10">
+                <!-- Fila 1: Filtros Globales y Formato de Cédula -->
+                <UniformGrid Grid.Row="0" Columns="4" Margin="0,0,0,12">
                     <StackPanel Margin="0,0,10,0">
                         <TextBlock Text="Tipo de Documento / Reporte:" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <ComboBox x:Name="cmbTipoReporte" Height="30" SelectedIndex="0" SelectionChanged="cmbTipoReporte_SelectionChanged">
@@ -38,41 +39,59 @@
                         <ComboBox x:Name="cmbPeriodo" Height="30" DisplayMemberPath="Nombre" SelectedValuePath="Id" SelectionChanged="Filtro_SelectionChanged"/>
                     </StackPanel>
 
-                    <StackPanel>
+                    <StackPanel Margin="0,0,10,0">
                         <TextBlock Text="Año y Sección:" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <ComboBox x:Name="cmbGradoSeccion" Height="30" DisplayMemberPath="Display" SelectedValuePath="Id" SelectionChanged="cmbGradoSeccion_SelectionChanged"/>
                     </StackPanel>
+
+                    <!-- Selector de Formato de Cédula -->
+                    <StackPanel>
+                        <TextBlock Text="Formato de Cédula en Reporte:" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="#1E3A8A"/>
+                        <ComboBox x:Name="cmbFormatoCedula" Height="30" SelectedIndex="1" SelectionChanged="cmbFormatoCedula_SelectionChanged">
+                            <ComboBoxItem Content="99.999.999 (Con Puntos)" Tag="Puntos"/>
+                            <ComboBoxItem Content="99-999-999 (Con Guiones)" Tag="Guiones"/>
+                            <ComboBoxItem Content="99999999 (Sin Formato)" Tag="Plano"/>
+                        </ComboBox>
+                    </StackPanel>
                 </UniformGrid>
 
+                <!-- Fila 2: Búsqueda rápida por Cédula y Acciones -->
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel x:Name="panelEstudiante" Grid.Column="0" Margin="0,0,10,0">
-                        <TextBlock Text="Seleccionar Estudiante:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <StackPanel x:Name="panelBuscarCedula" Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="🔍 Buscar por Cédula:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBox x:Name="txtBuscarCedula" Height="30" Padding="5,0" VerticalContentAlignment="Center"
+                                 TextChanged="txtBuscarCedula_TextChanged"/>
+                    </StackPanel>
+
+                    <StackPanel x:Name="panelEstudiante" Grid.Column="1" Margin="0,0,10,0">
+                        <TextBlock Text="Estudiante Seleccionado:" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <ComboBox x:Name="cmbEstudiantes" Height="30" DisplayMemberPath="Display" SelectedValuePath="Codigo"/>
                     </StackPanel>
 
-                    <Button x:Name="btnGenerar" Grid.Column="1" Content="🔍 Vista Previa" Width="130" Height="30"
-            VerticalAlignment="Bottom" Background="#3B82F6" Foreground="White" FontWeight="Bold"
-            BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="btnGenerar_Click"/>
+                    <Button x:Name="btnGenerar" Grid.Column="2" Content="🔍 Vista Previa" Width="130" Height="30"
+                            VerticalAlignment="Bottom" Background="#3B82F6" Foreground="White" FontWeight="Bold"
+                            BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="btnGenerar_Click"/>
 
-                    <Button x:Name="btnExportarPdf" Grid.Column="2" Content="📄 Exportar a PDF" Width="145" Height="30"
-            VerticalAlignment="Bottom" Background="#0284C7" Foreground="White" FontWeight="Bold"
-            BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="btnExportarPdf_Click"/>
+                    <Button x:Name="btnExportarPdf" Grid.Column="3" Content="📄 Exportar a PDF" Width="145" Height="30"
+                            VerticalAlignment="Bottom" Background="#0284C7" Foreground="White" FontWeight="Bold"
+                            BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="btnExportarPdf_Click"/>
 
-                    <Button x:Name="btnImprimir" Grid.Column="3" Content="🖨️ Imprimir" Width="110" Height="30"
-            VerticalAlignment="Bottom" Background="#10B981" Foreground="White" FontWeight="Bold"
-            BorderThickness="0" Cursor="Hand" Click="btnImprimir_Click"/>
+                    <Button x:Name="btnImprimir" Grid.Column="4" Content="🖨️ Imprimir" Width="110" Height="30"
+                            VerticalAlignment="Bottom" Background="#10B981" Foreground="White" FontWeight="Bold"
+                            BorderThickness="0" Cursor="Hand" Click="btnImprimir_Click"/>
                 </Grid>
             </Grid>
         </Border>
 
-        <!-- Vista Previa del Documento (FlowDocumentScrollViewer) -->
+        <!-- Vista Previa del Documento -->
         <Border Grid.Row="2" Background="#94A3B8" CornerRadius="8" Padding="15">
             <FlowDocumentScrollViewer x:Name="docViewer" Background="White" MaxZoom="150" MinZoom="80"/>
         </Border>

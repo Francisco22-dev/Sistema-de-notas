@@ -12,6 +12,7 @@ namespace SistemaLiceo.Presentacion
         private readonly EstudianteDatos _estudiantes = new EstudianteDatos();
         private readonly CatalogoDatos _catalogos = new CatalogoDatos();
         private readonly InscripcionNegocio _negocio = new InscripcionNegocio();
+        private DataTable? _dtEstudiantes;
         private bool _cargando;
 
         public EstudiantesControl()
@@ -45,12 +46,35 @@ namespace SistemaLiceo.Presentacion
             try
             {
                 int periodoId = cmbPeriodo.SelectedValue is int valor ? valor : 0;
-                DataTable estudiantes = _estudiantes.ObtenerEstudiantesActivos(periodoId);
-                gridEstudiantes.ItemsSource = estudiantes.DefaultView;
+                _dtEstudiantes = _estudiantes.ObtenerEstudiantesActivos(periodoId);
+                gridEstudiantes.ItemsSource = _dtEstudiantes.DefaultView;
+                AplicarFiltroBusqueda();
             }
             catch (Exception ex)
             {
                 Alerta.Mostrar("Error", "No se pudieron cargar los estudiantes: " + ex.Message, true);
+            }
+        }
+
+        private void txtBuscarEstudiante_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            AplicarFiltroBusqueda();
+        }
+
+        private void AplicarFiltroBusqueda()
+        {
+            if (_dtEstudiantes == null) return;
+
+            string busqueda = txtBuscarEstudiante.Text.Trim().Replace("'", "''");
+
+            if (string.IsNullOrWhiteSpace(busqueda))
+            {
+                _dtEstudiantes.DefaultView.RowFilter = string.Empty;
+            }
+            else
+            {
+                _dtEstudiantes.DefaultView.RowFilter =
+                    $"Cedula LIKE '%{busqueda}%' OR [Cedula Escolar] LIKE '%{busqueda}%' OR Estudiante LIKE '%{busqueda}%'";
             }
         }
 
@@ -60,7 +84,11 @@ namespace SistemaLiceo.Presentacion
                 CargarDatos();
         }
 
-        private void btnActualizar_Click(object sender, RoutedEventArgs e) => CargarDatos();
+        private void btnActualizar_Click(object sender, RoutedEventArgs e)
+        {
+            txtBuscarEstudiante.Clear();
+            CargarDatos();
+        }
 
         private void btnNuevoEstudiante_Click(object sender, RoutedEventArgs e)
         {
