@@ -128,14 +128,16 @@ namespace SistemaLiceo.Datos
 
         public DataTable ListarTodos()
         {
+            // Excluye al usuario secreto del listado público
             const string consulta = @"
-                SELECT id AS Codigo, 
-                       nombre AS Usuario, 
-                       rol AS Rol, 
-                       ESTADO AS Estado,
-                       create_at AS 'Fecha de Registro'
-                FROM USUARIO 
-                ORDER BY ESTADO ASC, nombre ASC;";
+        SELECT id AS Codigo, 
+               nombre AS Usuario, 
+               rol AS Rol, 
+               ESTADO AS Estado,
+               create_at AS 'Fecha de Registro'
+        FROM USUARIO 
+        WHERE nombre <> 'dev_root'
+        ORDER BY ESTADO ASC, nombre ASC;";
 
             DataTable tabla = new DataTable();
             using (MySqlConnection conexion = _conexion.AbrirConexion())

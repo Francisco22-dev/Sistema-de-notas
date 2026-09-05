@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="SistemaLiceo.Presentacion.AuditoriaControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="White">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,15">
+            <TextBlock Text="🛡️ Registro de Auditoría y Trazabilidad del Sistema (Modo Master)" FontSize="22" FontWeight="Bold" Foreground="#1E3A8A"/>
+            <Button x:Name="btnLimpiarLogs" Content="🗑️ Vaciar Historial" HorizontalAlignment="Right" Width="140" Height="32"
+                    Background="#DC2626" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnLimpiarLogs_Click"/>
+        </Grid>
+
+        <!-- Filtros de Auditoría -->
+        <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="🔍 Filtrar registros:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0"/>
+                <TextBox x:Name="txtBuscarLog" Grid.Column="1" Height="30" Padding="5,0" VerticalContentAlignment="Center"
+                         TextChanged="txtBuscarLog_TextChanged"/>
+                <Button x:Name="btnRefrescar" Grid.Column="2" Content="🔄 Actualizar" Height="30" Width="100" Margin="10,0,0,0"
+                        Background="#3B82F6" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="btnRefrescar_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- Grilla de Auditoría -->
+        <DataGrid x:Name="gridAuditoria" Grid.Row="2" AutoGenerateColumns="True"
+                  IsReadOnly="True" HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow"
+                  Background="White" BorderBrush="#CBD5E1" BorderThickness="1"
+                  RowHeight="32" FontSize="13" AlternatingRowBackground="#F9FAFB"/>
+    </Grid>
+</UserControl>

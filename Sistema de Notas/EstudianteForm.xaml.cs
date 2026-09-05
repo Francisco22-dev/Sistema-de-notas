@@ -8,6 +8,9 @@ using SistemaLiceo.Negocio;
 
 namespace SistemaLiceo.Presentacion
 {
+    /// <summary>
+    /// Ficha de inscripción y edición integral de estudiantes y representantes.
+    /// </summary>
     public partial class EstudianteForm : Window
     {
         private readonly CatalogoDatos _catalogos = new CatalogoDatos();
@@ -17,7 +20,6 @@ namespace SistemaLiceo.Presentacion
         private int _idRepresentanteSeleccionado;
         private readonly int _estudianteId;
         private Estudiante? _estudianteActual;
-        private Inscripcion? _inscripcionActual;
 
         public EstudianteForm(int estudianteId = 0)
         {
@@ -27,7 +29,7 @@ namespace SistemaLiceo.Presentacion
 
             if (_estudianteId > 0)
             {
-                this.Title = "Editar Ficha de Estudiante";
+                Title = "Editar Ficha de Estudiante";
                 btnGuardar.Content = "Guardar Cambios";
                 CargarDatosEstudiante();
             }
@@ -37,10 +39,15 @@ namespace SistemaLiceo.Presentacion
         {
             try
             {
+                // Lugar de nacimiento
                 cmbPaisNacimiento.ItemsSource = _catalogos.ListarPaises();
                 cmbPaisNacimiento.SelectedValue = Pais.VenezuelaId;
 
+                // Direcciones de habitación
                 cmbEstadoDireccion.ItemsSource = _catalogos.ListarEstados();
+                cmbEstadoDireccionRep.ItemsSource = _catalogos.ListarEstados();
+
+                // Matrícula académica
                 cmbPeriodo.ItemsSource = _catalogos.ListarPeriodosActivos();
                 cmbGrado.ItemsSource = _catalogos.ListarGrados();
                 cmbSeccion.ItemsSource = _catalogos.ListarSecciones();
@@ -51,7 +58,7 @@ namespace SistemaLiceo.Presentacion
             }
             catch (Exception ex)
             {
-                Alerta.Mostrar("Error", "No se pudieron cargar los catálogos: " + ex.Message, true);
+                Alerta.Mostrar("Error", "No se pudieron cargar los catálogos del sistema: " + ex.Message, true);
             }
         }
 
@@ -62,12 +69,12 @@ namespace SistemaLiceo.Presentacion
                 _estudianteActual = _negocio.ObtenerEstudiantePorId(_estudianteId);
                 if (_estudianteActual == null)
                 {
-                    Alerta.Mostrar("Error", "No se encontró el estudiante.", true);
+                    Alerta.Mostrar("Error", "No se encontró la ficha del estudiante solicitado.", true);
                     Close();
                     return;
                 }
 
-                // 1. Alumno
+                // 1. Datos del Alumno
                 cmbNacionalidad.SelectedIndex = _estudianteActual.Persona.Nacionalidad == "E" ? 1 : 0;
                 txtCedula.Text = _estudianteActual.Persona.CedulaIdentidad ?? string.Empty;
                 txtCedulaEscolar.Text = _estudianteActual.CedulaEscolar;
@@ -81,7 +88,7 @@ namespace SistemaLiceo.Presentacion
                 txtNumeroHijo.Text = _estudianteActual.NumeroHijo.ToString();
                 cmbPaisNacimiento.SelectedValue = _estudianteActual.PaisNacimientoId;
 
-                // 2. Dirección
+                // 2. Dirección del Alumno
                 if (_estudianteActual.Persona.Direccion != null)
                 {
                     chkRegistrarDireccion.IsChecked = true;
@@ -100,7 +107,7 @@ namespace SistemaLiceo.Presentacion
                     chkRegistrarDireccion.IsChecked = false;
                 }
 
-                // 3. Salud & Antropométricos
+                // 3. Salud y Antropométricos
                 txtEstatura.Text = _estudianteActual.Antropometricos.Estatura?.ToString();
                 txtPeso.Text = _estudianteActual.Antropometricos.Peso?.ToString();
                 txtTallaCamisa.Text = _estudianteActual.Antropometricos.TallaCamisa ?? string.Empty;
@@ -128,7 +135,7 @@ namespace SistemaLiceo.Presentacion
                 cmbPoseeCargador.Text = _estudianteActual.ExtraCurricular.PoseeCargador;
                 cmbEstadoCargador.Text = _estudianteActual.ExtraCurricular.EstadoCargador ?? "Operativo";
 
-                // 4. Representante
+                // 4. Representante Principal
                 _idRepresentanteSeleccionado = _estudianteActual.RepresentantePrincipalId;
             }
             catch (Exception ex)
@@ -136,6 +143,8 @@ namespace SistemaLiceo.Presentacion
                 Alerta.Mostrar("Error", "Error al cargar los datos del estudiante: " + ex.Message, true);
             }
         }
+
+        // ===================== Cascadas Geográficas (Nacimiento) =====================
 
         private void cmbPaisNacimiento_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -176,11 +185,31 @@ namespace SistemaLiceo.Presentacion
             cmbParroquiaNacimiento.ItemsSource = municipioId == 0 ? null : _catalogos.ListarParroquias(municipioId);
         }
 
+        // ===================== Cascadas de Dirección (Alumno) =====================
+
         private void cmbEstadoDireccion_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             int estadoId = ValorSeleccionado(cmbEstadoDireccion);
             cmbCiudadDireccion.ItemsSource = estadoId == 0 ? null : _catalogos.ListarCiudades(estadoId);
         }
+
+        // ===================== Cascadas y Control de Dirección (Representante) =====================
+
+        private void chkMismaDireccionEstudiante_Changed(object sender, RoutedEventArgs e)
+        {
+            if (panelDireccionRep == null) return;
+            panelDireccionRep.Visibility = (chkMismaDireccionEstudiante.IsChecked == true)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private void cmbEstadoDireccionRep_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int estadoId = ValorSeleccionado(cmbEstadoDireccionRep);
+            cmbCiudadDireccionRep.ItemsSource = estadoId == 0 ? null : _catalogos.ListarCiudades(estadoId);
+        }
+
+        // ===================== Búsqueda de Representante =====================
 
         private void btnBuscarRep_Click(object sender, RoutedEventArgs e)
         {
@@ -212,6 +241,8 @@ namespace SistemaLiceo.Presentacion
                 dpFechaNacimientoRep.SelectedDate = encontrado.Persona.FechaNacimiento;
                 cmbSexoRep.SelectedIndex = encontrado.Persona.Sexo == "M" ? 1 : 0;
                 txtParentesco.Text = encontrado.Parentesco;
+                cmbEstadoCivilRep.Text = encontrado.EstadoCivil;
+                txtIngresoMensual.Text = encontrado.IngresoMensual?.ToString();
                 txtTelefonoMovilRep.Text = encontrado.TelefonoMovil ?? string.Empty;
                 txtTelefonoHabRep.Text = encontrado.TelefonoHabitacion ?? string.Empty;
                 txtCorreoRep.Text = encontrado.CorreoElectronico ?? string.Empty;
@@ -219,12 +250,31 @@ namespace SistemaLiceo.Presentacion
                 txtEmpresaRep.Text = encontrado.EmpresaTrabajo ?? string.Empty;
                 txtTelefonoEmpresaRep.Text = encontrado.TelefonoEmpresa ?? string.Empty;
                 txtDireccionEmpresaRep.Text = encontrado.DireccionEmpresa ?? string.Empty;
+
+                // Cargar dirección propia del representante si está registrada
+                if (encontrado.Persona.Direccion != null)
+                {
+                    chkMismaDireccionEstudiante.IsChecked = false;
+                    panelDireccionRep.Visibility = Visibility.Visible;
+
+                    txtSectorRep.Text = encontrado.Persona.Direccion.Sector ?? string.Empty;
+                    txtAvenidaRep.Text = encontrado.Persona.Direccion.Avenida ?? string.Empty;
+                    txtCalleRep.Text = encontrado.Persona.Direccion.Calle ?? string.Empty;
+                    txtManzanaRep.Text = encontrado.Persona.Direccion.Manzana ?? string.Empty;
+                    txtVeredaRep.Text = encontrado.Persona.Direccion.Vereda ?? string.Empty;
+                    txtNumeroViviendaRep.Text = encontrado.Persona.Direccion.NumeroVivienda ?? string.Empty;
+                    cmbTipoViviendaRep.Text = encontrado.Persona.Direccion.TipoVivienda;
+                    cmbCondicionViviendaRep.Text = encontrado.Persona.Direccion.CondicionVivienda;
+                    cmbInfraestructuraViviendaRep.Text = encontrado.Persona.Direccion.InfraestructuraVivienda;
+                }
             }
             catch (Exception ex)
             {
-                Alerta.Mostrar("Error", "No se pudo buscar el representante: " + ex.Message, true);
+                Alerta.Mostrar("Error", "No se pudo consultar el representante: " + ex.Message, true);
             }
         }
+
+        // ===================== Guardado Transaccional =====================
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
@@ -248,11 +298,13 @@ namespace SistemaLiceo.Presentacion
                     estudiante.ExtraCurricular.Id = _estudianteActual.ExtraCurricularId;
 
                     _negocio.ActualizarInscripcionCompleta(representante, estudiante, inscripcion);
+                    AuditoriaDatos.Registrar(SesionActual.IdUsuario, "Estudiantes", $"Actualizó ficha del estudiante {estudiante.Persona.NombreCompleto} ({estudiante.CedulaEscolar})");
                     Alerta.Mostrar("Listo", "¡Ficha del estudiante actualizada con éxito!", false);
                 }
                 else
                 {
                     _negocio.RegistrarInscripcionCompleta(representante, estudiante, inscripcion);
+                    AuditoriaDatos.Registrar(SesionActual.IdUsuario, "Inscripciones", $"Inscribió al estudiante {estudiante.Persona.NombreCompleto} ({estudiante.CedulaEscolar})");
                     Alerta.Mostrar("Listo", "¡Matrícula registrada con éxito!", false);
                 }
 
@@ -291,7 +343,8 @@ namespace SistemaLiceo.Presentacion
                 Apellido1 = txtApellido1Rep.Text.Trim(),
                 Apellido2 = txtApellido2Rep.Text.Trim(),
                 FechaNacimiento = dpFechaNacimientoRep.SelectedDate,
-                Sexo = TextoCombo(cmbSexoRep, "F")
+                Sexo = TextoCombo(cmbSexoRep, "F"),
+                Direccion = ArmarDireccionRepresentante()
             };
 
             return rep;
@@ -302,7 +355,7 @@ namespace SistemaLiceo.Presentacion
             string cedulaIdentidad = txtCedula.Text.Trim();
             string cedulaEscolar = txtCedulaEscolar.Text.Trim();
 
-            // Si la cédula escolar se deja en blanco, toma automáticamente la cédula de identidad
+            // Si la cédula escolar se deja vacía, se autoasigna la de identidad para cumplir con NOT NULL
             if (string.IsNullOrWhiteSpace(cedulaEscolar))
                 cedulaEscolar = cedulaIdentidad;
 
@@ -373,7 +426,7 @@ namespace SistemaLiceo.Presentacion
 
             int ciudadId = ValorSeleccionado(cmbCiudadDireccion);
             if (ciudadId == 0)
-                throw new Exception("Seleccione el estado y la ciudad de la dirección, o desmarque el registro de dirección.");
+                throw new Exception("Seleccione el estado y la ciudad de la dirección del estudiante, o desmarque la casilla de registro de dirección.");
 
             return new Direccion
             {
@@ -387,6 +440,31 @@ namespace SistemaLiceo.Presentacion
                 TipoVivienda = TextoCombo(cmbTipoVivienda, "Casa"),
                 CondicionVivienda = TextoCombo(cmbCondicionVivienda, "Propia"),
                 InfraestructuraVivienda = TextoCombo(cmbInfraestructuraVivienda, "Buena")
+            };
+        }
+
+        private Direccion? ArmarDireccionRepresentante()
+        {
+            // Si vive en la misma casa, hereda la dirección del estudiante
+            if (chkMismaDireccionEstudiante.IsChecked == true)
+                return ArmarDireccion();
+
+            int ciudadId = ValorSeleccionado(cmbCiudadDireccionRep);
+            if (ciudadId == 0)
+                throw new Exception("Seleccione el estado y la ciudad de la dirección del representante, o marque la opción de heredar la dirección del estudiante.");
+
+            return new Direccion
+            {
+                CiudadId = ciudadId,
+                Sector = txtSectorRep.Text.Trim(),
+                Avenida = txtAvenidaRep.Text.Trim(),
+                Calle = txtCalleRep.Text.Trim(),
+                Manzana = txtManzanaRep.Text.Trim(),
+                Vereda = txtVeredaRep.Text.Trim(),
+                NumeroVivienda = txtNumeroViviendaRep.Text.Trim(),
+                TipoVivienda = TextoCombo(cmbTipoViviendaRep, "Casa"),
+                CondicionVivienda = TextoCombo(cmbCondicionViviendaRep, "Propia"),
+                InfraestructuraVivienda = TextoCombo(cmbInfraestructuraViviendaRep, "Buena")
             };
         }
 
@@ -409,10 +487,36 @@ namespace SistemaLiceo.Presentacion
             };
         }
 
-        private void btnCancelar_Click(object sender, RoutedEventArgs e) => Close();
+        private void btnCancelar_Click(object sender, RoutedEventArgs e)
+        {
+            bool tieneDatos = !string.IsNullOrWhiteSpace(txtCedula.Text) ||
+                              !string.IsNullOrWhiteSpace(txtNombre1.Text) ||
+                              !string.IsNullOrWhiteSpace(txtCedulaRep.Text);
 
-        private static int ValorSeleccionado(ComboBox combo) => combo.SelectedValue is int valor ? valor : 0;
-        private static int? ValorSeleccionadoOpcional(ComboBox combo) => combo.SelectedValue is int valor ? valor : (int?)null;
+            if (!tieneDatos)
+            {
+                Close();
+                return;
+            }
+
+            MessageBoxResult resultado = MessageBox.Show(
+                "¿Está seguro de que desea cancelar? Se perderán todos los datos introducidos en este formulario.",
+                "Confirmar Cancelación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (resultado == MessageBoxResult.Yes)
+                Close();
+        }
+
+        // ===================== Métodos Auxiliares =====================
+
+        private static int ValorSeleccionado(ComboBox combo) =>
+            combo.SelectedValue is int valor ? valor : 0;
+
+        private static int? ValorSeleccionadoOpcional(ComboBox combo) =>
+            combo.SelectedValue is int valor ? valor : (int?)null;
+
         private static string TextoCombo(ComboBox combo, string porDefecto)
         {
             if (combo.SelectedItem is ComboBoxItem item && item.Content != null)
@@ -423,12 +527,14 @@ namespace SistemaLiceo.Presentacion
         private static decimal? ADecimal(string texto)
         {
             texto = texto.Trim().Replace(',', '.');
+            if (texto.Length == 0) return null;
             return decimal.TryParse(texto, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal valor) ? valor : null;
         }
 
         private static int? AEntero(string texto)
         {
             texto = texto.Trim();
+            if (texto.Length == 0) return null;
             return int.TryParse(texto, out int valor) ? valor : null;
         }
     }

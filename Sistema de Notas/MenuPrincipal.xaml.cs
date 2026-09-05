@@ -15,32 +15,44 @@ namespace SistemaLiceo.Presentacion
         {
             txtUsuarioInfo.Text = $"{SesionActual.NombreUsuario} | Rol: {SesionActual.Rol}";
 
-            // 1. RESTRICCIONES PARA SECRETARIA
-            if (SesionActual.EsSecretaria)
-            {
-                // La secretaria no tiene acceso a crear o cambiar usuarios del sistema
-                btnUsuarios.Visibility = Visibility.Collapsed;
-            }
-            // 2. RESTRICCIONES PARA DOCENTE
-            else if (SesionActual.EsDocente)
+            // DOCENTE: Acceso único y exclusivo a Notas
+            if (SesionActual.EsDocente)
             {
                 btnEstudiantes.Visibility = Visibility.Collapsed;
                 btnProfesores.Visibility = Visibility.Collapsed;
                 btnMaterias.Visibility = Visibility.Collapsed;
+                btnReportes.Visibility = Visibility.Collapsed;
                 btnUsuarios.Visibility = Visibility.Collapsed;
+                btnAuditoria.Visibility = Visibility.Collapsed;
+                btnNotas.Visibility = Visibility.Visible;
 
-                // Muestra directo la carga de notas al docente
                 ContenedorPrincipal.Content = new NotasControl();
             }
-            // 3. ADMINISTRADOR: Tiene acceso visible a todos los módulos
-            else
+            // SECRETARIA: Todo operativo excepto usuarios y auditoría secreta
+            else if (SesionActual.EsSecretaria)
             {
-                btnUsuarios.Visibility = Visibility.Visible;
-                btnMaterias.Visibility = Visibility.Visible;
-                btnProfesores.Visibility = Visibility.Visible;
                 btnEstudiantes.Visibility = Visibility.Visible;
+                btnProfesores.Visibility = Visibility.Visible;
+                btnMaterias.Visibility = Visibility.Visible;
                 btnNotas.Visibility = Visibility.Visible;
                 btnReportes.Visibility = Visibility.Visible;
+                btnUsuarios.Visibility = Visibility.Collapsed;
+                btnAuditoria.Visibility = Visibility.Collapsed;
+            }
+            // ADMINISTRADOR
+            else
+            {
+                btnEstudiantes.Visibility = Visibility.Visible;
+                btnProfesores.Visibility = Visibility.Visible;
+                btnMaterias.Visibility = Visibility.Visible;
+                btnNotas.Visibility = Visibility.Visible;
+                btnReportes.Visibility = Visibility.Visible;
+                btnUsuarios.Visibility = Visibility.Visible;
+
+                // BOTÓN SECRETO: Solo visible para tu usuario desarrollador ('dev_root')
+                btnAuditoria.Visibility = (SesionActual.NombreUsuario.ToLower() == "dev_root")
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
             }
         }
 
@@ -58,7 +70,16 @@ namespace SistemaLiceo.Presentacion
             }
             ContenedorPrincipal.Content = new UsuariosControl();
         }
+        private void btnAuditoria_Click(object sender, RoutedEventArgs e)
+        {
+            if (SesionActual.NombreUsuario.ToLower() != "dev_root")
+            {
+                Alerta.Mostrar("Acceso Restringido", "Este apartado solo es accesible por el Desarrollador del sistema.", true);
+                return;
+            }
 
+            ContenedorPrincipal.Content = new AuditoriaControl();
+        }
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
             SesionActual.LimpiarSesion();

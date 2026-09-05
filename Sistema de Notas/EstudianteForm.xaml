@@ -449,6 +449,93 @@
                             <TextBlock Text="Dirección de la Empresa" Style="{StaticResource Etiqueta}"/>
                             <TextBox x:Name="txtDireccionEmpresaRep" Height="45" TextWrapping="Wrap" AcceptsReturn="True"/>
                         </StackPanel>
+                        <GroupBox Header="Dirección de Habitación del Representante" Margin="6,15,6,6" Padding="10">
+                            <StackPanel>
+                                <CheckBox x:Name="chkMismaDireccionEstudiante"
+                              Content="El representante vive en la misma dirección del estudiante (Heredar datos)"
+                              IsChecked="True" FontWeight="Bold" Foreground="#1E3A8A" Margin="6,0,0,12"
+                              Checked="chkMismaDireccionEstudiante_Changed"
+                              Unchecked="chkMismaDireccionEstudiante_Changed"/>
+
+                                <!-- Panel con los 11 campos idénticos al del estudiante -->
+                                <StackPanel x:Name="panelDireccionRep" Visibility="Collapsed">
+                                    <UniformGrid Columns="3">
+                                        <StackPanel>
+                                            <TextBlock Text="Estado" Style="{StaticResource Etiqueta}"/>
+                                            <ComboBox x:Name="cmbEstadoDireccionRep" DisplayMemberPath="Nombre" SelectedValuePath="Id"
+                                          SelectionChanged="cmbEstadoDireccionRep_SelectionChanged"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Ciudad" Style="{StaticResource Etiqueta}"/>
+                                            <ComboBox x:Name="cmbCiudadDireccionRep" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Sector / Urbanización / Barrio" Style="{StaticResource Etiqueta}"/>
+                                            <TextBox x:Name="txtSectorRep"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Avenida" Style="{StaticResource Etiqueta}"/>
+                                            <TextBox x:Name="txtAvenidaRep"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Calle" Style="{StaticResource Etiqueta}"/>
+                                            <TextBox x:Name="txtCalleRep"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Manzana" Style="{StaticResource Etiqueta}"/>
+                                            <TextBox x:Name="txtManzanaRep"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Vereda" Style="{StaticResource Etiqueta}"/>
+                                            <TextBox x:Name="txtVeredaRep"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Número de Vivienda" Style="{StaticResource Etiqueta}"/>
+                                            <TextBox x:Name="txtNumeroViviendaRep"/>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Tipo de Vivienda" Style="{StaticResource Etiqueta}"/>
+                                            <ComboBox x:Name="cmbTipoViviendaRep" SelectedIndex="0">
+                                                <ComboBoxItem Content="Casa"/>
+                                                <ComboBoxItem Content="Edificio"/>
+                                                <ComboBoxItem Content="Apartamento"/>
+                                                <ComboBoxItem Content="Quinta"/>
+                                                <ComboBoxItem Content="Rancho"/>
+                                                <ComboBoxItem Content="Otro"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Condición de la Vivienda" Style="{StaticResource Etiqueta}"/>
+                                            <ComboBox x:Name="cmbCondicionViviendaRep" SelectedIndex="0">
+                                                <ComboBoxItem Content="Propia"/>
+                                                <ComboBoxItem Content="Alquilada"/>
+                                                <ComboBoxItem Content="Pagandose"/>
+                                                <ComboBoxItem Content="Prestada"/>
+                                                <ComboBoxItem Content="Invadida"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel>
+                                            <TextBlock Text="Infraestructura" Style="{StaticResource Etiqueta}"/>
+                                            <ComboBox x:Name="cmbInfraestructuraViviendaRep" SelectedIndex="0">
+                                                <ComboBoxItem Content="Buena"/>
+                                                <ComboBoxItem Content="Regular"/>
+                                                <ComboBoxItem Content="Deteriorada"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
