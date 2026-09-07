@@ -18,9 +18,9 @@ namespace SistemaLiceo.Presentacion
 {
     public partial class ReportesControl : UserControl
     {
-        private const string EponimoLiceo = "UNIDAD EDUCATIVA «LICEO BOLIVARIANO DR. ENRIQUE TEJERA»";
-        private const string CodigoDea = "CÓDIGO DEA: OD05280804 | CIRCUITO EDUCATIVO Nº 4";
-        private const string UbicacionPlantel = "PARROQUIA RAFAEL URDANETA, VALENCIA - ESTADO CARABOBO";
+        private const string EponimoLiceo = "UNIDAD EDUCATIVA CARABOBO";
+        private const string CodigoDea = "CÓDIGO DEA: T0311D0814";
+        private const string UbicacionPlantel = "PARROQUIA SAN JOSÉ, VALENCIA - ESTADO CARABOBO";
 
         private readonly CatalogoDatos _catalogos = new CatalogoDatos();
         private readonly EstudianteDatos _estudiantes = new EstudianteDatos();
@@ -625,7 +625,7 @@ namespace SistemaLiceo.Presentacion
 
             TableRowGroup grp = new TableRowGroup();
             TableRow f1 = new TableRow();
-            f1.Cells.Add(new TableCell(new Paragraph(new Run("_____________________________\nLcda. Directora General\nSello del Plantel")) { TextAlignment = TextAlignment.Center }));
+            f1.Cells.Add(new TableCell(new Paragraph(new Run("_____________________________\nLcd. Director General\nSello del Plantel")) { TextAlignment = TextAlignment.Center }));
             f1.Cells.Add(new TableCell(new Paragraph(new Run("_____________________________\nDivisión de Control de Estudios\ny Evaluación")) { TextAlignment = TextAlignment.Center }));
             grp.Rows.Add(f1);
 
