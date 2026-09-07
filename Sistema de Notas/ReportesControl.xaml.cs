@@ -1,6 +1,7 @@
 ﻿using Entidades;
 using Microsoft.Win32;
 using SistemaLiceo.Datos;
+using SistemaLiceo.Negocio;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -259,92 +260,323 @@ namespace SistemaLiceo.Presentacion
 
         private FlowDocument GenerarDocumentoNotasCertificadas(int estudianteId, int periodoId, string estiloCedula)
         {
-            ConstanciaEstudioDto? est = _reportes.ObtenerDatosConstancia(estudianteId, periodoId);
-            List<FilaNotaCertificadaDto> notas = _reportes.ObtenerNotasCertificadas(estudianteId, periodoId);
-            FlowDocument doc = CrearDocumentoBase();
+            ConfiguracionPlantelDatos confDatos = new ConfiguracionPlantelDatos();
+            ConfiguracionPlantel conf = confDatos.Obtener();
+            CertificacionEstudianteCompletaDto? est = _reportes.ObtenerCertificacionOficialCompleta(estudianteId);
+
+            FlowDocument doc = new FlowDocument
+            {
+                PagePadding = new Thickness(25),
+                FontFamily = new FontFamily("Arial"),
+                FontSize = 9.5,
+                PageWidth = 840
+            };
 
             if (est == null) return DocumentoVacio(doc);
 
-            string cedulaFormateada = FormatearCedula(est.Cedula, estiloCedula);
+            string cedulaEst = FormatearCedula(est.Cedula, estiloCedula);
 
-            AgregarMembrete(doc);
+            // ================= ENCABEZADO SUPERIOR =================
+            Table tHeader = new Table { Margin = new Thickness(0, 0, 0, 4) };
+            tHeader.Columns.Add(new TableColumn { Width = new GridLength(280) });
+            tHeader.Columns.Add(new TableColumn { Width = new GridLength(510) });
 
-            Paragraph pTitulo = new Paragraph(new Run("CERTIFICACIÓN DE CALIFICACIONES\n(EDUCACIÓN MEDIA GENERAL)"))
+            TableRowGroup grpHead = new TableRowGroup();
+            TableRow rHead = new TableRow();
+
+            Paragraph pLogos = new Paragraph(new Bold(new Run("REPÚBLICA BOLIVARIANA DE VENEZUELA\nMINISTERIO DEL PODER POPULAR PARA LA\n")) { FontSize = 8.5 });
+            pLogos.Inlines.Add(new Bold(new Run("EDUCACIÓN")) { FontSize = 14 });
+            rHead.Cells.Add(new TableCell(pLogos));
+
+            Paragraph pTitOficial = new Paragraph { TextAlignment = TextAlignment.Right, LineHeight = 13 };
+            pTitOficial.Inlines.Add(new Bold(new Run("CERTIFICACIÓN DE CALIFICACIONES EMG\n")) { FontSize = 11 });
+            pTitOficial.Inlines.Add(new Run($"I. Plan de Estudio: {conf.DenominacionPlan}     Código: {conf.CodigoPlanEstudio}\n") { FontSize = 8.5 });
+            pTitOficial.Inlines.Add(new Run($"Lugar y Fecha de Expedición: {conf.EntidadFederal}, {DateTime.Now.ToString("dd 'DE' MMMM 'DE' yyyy", new CultureInfo("es-ES")).ToUpper()}\n") { FontSize = 8.5 });
+            rHead.Cells.Add(new TableCell(pTitOficial));
+
+            grpHead.Rows.Add(rHead);
+            tHeader.RowGroups.Add(grpHead);
+            doc.Blocks.Add(tHeader);
+
+            // ================= II. DATOS DE LA INSTITUCIÓN =================
+            Table tInst = CrearTablaMarco();
+            tInst.Columns.Add(new TableColumn { Width = new GridLength(140) });
+            tInst.Columns.Add(new TableColumn { Width = new GridLength(380) });
+            tInst.Columns.Add(new TableColumn { Width = new GridLength(270) });
+
+            TableRowGroup grpInst = new TableRowGroup();
+            TableRow rInstTitle = new TableRow { Background = Brushes.WhiteSmoke };
+            TableCell cInstTitle = new TableCell(new Paragraph(new Bold(new Run("II. Datos de la Institución Educativa o Centro de Desarrollo de la Calidad Educativa Estatal (CDCEE) que Emite la Certificación:"))) { Margin = new Thickness(2) }) { ColumnSpan = 3 };
+            rInstTitle.Cells.Add(cInstTitle);
+            grpInst.Rows.Add(rInstTitle);
+
+            TableRow rInst1 = new TableRow();
+            rInst1.Cells.Add(CrearCeldaTexto($"Código: {conf.CodigoPlantel}"));
+            rInst1.Cells.Add(CrearCeldaTexto($"Denominación y Epónimo: {conf.Eponimo}"));
+            rInst1.Cells.Add(CrearCeldaTexto($"Teléfono: {conf.Telefono}"));
+            grpInst.Rows.Add(rInst1);
+
+            TableRow rInst2 = new TableRow();
+            rInst2.Cells.Add(CrearCeldaTexto($"Municipio: {conf.Municipio}"));
+            rInst2.Cells.Add(CrearCeldaTexto($"Dirección: {conf.Direccion}"));
+            rInst2.Cells.Add(CrearCeldaTexto($"Entidad Federal: {conf.EntidadFederal}   |   CDCEE: {conf.Cdcee}"));
+            grpInst.Rows.Add(rInst2);
+
+            tInst.RowGroups.Add(grpInst);
+            doc.Blocks.Add(tInst);
+
+            // ================= III. DATOS DE IDENTIFICACIÓN DEL ESTUDIANTE =================
+            Table tEst = CrearTablaMarco();
+            tEst.Columns.Add(new TableColumn { Width = new GridLength(260) });
+            tEst.Columns.Add(new TableColumn { Width = new GridLength(260) });
+            tEst.Columns.Add(new TableColumn { Width = new GridLength(270) });
+
+            TableRowGroup grpEst = new TableRowGroup();
+            TableRow rEstTitle = new TableRow { Background = Brushes.WhiteSmoke };
+            rEstTitle.Cells.Add(new TableCell(new Paragraph(new Bold(new Run("III. Datos de Identificación del Estudiante:"))) { Margin = new Thickness(2) }) { ColumnSpan = 3 });
+            grpEst.Rows.Add(rEstTitle);
+
+            TableRow rEst1 = new TableRow();
+            rEst1.Cells.Add(CrearCeldaTexto($"Cédula de Identidad: {cedulaEst}"));
+            rEst1.Cells.Add(CrearCeldaTexto($"Apellidos: {est.Apellidos}"));
+            rEst1.Cells.Add(CrearCeldaTexto($"Nombres: {est.Nombres}"));
+            grpEst.Rows.Add(rEst1);
+
+            TableRow rEst2 = new TableRow();
+            string fechaNac = est.FechaNacimiento.HasValue ? est.FechaNacimiento.Value.ToString("dd 'DE' MMMM 'DE' yyyy", new CultureInfo("es-ES")).ToUpper() : "S/F";
+            rEst2.Cells.Add(CrearCeldaTexto($"Fecha de Nacimiento: {fechaNac}"));
+            rEst2.Cells.Add(CrearCeldaTexto($"Lugar de Nacimiento: País: {est.PaisNacimiento}"));
+            rEst2.Cells.Add(CrearCeldaTexto($"Estado: {est.EstadoNacimiento}   |   Municipio: {est.MunicipioNacimiento}"));
+            grpEst.Rows.Add(rEst2);
+
+            tEst.RowGroups.Add(grpEst);
+            doc.Blocks.Add(tEst);
+
+            // ================= IV. INSTITUCIONES DONDE CURSÓ ESTUDIOS =================
+            Table tPlanteles = CrearTablaMarco();
+            tPlanteles.Columns.Add(new TableColumn { Width = new GridLength(25) });
+            tPlanteles.Columns.Add(new TableColumn { Width = new GridLength(450) });
+            tPlanteles.Columns.Add(new TableColumn { Width = new GridLength(265) });
+            tPlanteles.Columns.Add(new TableColumn { Width = new GridLength(50) });
+
+            TableRowGroup grpPl = new TableRowGroup();
+            TableRow rPlTitle = new TableRow { Background = Brushes.WhiteSmoke };
+            rPlTitle.Cells.Add(new TableCell(new Paragraph(new Bold(new Run("IV. Instituciones Educativas donde Cursó Estudios:"))) { Margin = new Thickness(2) }) { ColumnSpan = 4 });
+            grpPl.Rows.Add(rPlTitle);
+
+            TableRow rPlHead = new TableRow { Background = Brushes.LightGray };
+            rPlHead.Cells.Add(CrearCeldaHeader("Nº"));
+            rPlHead.Cells.Add(CrearCeldaHeader("Denominación y Epónimo de la Institución Educativa"));
+            rPlHead.Cells.Add(CrearCeldaHeader("Localidad"));
+            rPlHead.Cells.Add(CrearCeldaHeader("E.F."));
+            grpPl.Rows.Add(rPlHead);
+
+            TableRow rPl1 = new TableRow();
+            rPl1.Cells.Add(CrearCeldaCentro("1"));
+            rPl1.Cells.Add(CrearCeldaTexto(conf.Eponimo));
+            rPl1.Cells.Add(CrearCeldaTexto(conf.Municipio));
+            rPl1.Cells.Add(CrearCeldaCentro("CA"));
+            grpPl.Rows.Add(rPl1);
+
+            tPlanteles.RowGroups.Add(grpPl);
+            doc.Blocks.Add(tPlanteles);
+
+            // ================= V. PLAN DE ESTUDIO (1° A 5° AÑO EN COLUMNAS) =================
+            Paragraph pV = new Paragraph(new Bold(new Run("V. Plan de Estudio:")) { FontSize = 9 }) { Margin = new Thickness(0, 3, 0, 2) };
+            doc.Blocks.Add(pV);
+
+            Table tPensumGrid = new Table { CellSpacing = 4, Margin = new Thickness(0) };
+            tPensumGrid.Columns.Add(new TableColumn { Width = new GridLength(390) });
+            tPensumGrid.Columns.Add(new TableColumn { Width = new GridLength(390) });
+
+            TableRowGroup grpPensum = new TableRowGroup();
+
+            // FILA 1: Primer Año (Izq) | Segundo Año (Der)
+            TableRow rP1 = new TableRow();
+            rP1.Cells.Add(new TableCell(GenerarTablaAnoEscolar("PRIMER AÑO", est.PrimerAno)));
+            rP1.Cells.Add(new TableCell(GenerarTablaAnoEscolar("SEGUNDO AÑO", est.SegundoAno)));
+            grpPensum.Rows.Add(rP1);
+
+            // FILA 2: Tercer Año (Izq) | Cuarto Año (Der)
+            TableRow rP2 = new TableRow();
+            rP2.Cells.Add(new TableCell(GenerarTablaAnoEscolar("TERCER AÑO", est.TercerAno)));
+            rP2.Cells.Add(new TableCell(GenerarTablaAnoEscolar("CUARTO AÑO", est.CuartoAno)));
+            grpPensum.Rows.Add(rP2);
+
+            // FILA 3: Quinto Año (Izq) | Grupos Estables y Orientación (Der)
+            TableRow rP3 = new TableRow();
+            rP3.Cells.Add(new TableCell(GenerarTablaAnoEscolar("QUINTO AÑO", est.QuintoAno)));
+            rP3.Cells.Add(new TableCell(GenerarTablaGruposYOrientacion()));
+            grpPensum.Rows.Add(rP3);
+
+            tPensumGrid.RowGroups.Add(grpPensum);
+            doc.Blocks.Add(tPensumGrid);
+
+            // ================= VI. OBSERVACIONES (PROMEDIO GENERAL) =================
+            Table tObs = CrearTablaMarco();
+            tObs.Columns.Add(new TableColumn { Width = new GridLength(790) });
+            TableRowGroup grpObs = new TableRowGroup();
+            TableRow rObs = new TableRow();
+            rObs.Cells.Add(CrearCeldaTexto($"VI. Observaciones:   Promedio General: {est.PromedioGeneral:N3}"));
+            grpObs.Rows.Add(rObs);
+            tObs.RowGroups.Add(grpObs);
+            doc.Blocks.Add(tObs);
+
+            // ================= VII Y VIII. FIRMAS, SELLOS Y TIMBRE FISCAL =================
+            Table tFirmas = CrearTablaMarco();
+            tFirmas.Columns.Add(new TableColumn { Width = new GridLength(395) });
+            tFirmas.Columns.Add(new TableColumn { Width = new GridLength(395) });
+
+            TableRowGroup grpF = new TableRowGroup();
+            TableRow rFHead = new TableRow { Background = Brushes.WhiteSmoke };
+            rFHead.Cells.Add(CrearCeldaHeader("VII. Institución Educativa (Director/a)"));
+            rFHead.Cells.Add(CrearCeldaHeader("VIII. Centro de Desarrollo de la Calidad Educativa Estatal"));
+            grpF.Rows.Add(rFHead);
+
+            TableRow rFBody = new TableRow();
+            Paragraph pF1 = new Paragraph { LineHeight = 14, Margin = new Thickness(4) };
+            pF1.Inlines.Add(new Run($"Apellidos y Nombres: {conf.DirectorNombre}\n"));
+            pF1.Inlines.Add(new Run($"Cédula de Identidad: {conf.DirectorCedula}\n\n\n"));
+            pF1.Inlines.Add(new Run("Firma: ________________________   SELLO DEL PLANTEL\n"));
+            pF1.Inlines.Add(new Run("Para efectos de su Validez Nacional") { FontSize = 8, Foreground = Brushes.Gray });
+            rFBody.Cells.Add(new TableCell(pF1));
+
+            Paragraph pF2 = new Paragraph { LineHeight = 14, Margin = new Thickness(4) };
+            pF2.Inlines.Add(new Run("Director(a) de la Calidad Educativa:\n"));
+            pF2.Inlines.Add(new Run("Cédula de Identidad: ____________________\n\n\n"));
+            pF2.Inlines.Add(new Run("Firma: ________________________   SELLO DEL CDCEE\n"));
+            pF2.Inlines.Add(new Run("Para efectos de su Validez Internacional") { FontSize = 8, Foreground = Brushes.Gray });
+            rFBody.Cells.Add(new TableCell(pF2));
+
+            grpF.Rows.Add(rFBody);
+
+            TableRow rFiscal = new TableRow();
+            TableCell cFiscal = new TableCell(new Paragraph(new Run("VALOR FISCAL: Para su validez legal y de acuerdo a la Ley de Timbre Fiscal al dorso de este documento se le debe colocar tres décimas de la Unidad Tributaria (0,3 U.T.)")) { FontSize = 7.5, TextAlignment = TextAlignment.Center, Margin = new Thickness(2) }) { ColumnSpan = 2 };
+            rFiscal.Cells.Add(cFiscal);
+            grpF.Rows.Add(rFiscal);
+
+            tFirmas.RowGroups.Add(grpF);
+            doc.Blocks.Add(tFirmas);
+
+            return doc;
+        }
+
+        // ================= TABLAS AUXILIARES PARA EL PENSUM =================
+
+        private static Table GenerarTablaAnoEscolar(string tituloAno, List<FilaMateriaPensumDto> materias)
+        {
+            Table t = new Table { CellSpacing = 0, BorderBrush = Brushes.Black, BorderThickness = new Thickness(0.5) };
+            t.Columns.Add(new TableColumn { Width = new GridLength(170) }); // Materia
+            t.Columns.Add(new TableColumn { Width = new GridLength(28) });  // Nº
+            t.Columns.Add(new TableColumn { Width = new GridLength(75) });  // Letras
+            t.Columns.Add(new TableColumn { Width = new GridLength(25) });  // T-E
+            t.Columns.Add(new TableColumn { Width = new GridLength(52) });  // Mes/Año
+            t.Columns.Add(new TableColumn { Width = new GridLength(20) });  // Inst
+
+            TableRowGroup grp = new TableRowGroup();
+            TableRow rTit = new TableRow { Background = Brushes.WhiteSmoke };
+            rTit.Cells.Add(new TableCell(new Paragraph(new Bold(new Run(tituloAno))) { TextAlignment = TextAlignment.Center, Margin = new Thickness(1) }) { ColumnSpan = 6 });
+            grp.Rows.Add(rTit);
+
+            TableRow rH = new TableRow { Background = Brushes.LightGray, FontSize = 8 };
+            rH.Cells.Add(CrearCeldaHeader("ÁREAS DE FORMACIÓN"));
+            rH.Cells.Add(CrearCeldaHeader("Nº"));
+            rH.Cells.Add(CrearCeldaHeader("LETRAS"));
+            rH.Cells.Add(CrearCeldaHeader("T-E"));
+            rH.Cells.Add(CrearCeldaHeader("FECHA"));
+            rH.Cells.Add(CrearCeldaHeader("I"));
+            grp.Rows.Add(rH);
+
+            foreach (var m in materias)
             {
-                FontSize = 15,
-                FontWeight = FontWeights.Bold,
-                TextAlignment = TextAlignment.Center,
-                Margin = new Thickness(0, 5, 0, 15)
-            };
-            doc.Blocks.Add(pTitulo);
-
-            Paragraph pDatos = new Paragraph
-            {
-                FontSize = 12,
-                LineHeight = 18,
-                Margin = new Thickness(0, 0, 0, 12)
-            };
-            pDatos.Inlines.Add(new Bold(new Run("Apellidos y Nombres: ")));
-            pDatos.Inlines.Add(new Run($"{est.EstudianteNombreCompleto}    "));
-            pDatos.Inlines.Add(new Bold(new Run("Cédula de Identidad: ")));
-            pDatos.Inlines.Add(new Run($"{cedulaFormateada}\n"));
-            pDatos.Inlines.Add(new Bold(new Run("Cédula Escolar: ")));
-            pDatos.Inlines.Add(new Run($"{est.CedulaEscolar}    "));
-            pDatos.Inlines.Add(new Bold(new Run("Año que Cursó: ")));
-            pDatos.Inlines.Add(new Run($"{est.Grado}    "));
-            pDatos.Inlines.Add(new Bold(new Run("Año Escolar: ")));
-            pDatos.Inlines.Add(new Run($"{est.Periodo}"));
-            doc.Blocks.Add(pDatos);
-
-            Table tabla = new Table { CellSpacing = 0, BorderBrush = Brushes.Black, BorderThickness = new Thickness(1) };
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(240) });
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(80) });
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(160) });
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(100) });
-
-            TableRowGroup grupo = new TableRowGroup();
-            TableRow cabecera = new TableRow { Background = Brushes.LightGray };
-            cabecera.Cells.Add(CrearCelda("Área de Formación / Asignatura", true));
-            cabecera.Cells.Add(CrearCelda("Calificación\n(Número)", true));
-            cabecera.Cells.Add(CrearCelda("Calificación\n(En Letras)", true));
-            cabecera.Cells.Add(CrearCelda("Año Escolar", true));
-            grupo.Rows.Add(cabecera);
-
-            foreach (var n in notas)
-            {
-                TableRow fila = new TableRow();
-                fila.Cells.Add(CrearCelda(n.Materia));
-                fila.Cells.Add(CrearCelda(n.NotaNumero.HasValue ? n.NotaNumero.Value.ToString("D2") : "--", true));
-                fila.Cells.Add(CrearCelda(n.NotaLetras));
-                fila.Cells.Add(CrearCelda(n.Periodo));
-                grupo.Rows.Add(fila);
+                TableRow r = new TableRow { FontSize = 8 };
+                r.Cells.Add(CrearCeldaTexto(m.Materia));
+                r.Cells.Add(CrearCeldaCentro(m.NotaNumero.HasValue ? m.NotaNumero.Value.ToString("D2") : "--"));
+                r.Cells.Add(CrearCeldaCentro(m.NotaLetras));
+                r.Cells.Add(CrearCeldaCentro(m.TipoEvaluacion));
+                r.Cells.Add(CrearCeldaCentro(m.MesAno));
+                r.Cells.Add(CrearCeldaCentro(m.InstitucionNro.ToString()));
+                grp.Rows.Add(r);
             }
 
-            tabla.RowGroups.Add(grupo);
-            doc.Blocks.Add(tabla);
+            t.RowGroups.Add(grp);
 
-            Paragraph pCertificacion = new Paragraph(new Run(
-                $"Quienes suscriben, Director(a) y Coordinador(a) de Control de Estudios y Evaluación de la {EponimoLiceo}, " +
-                "certifican por medio de la presente que las calificaciones aquí registradas concuerdan exactamente con las actas " +
-                "probatorias de evaluación que reposan en el archivo oficial de este plantel educativo."))
+            // Retornamos la tabla directamente, ya que hereda de Block
+            return t;
+        }
+
+        private static Table GenerarTablaGruposYOrientacion()
+        {
+            Table t = new Table { CellSpacing = 0, BorderBrush = Brushes.Black, BorderThickness = new Thickness(0.5) };
+            t.Columns.Add(new TableColumn { Width = new GridLength(240) });
+            t.Columns.Add(new TableColumn { Width = new GridLength(40) });
+            t.Columns.Add(new TableColumn { Width = new GridLength(90) });
+
+            TableRowGroup grp = new TableRowGroup();
+
+            TableRow rTit = new TableRow { Background = Brushes.WhiteSmoke };
+            rTit.Cells.Add(new TableCell(new Paragraph(new Bold(new Run("ÁREAS DE FORMACIÓN COMPLEMENTARIAS"))) { TextAlignment = TextAlignment.Center, Margin = new Thickness(1) }) { ColumnSpan = 3 });
+            grp.Rows.Add(rTit);
+
+            TableRow rH = new TableRow { Background = Brushes.LightGray, FontSize = 8 };
+            rH.Cells.Add(CrearCeldaHeader("ÁREA DE FORMACIÓN"));
+            rH.Cells.Add(CrearCeldaHeader("AÑO"));
+            rH.Cells.Add(CrearCeldaHeader("LITERAL / GRUPO"));
+            grp.Rows.Add(rH);
+
+            for (int ano = 1; ano <= 5; ano++)
             {
-                FontSize = 11,
-                TextAlignment = TextAlignment.Justify,
-                Margin = new Thickness(0, 15, 0, 10)
-            };
-            doc.Blocks.Add(pCertificacion);
+                TableRow r = new TableRow { FontSize = 8 };
+                r.Cells.Add(CrearCeldaTexto(ano == 1 ? "ORIENTACIÓN Y CONVIVENCIA" : "PARTICIPACIÓN EN GRUPOS DE CREACIÓN, RECREACIÓN Y PRODUCCIÓN"));
+                r.Cells.Add(CrearCeldaCentro($"{ano}°"));
+                r.Cells.Add(CrearCeldaCentro("A (PROTOCOLO)"));
+                grp.Rows.Add(r);
+            }
 
-            string fechaHoy = DateTime.Now.ToString("dd 'días del mes de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
-            Paragraph pFecha = new Paragraph(new Run($"Certificación que se expide en Valencia, a los {fechaHoy}."))
+            t.RowGroups.Add(grp);
+
+            // Retornamos la tabla directamente
+            return t;
+        }
+
+        // ================= HELPERS DE CELDAS Y BORDES =================
+
+        private static Table CrearTablaMarco()
+        {
+            return new Table
             {
-                FontSize = 11,
-                TextAlignment = TextAlignment.Right,
-                Margin = new Thickness(0, 0, 0, 20)
+                CellSpacing = 0,
+                BorderBrush = Brushes.Black,
+                BorderThickness = new Thickness(0.5),
+                Margin = new Thickness(0, 0, 0, 3)
             };
-            doc.Blocks.Add(pFecha);
+        }
 
-            AgregarFirmas(doc);
-            return doc;
+        private static TableCell CrearCeldaTexto(string texto)
+        {
+            return new TableCell(new Paragraph(new Run(texto)) { Margin = new Thickness(3, 1, 3, 1) })
+            {
+                BorderBrush = Brushes.Black,
+                BorderThickness = new Thickness(0.5)
+            };
+        }
+
+        private static TableCell CrearCeldaCentro(string texto)
+        {
+            return new TableCell(new Paragraph(new Run(texto)) { Margin = new Thickness(1), TextAlignment = TextAlignment.Center })
+            {
+                BorderBrush = Brushes.Black,
+                BorderThickness = new Thickness(0.5)
+            };
+        }
+
+        private static TableCell CrearCeldaHeader(string texto)
+        {
+            return new TableCell(new Paragraph(new Bold(new Run(texto))) { Margin = new Thickness(1), TextAlignment = TextAlignment.Center })
+            {
+                BorderBrush = Brushes.Black,
+                BorderThickness = new Thickness(0.5)
+            };
         }
 
         private FlowDocument GenerarDocumentoBoleta(int estudianteId, int periodoId, string estiloCedula)
@@ -740,14 +972,17 @@ namespace SistemaLiceo.Presentacion
 
         private static FlowDocument ClonarFlowDocument(FlowDocument source)
         {
-            System.IO.MemoryStream stream = new System.IO.MemoryStream();
-            TextRange sourceRange = new TextRange(source.ContentStart, source.ContentEnd);
-            sourceRange.Save(stream, DataFormats.Xaml);
+            using (var stream = new MemoryStream())
+            {
+                TextRange sourceRange = new TextRange(source.ContentStart, source.ContentEnd);
+                sourceRange.Save(stream, DataFormats.Xaml);
+                stream.Seek(0, SeekOrigin.Begin);
 
-            FlowDocument clone = new FlowDocument();
-            TextRange cloneRange = new TextRange(clone.ContentStart, clone.ContentEnd);
-            cloneRange.Load(stream, DataFormats.Xaml);
-            return clone;
+                FlowDocument clone = new FlowDocument();
+                TextRange cloneRange = new TextRange(clone.ContentStart, clone.ContentEnd);
+                cloneRange.Load(stream, DataFormats.Xaml);
+                return clone;
+            }
         }
 
         private void btnImprimir_Click(object sender, RoutedEventArgs e)
@@ -765,5 +1000,6 @@ namespace SistemaLiceo.Presentacion
                 printDialog.PrintDocument(dps.DocumentPaginator, "Documento Oficial Liceo");
             }
         }
+
     }
 }

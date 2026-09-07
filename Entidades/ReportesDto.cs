@@ -67,4 +67,32 @@ namespace Entidades
         public int? NotaNumero { get; set; }
         public string NotaLetras { get; set; } = string.Empty;
     }
+
+    public class CertificacionEstudianteCompletaDto
+    {
+        public string Apellidos { get; set; } = string.Empty;
+        public string Nombres { get; set; } = string.Empty;
+        public string Cedula { get; set; } = string.Empty;
+        public DateTime? FechaNacimiento { get; set; }
+        public string PaisNacimiento { get; set; } = "VENEZUELA";
+        public string EstadoNacimiento { get; set; } = "CARABOBO";
+        public string MunicipioNacimiento { get; set; } = "VALENCIA";
+        public decimal PromedioGeneral { get; set; }
+
+        public List<FilaMateriaPensumDto> PrimerAno { get; set; } = new();
+        public List<FilaMateriaPensumDto> SegundoAno { get; set; } = new();
+        public List<FilaMateriaPensumDto> TercerAno { get; set; } = new();
+        public List<FilaMateriaPensumDto> CuartoAno { get; set; } = new();
+        public List<FilaMateriaPensumDto> QuintoAno { get; set; } = new();
+    }
+
+    public class FilaMateriaPensumDto
+    {
+        public string Materia { get; set; } = string.Empty;
+        public int? NotaNumero { get; set; }
+        public string NotaLetras { get; set; } = "--";
+        public string TipoEvaluacion { get; set; } = "F"; // F = Final, R = Reparación
+        public string MesAno { get; set; } = "07 2026";
+        public int InstitucionNro { get; set; } = 1;
+    }
 }

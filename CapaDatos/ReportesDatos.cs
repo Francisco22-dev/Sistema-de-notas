@@ -329,5 +329,122 @@ namespace SistemaLiceo.Datos
                 _ => nota.Value.ToString()
             };
         }
+        public CertificacionEstudianteCompletaDto? ObtenerCertificacionOficialCompleta(int estudianteId)
+        {
+            const string consultaEstudiante = @"
+        SELECT p.nombre_1, p.nombre_2, p.apellido_1, p.apellido_2,
+               CONCAT(p.nacionalidad, '-', IFNULL(p.cedula_identidad, 'S/C')) AS Cedula,
+               p.fecha_nacimiento,
+               pais.nombre AS PaisNac,
+               IFNULL(e.nombre, 'CARABOBO') AS EstadoNac,
+               IFNULL(m.nombre, 'VALENCIA') AS MunNac
+        FROM PERSONA_ESTUDIANTE pe
+        INNER JOIN PERSONA p ON p.id = pe.persona_id
+        INNER JOIN PAIS pais ON pais.id = pe.pais_nacimiento_id
+        LEFT JOIN PARROQUIA par ON par.id = pe.parroquia_nacimiento_id
+        LEFT JOIN MUNICIPIO m ON m.id = par.municipio_id
+        LEFT JOIN ESTADO e ON e.id = m.estado_id
+        WHERE pe.id = @estId LIMIT 1;";
+
+            CertificacionEstudianteCompletaDto dto = new CertificacionEstudianteCompletaDto();
+
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            {
+                using (MySqlCommand cmdEst = new MySqlCommand(consultaEstudiante, conexion))
+                {
+                    cmdEst.Parameters.AddWithValue("@estId", estudianteId);
+                    using (MySqlDataReader lector = cmdEst.ExecuteReader())
+                    {
+                        if (!lector.Read()) return null;
+
+                        dto.Nombres = $"{lector.GetString("nombre_1")} {lector.GetString("nombre_2")}".Trim().ToUpper();
+                        dto.Apellidos = $"{lector.GetString("apellido_1")} {lector.GetString("apellido_2")}".Trim().ToUpper();
+                        dto.Cedula = lector.GetString("Cedula");
+                        dto.FechaNacimiento = lector.IsDBNull(lector.GetOrdinal("fecha_nacimiento")) ? null : lector.GetDateTime("fecha_nacimiento");
+                        dto.PaisNacimiento = lector.GetString("PaisNac").ToUpper();
+                        dto.EstadoNacimiento = lector.GetString("EstadoNac").ToUpper();
+                        dto.MunicipioNacimiento = lector.GetString("MunNac").ToUpper();
+                    }
+                }
+
+                // Obtener asignaturas y notas agrupadas por grado
+                const string consultaNotas = @"
+            SELECT g.nombre AS Grado,
+                   m.nombre AS Materia,
+                   npi.nota AS Definitiva,
+                   pa.nombre AS Periodo
+            FROM INSCRIPCION i
+            INNER JOIN GRADO_SECCION gs ON gs.id = i.grado_seccion_id
+            INNER JOIN GRADO g ON g.id = gs.grado_id
+            INNER JOIN PERIODO_ACADEMICO pa ON pa.id = i.periodo_id
+            INNER JOIN MATERIA_PROFESOR_PERIODO mpp ON mpp.grado_seccion_id = gs.id AND mpp.periodo_id = pa.id
+            INNER JOIN GRADO_MATERIA gm ON gm.id = mpp.grado_materia_id
+            INNER JOIN MATERIA m ON m.id = gm.materia_id
+            LEFT JOIN NOTA_PERIODO_INSCRIPCION npi ON npi.inscripcion_id = i.id AND npi.materia_profe_periodo_id = mpp.id
+            WHERE i.estudiante_id = @estId
+            ORDER BY g.id, m.nombre;";
+
+                List<decimal> notasParaPromedio = new List<decimal>();
+
+                using (MySqlCommand cmdNotas = new MySqlCommand(consultaNotas, conexion))
+                {
+                    cmdNotas.Parameters.AddWithValue("@estId", estudianteId);
+                    using (MySqlDataReader lector = cmdNotas.ExecuteReader())
+                    {
+                        while (lector.Read())
+                        {
+                            string grado = lector.GetString("Grado").ToUpper();
+                            string materia = lector.GetString("Materia").ToUpper();
+                            int? nota = lector.IsDBNull(lector.GetOrdinal("Definitiva")) ? null : lector.GetInt32("Definitiva");
+
+                            if (nota.HasValue) notasParaPromedio.Add(nota.Value);
+
+                            var item = new FilaMateriaPensumDto
+                            {
+                                Materia = materia,
+                                NotaNumero = nota,
+                                NotaLetras = ConvertirNotaEnLetras(nota),
+                                TipoEvaluacion = "F",
+                                MesAno = "07 2026",
+                                InstitucionNro = 1
+                            };
+
+                            if (grado.Contains("1")) dto.PrimerAno.Add(item);
+                            else if (grado.Contains("2")) dto.SegundoAno.Add(item);
+                            else if (grado.Contains("3")) dto.TercerAno.Add(item);
+                            else if (grado.Contains("4")) dto.CuartoAno.Add(item);
+                            else if (grado.Contains("5")) dto.QuintoAno.Add(item);
+                        }
+                    }
+                }
+
+                // Rellenar pensum oficial estándar en caso de asignaturas aún no cursadas
+                LlenarPensumOficialBase(dto);
+
+                dto.PromedioGeneral = notasParaPromedio.Count > 0 ? Math.Round(notasParaPromedio.Average(), 3) : 20.000m;
+            }
+
+            return dto;
+        }
+
+        private static void LlenarPensumOficialBase(CertificacionEstudianteCompletaDto dto)
+        {
+            AsegurarMaterias(dto.PrimerAno, new[] { "CASTELLANO", "INGLÉS Y OTRAS LENGUAS EXTRANJERAS", "MATEMÁTICAS", "EDUCACIÓN FÍSICA", "ARTE Y PATRIMONIO", "CIENCIAS NATURALES", "GEOGRAFÍA, HISTORIA Y CIUDADANÍA" });
+            AsegurarMaterias(dto.SegundoAno, new[] { "CASTELLANO", "INGLÉS Y OTRAS LENGUAS EXTRANJERAS", "MATEMÁTICAS", "EDUCACIÓN FÍSICA", "ARTE Y PATRIMONIO", "CIENCIAS NATURALES", "GEOGRAFÍA, HISTORIA Y CIUDADANÍA" });
+            AsegurarMaterias(dto.TercerAno, new[] { "CASTELLANO", "INGLÉS Y OTRAS LENGUAS EXTRANJERAS", "MATEMÁTICAS", "EDUCACIÓN FÍSICA", "FÍSICA", "QUÍMICA", "BIOLOGÍA", "GEOGRAFÍA, HISTORIA Y CIUDADANÍA" });
+            AsegurarMaterias(dto.CuartoAno, new[] { "CASTELLANO", "INGLÉS Y OTRAS LENGUAS EXTRANJERAS", "MATEMÁTICAS", "EDUCACIÓN FÍSICA", "FÍSICA", "QUÍMICA", "BIOLOGÍA", "GEOGRAFÍA, HISTORIA Y CIUDADANÍA", "FORMACIÓN PARA LA SOBERANÍA NACIONAL" });
+            AsegurarMaterias(dto.QuintoAno, new[] { "CASTELLANO", "INGLÉS Y OTRAS LENGUAS EXTRANJERAS", "MATEMÁTICAS", "EDUCACIÓN FÍSICA", "FÍSICA", "QUÍMICA", "BIOLOGÍA", "CIENCIAS DE LA TIERRA", "GEOGRAFÍA, HISTORIA Y CIUDADANÍA", "FORMACIÓN PARA LA SOBERANÍA NACIONAL" });
+        }
+
+        private static void AsegurarMaterias(List<FilaMateriaPensumDto> lista, string[] pensum)
+        {
+            foreach (var m in pensum)
+            {
+                if (!lista.Exists(x => x.Materia == m))
+                {
+                    lista.Add(new FilaMateriaPensumDto { Materia = m, NotaNumero = null, NotaLetras = "--", TipoEvaluacion = "F", MesAno = "07 2026", InstitucionNro = 1 });
+                }
+            }
+        }
     }
 }

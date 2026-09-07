@@ -23,6 +23,7 @@
                 <Button x:Name="btnNotas" Click="btnNotas_Click" Content="📝 Notas y Lapsos" Height="45" Margin="0,5" Background="Transparent" Foreground="White" FontSize="16" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
                 <Button x:Name="btnReportes" Click="btnReportes_Click" Content="📊 Reportes y Constancias" Height="45" Margin="0,5" Background="Transparent" Foreground="White" FontSize="16" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
                 <Button x:Name="btnUsuarios" Click="btnUsuarios_Click" Content="👥 Gestión de Usuarios" Height="45" Margin="0,4" Background="Transparent" Foreground="White" FontSize="16" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
+                <Button x:Name="btnConfigPlantel" Click="btnConfigPlantel_Click" Content="⚙️ Datos del Plantel (Epónimo)" Height="45" Margin="0,4" Background="Transparent" Foreground="White" FontSize="15" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand"/>
                 <Button x:Name="btnAuditoria" Click="btnAuditoria_Click" Content="🛡️ Auditoría Secreta" Height="45" Margin="0,4" Background="#1E1B4B" Foreground="#A5B4FC" FontSize="15" FontWeight="Bold" BorderThickness="0" HorizontalContentAlignment="Left" Padding="20,0,0,0" Cursor="Hand" Visibility="Collapsed"/>
 
                 <Border Height="1" Background="#3B82F6" Margin="20,50,20,20"/>

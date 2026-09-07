@@ -25,6 +25,7 @@ namespace SistemaLiceo.Presentacion
                 btnUsuarios.Visibility = Visibility.Collapsed;
                 btnAuditoria.Visibility = Visibility.Collapsed;
                 btnNotas.Visibility = Visibility.Visible;
+                btnConfigPlantel.Visibility = Visibility.Collapsed;
 
                 ContenedorPrincipal.Content = new NotasControl();
             }
@@ -38,6 +39,7 @@ namespace SistemaLiceo.Presentacion
                 btnReportes.Visibility = Visibility.Visible;
                 btnUsuarios.Visibility = Visibility.Collapsed;
                 btnAuditoria.Visibility = Visibility.Collapsed;
+                btnConfigPlantel.Visibility = Visibility.Collapsed;
             }
             // ADMINISTRADOR
             else
@@ -48,6 +50,7 @@ namespace SistemaLiceo.Presentacion
                 btnNotas.Visibility = Visibility.Visible;
                 btnReportes.Visibility = Visibility.Visible;
                 btnUsuarios.Visibility = Visibility.Visible;
+                btnConfigPlantel.Visibility = Visibility.Visible;
 
                 // BOTÓN SECRETO: Solo visible para tu usuario desarrollador ('dev_root')
                 btnAuditoria.Visibility = (SesionActual.NombreUsuario.ToLower() == "dev_root")
@@ -79,6 +82,17 @@ namespace SistemaLiceo.Presentacion
             }
 
             ContenedorPrincipal.Content = new AuditoriaControl();
+        }
+        private void btnConfigPlantel_Click(object sender, RoutedEventArgs e)
+        {
+            if (!SesionActual.EsAdministrador)
+            {
+                Alerta.Mostrar("Acceso Restringido", "Solo el Administrador puede modificar los datos del plantel y su epónimo.", true);
+                return;
+            }
+
+            ConfiguracionPlantelForm form = new ConfiguracionPlantelForm();
+            form.ShowDialog();
         }
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
         {
