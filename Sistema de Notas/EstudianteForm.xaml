@@ -81,6 +81,16 @@
                                 <ComboBoxItem Content="F"/>
                             </ComboBox>
                         </StackPanel>
+                        
+                        <StackPanel>
+                            <TextBlock Text="Teléfono Personal del Alumno (opcional)" Style="{StaticResource Etiqueta}"/>
+                            <TextBox x:Name="txtTelefonoEstudiante"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Text="Correo Electrónico del Alumno (opcional)" Style="{StaticResource Etiqueta}"/>
+                            <TextBox x:Name="txtCorreoEstudiante"/>
+                        </StackPanel>
 
                         <StackPanel>
                             <TextBlock Text="Lateralidad" Style="{StaticResource Etiqueta}"/>
@@ -350,158 +360,293 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- ================= 4. REPRESENTANTE ================= -->
-            <TabItem Header=" 4. Representante Legal " Padding="10,5">
+            <!-- ================= 4. PADRES, FAMILIA Y REPRESENTACIÓN LEGAL ================= -->
+            <TabItem Header=" 4. Padres, Familia y Representante " Padding="10,5">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="12">
 
-                        <Grid Margin="6,0,6,10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="200"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <ComboBox x:Name="cmbNacionalidadRep" SelectedIndex="0" Height="28" VerticalAlignment="Bottom">
-                                <ComboBoxItem Content="V"/>
-                                <ComboBoxItem Content="E"/>
-                            </ComboBox>
-                            <TextBox x:Name="txtCedulaRep" Grid.Column="1" Height="28" Margin="6,0" VerticalContentAlignment="Center"/>
-                            <Button x:Name="btnBuscarRep" Grid.Column="2" Content="Buscar representante" Height="28" Padding="12,0"
-                                    Background="#3B82F6" Foreground="White" BorderThickness="0" Click="btnBuscarRep_Click"/>
-                            <TextBlock x:Name="lblRepEncontrado" Grid.Column="3" Margin="12,0,0,0" VerticalAlignment="Center"
-                                       Foreground="#059669" FontWeight="SemiBold"/>
-                        </Grid>
+                        <!-- ================= BLOQUE 1: SITUACIÓN FAMILIAR Y DICTAMEN LEGAL (CPNNA / TRIBUNAL) ================= -->
+                        <GroupBox Header="1. Situación Familiar y Justificación Legal de Representación (CPNNA / LOPNNA)" Padding="10" Margin="0,0,0,12">
+                            <UniformGrid Columns="3">
+                                <StackPanel Margin="4">
+                                    <TextBlock Text="Situación Conyugal de los Padres *" Style="{StaticResource Etiqueta}"/>
+                                    <ComboBox x:Name="cmbSituacionPadres" SelectedIndex="0">
+                                        <ComboBoxItem Content="Viven Juntos (Casados/Concubinato)"/>
+                                        <ComboBoxItem Content="Separados / Divorciados"/>
+                                        <ComboBoxItem Content="Padre en el Extranjero"/>
+                                        <ComboBoxItem Content="Madre en el Extranjero"/>
+                                        <ComboBoxItem Content="Ambos Padres en el Extranjero"/>
+                                        <ComboBoxItem Content="Padre Fallecido"/>
+                                        <ComboBoxItem Content="Madre Fallecida"/>
+                                        <ComboBoxItem Content="Ambos Padres Fallecidos"/>
+                                        <ComboBoxItem Content="Madre Soltera"/>
+                                        <ComboBoxItem Content="Padres Inhabilitados Judicialmente"/>
+                                        <ComboBoxItem Content="Otro"/>
+                                    </ComboBox>
+                                </StackPanel>
 
-                        <UniformGrid Columns="3">
-                            <StackPanel>
-                                <TextBlock Text="Primer Nombre *" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtNombre1Rep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Segundo Nombre" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtNombre2Rep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Primer Apellido *" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtApellido1Rep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Segundo Apellido" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtApellido2Rep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Fecha de Nacimiento" Style="{StaticResource Etiqueta}"/>
-                                <DatePicker x:Name="dpFechaNacimientoRep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Sexo" Style="{StaticResource Etiqueta}"/>
-                                <ComboBox x:Name="cmbSexoRep" SelectedIndex="0">
-                                    <ComboBoxItem Content="F"/>
-                                    <ComboBoxItem Content="M"/>
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Parentesco *" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtParentesco"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Estado Civil" Style="{StaticResource Etiqueta}"/>
-                                <ComboBox x:Name="cmbEstadoCivilRep" SelectedIndex="0">
-                                    <ComboBoxItem Content="Soltera/o"/>
-                                    <ComboBoxItem Content="Casada/o"/>
-                                    <ComboBoxItem Content="Divorciada/o"/>
-                                    <ComboBoxItem Content="Viuda/o"/>
-                                    <ComboBoxItem Content="Concubinato"/>
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Ingreso Mensual" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtIngresoMensual"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Teléfono Móvil" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtTelefonoMovilRep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Teléfono de Habitación" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtTelefonoHabRep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Correo Electrónico" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtCorreoRep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Profesión" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtProfesionRep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Empresa donde trabaja" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtEmpresaRep"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Teléfono de la Empresa" Style="{StaticResource Etiqueta}"/>
-                                <TextBox x:Name="txtTelefonoEmpresaRep"/>
-                            </StackPanel>
-                        </UniformGrid>
+                                <StackPanel Margin="4">
+                                    <TextBlock Text="El Estudiante Habita / Convive Con *" Style="{StaticResource Etiqueta}"/>
+                                    <ComboBox x:Name="cmbConviveCon" SelectedIndex="0">
+                                        <ComboBoxItem Content="Ambos Padres"/>
+                                        <ComboBoxItem Content="Solo Madre"/>
+                                        <ComboBoxItem Content="Solo Padre"/>
+                                        <ComboBoxItem Content="Abuelos"/>
+                                        <ComboBoxItem Content="Tíos"/>
+                                        <ComboBoxItem Content="Hermanos Mayores"/>
+                                        <ComboBoxItem Content="Tutor Designado CPNNA / Tribunal"/>
+                                        <ComboBoxItem Content="Tercero con Autorización"/>
+                                    </ComboBox>
+                                </StackPanel>
 
-                        <StackPanel>
-                            <TextBlock Text="Dirección de la Empresa" Style="{StaticResource Etiqueta}"/>
-                            <TextBox x:Name="txtDireccionEmpresaRep" Height="45" TextWrapping="Wrap" AcceptsReturn="True"/>
-                        </StackPanel>
-                        <GroupBox Header="Dirección de Habitación del Representante" Margin="6,15,6,6" Padding="10">
+                                <StackPanel Margin="4">
+                                    <TextBlock Text="Representante Legal Designado *" Style="{StaticResource Etiqueta}" Foreground="#1E3A8A"/>
+                                    <ComboBox x:Name="cmbRepresentanteLegalTipo" SelectedIndex="0">
+                                        <ComboBoxItem Content="Madre"/>
+                                        <ComboBoxItem Content="Padre"/>
+                                        <ComboBoxItem Content="Abuelo / Abuela"/>
+                                        <ComboBoxItem Content="Tío / Tía"/>
+                                        <ComboBoxItem Content="Hermano(a) Mayor de Edad"/>
+                                        <ComboBoxItem Content="Tutor Legal (Medida CPNNA)"/>
+                                        <ComboBoxItem Content="Tutor Legal (Sentencia Tribunal)"/>
+                                        <ComboBoxItem Content="Tercero con Poder Notariado"/>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Margin="4">
+                                    <TextBlock Text="Nº Oficio / Acta CPNNA o Sentencia Tribunal (si aplica):" Style="{StaticResource Etiqueta}"/>
+                                    <TextBox x:Name="txtOficioCpnna" Height="28"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.ColumnSpan="2" Margin="4">
+                                    <TextBlock Text="Observaciones de Custodia / Causa si no representan los padres:" Style="{StaticResource Etiqueta}"/>
+                                    <TextBox x:Name="txtObservacionesCustodia" Height="28"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </GroupBox>
+
+                        <!-- ================= BLOQUE 2: REGISTRO DE AMBOS PROGENITORES ================= -->
+                        <GroupBox Header="2. Datos de Filiación (Padre y Madre Biológicos / Legales)" Padding="10" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="15"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Datos del Padre -->
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="👨 Datos del Padre" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                    <UniformGrid Columns="2">
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Cédula del Padre:" Style="{StaticResource Etiqueta}"/>
+                                            <TextBox x:Name="txtPadreCedula"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Condición del Padre:" Style="{StaticResource Etiqueta}"/>
+                                            <ComboBox x:Name="cmbPadreVive" SelectedIndex="0">
+                                                <ComboBoxItem Content="Vivo (En el país)"/>
+                                                <ComboBoxItem Content="Vivo (En el extranjero)"/>
+                                                <ComboBoxItem Content="Fallecido"/>
+                                                <ComboBoxItem Content="Inhabilitado / Paradero Desconocido"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </UniformGrid>
+                                    <StackPanel Margin="2">
+                                        <TextBlock Text="Nombres y Apellidos del Padre:" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtPadreNombres"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="2">
+                                        <TextBlock Text="Teléfono de Contacto del Padre:" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtPadreTelefono"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Datos de la Madre -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="👩 Datos de la Madre" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                    <UniformGrid Columns="2">
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Cédula de la Madre:" Style="{StaticResource Etiqueta}"/>
+                                            <TextBox x:Name="txtMadreCedula"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Condición de la Madre:" Style="{StaticResource Etiqueta}"/>
+                                            <ComboBox x:Name="cmbMadreVive" SelectedIndex="0">
+                                                <ComboBoxItem Content="Viva (En el país)"/>
+                                                <ComboBoxItem Content="Viva (En el extranjero)"/>
+                                                <ComboBoxItem Content="Fallecida"/>
+                                                <ComboBoxItem Content="Inhabilitada / Paradero Desconocido"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </UniformGrid>
+                                    <StackPanel Margin="2">
+                                        <TextBlock Text="Nombres y Apellidos de la Madre:" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtMadreNombres"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="2">
+                                        <TextBlock Text="Teléfono de Contacto de la Madre:" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtMadreTelefono"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <!-- ================= BLOQUE 3: FICHA DEL REPRESENTANTE LEGAL PRINCIPAL ANTE EL PLANTEL ================= -->
+                        <GroupBox Header="3. Ficha del Representante Legal Principal (Firma de Matrícula ante el Plantel)" Padding="10" Margin="0,0,0,12">
+                            <StackPanel>
+                                <!-- Buscador rápido por si es una persona ya existente -->
+                                <Grid Margin="6,0,6,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="cmbNacionalidadRep" SelectedIndex="0" Height="28" VerticalAlignment="Bottom">
+                                        <ComboBoxItem Content="V"/>
+                                        <ComboBoxItem Content="E"/>
+                                    </ComboBox>
+                                    <TextBox x:Name="txtCedulaRep" Grid.Column="1" Height="28" Margin="6,0" VerticalContentAlignment="Center"/>
+                                    <Button x:Name="btnBuscarRep" Grid.Column="2" Content="🔍 Buscar Representante" Height="28" Padding="12,0"
+                                Background="#3B82F6" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="btnBuscarRep_Click"/>
+                                    <TextBlock x:Name="lblRepEncontrado" Grid.Column="3" Margin="12,0,0,0" VerticalAlignment="Center"
+                                   Foreground="#059669" FontWeight="SemiBold"/>
+                                </Grid>
+
+                                <UniformGrid Columns="3">
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Primer Nombre *" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtNombre1Rep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Segundo Nombre" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtNombre2Rep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Primer Apellido *" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtApellido1Rep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Segundo Apellido" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtApellido2Rep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Fecha de Nacimiento" Style="{StaticResource Etiqueta}"/>
+                                        <DatePicker x:Name="dpFechaNacimientoRep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Sexo" Style="{StaticResource Etiqueta}"/>
+                                        <ComboBox x:Name="cmbSexoRep" SelectedIndex="0">
+                                            <ComboBoxItem Content="F"/>
+                                            <ComboBoxItem Content="M"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Parentesco con el Alumno *" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtParentesco"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Estado Civil" Style="{StaticResource Etiqueta}"/>
+                                        <ComboBox x:Name="cmbEstadoCivilRep" SelectedIndex="0">
+                                            <ComboBoxItem Content="Soltera/o"/>
+                                            <ComboBoxItem Content="Casada/o"/>
+                                            <ComboBoxItem Content="Divorciada/o"/>
+                                            <ComboBoxItem Content="Viuda/o"/>
+                                            <ComboBoxItem Content="Concubinato"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Ingreso Mensual (Bs / $)" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtIngresoMensual"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Teléfono Móvil *" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtTelefonoMovilRep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Teléfono de Habitación" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtTelefonoHabRep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Correo Electrónico" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtCorreoRep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Profesión u Oficio" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtProfesionRep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Empresa donde Trabaja" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtEmpresaRep"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="Teléfono de la Empresa" Style="{StaticResource Etiqueta}"/>
+                                        <TextBox x:Name="txtTelefonoEmpresaRep"/>
+                                    </StackPanel>
+                                </UniformGrid>
+
+                                <StackPanel Margin="4">
+                                    <TextBlock Text="Dirección de la Empresa" Style="{StaticResource Etiqueta}"/>
+                                    <TextBox x:Name="txtDireccionEmpresaRep" Height="36" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- ================= BLOQUE 4: DIRECCIÓN DE HABITACIÓN DE 11 CAMPOS DEL REPRESENTANTE ================= -->
+                        <GroupBox Header="4. Dirección de Habitación del Representante Legal" Padding="10">
                             <StackPanel>
                                 <CheckBox x:Name="chkMismaDireccionEstudiante"
-                              Content="El representante vive en la misma dirección del estudiante (Heredar datos)"
-                              IsChecked="True" FontWeight="Bold" Foreground="#1E3A8A" Margin="6,0,0,12"
+                              Content="El representante vive en la misma dirección del estudiante (Heredar los datos del Tab 2)"
+                              IsChecked="True" FontWeight="Bold" Foreground="#1E3A8A" Margin="4,0,0,10"
                               Checked="chkMismaDireccionEstudiante_Changed"
                               Unchecked="chkMismaDireccionEstudiante_Changed"/>
 
-                                <!-- Panel con los 11 campos idénticos al del estudiante -->
+                                <!-- Panel con los 11 campos completos e idénticos a los del estudiante -->
                                 <StackPanel x:Name="panelDireccionRep" Visibility="Collapsed">
                                     <UniformGrid Columns="3">
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Estado" Style="{StaticResource Etiqueta}"/>
                                             <ComboBox x:Name="cmbEstadoDireccionRep" DisplayMemberPath="Nombre" SelectedValuePath="Id"
                                           SelectionChanged="cmbEstadoDireccionRep_SelectionChanged"/>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Ciudad" Style="{StaticResource Etiqueta}"/>
                                             <ComboBox x:Name="cmbCiudadDireccionRep" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Sector / Urbanización / Barrio" Style="{StaticResource Etiqueta}"/>
                                             <TextBox x:Name="txtSectorRep"/>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Avenida" Style="{StaticResource Etiqueta}"/>
                                             <TextBox x:Name="txtAvenidaRep"/>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Calle" Style="{StaticResource Etiqueta}"/>
                                             <TextBox x:Name="txtCalleRep"/>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Manzana" Style="{StaticResource Etiqueta}"/>
                                             <TextBox x:Name="txtManzanaRep"/>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Vereda" Style="{StaticResource Etiqueta}"/>
                                             <TextBox x:Name="txtVeredaRep"/>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Número de Vivienda" Style="{StaticResource Etiqueta}"/>
                                             <TextBox x:Name="txtNumeroViviendaRep"/>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Tipo de Vivienda" Style="{StaticResource Etiqueta}"/>
                                             <ComboBox x:Name="cmbTipoViviendaRep" SelectedIndex="0">
                                                 <ComboBoxItem Content="Casa"/>
@@ -513,7 +658,7 @@
                                             </ComboBox>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Condición de la Vivienda" Style="{StaticResource Etiqueta}"/>
                                             <ComboBox x:Name="cmbCondicionViviendaRep" SelectedIndex="0">
                                                 <ComboBoxItem Content="Propia"/>
@@ -524,7 +669,7 @@
                                             </ComboBox>
                                         </StackPanel>
 
-                                        <StackPanel>
+                                        <StackPanel Margin="4">
                                             <TextBlock Text="Infraestructura" Style="{StaticResource Etiqueta}"/>
                                             <ComboBox x:Name="cmbInfraestructuraViviendaRep" SelectedIndex="0">
                                                 <ComboBoxItem Content="Buena"/>
@@ -536,6 +681,7 @@
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
+
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

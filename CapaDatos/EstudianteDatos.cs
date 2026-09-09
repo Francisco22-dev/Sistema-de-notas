@@ -162,19 +162,27 @@ namespace SistemaLiceo.Datos
         private static int InsertarEstudiante(Estudiante estudiante, MySqlConnection conexion, MySqlTransaction transaccion)
         {
             const string consulta = @"
-                INSERT INTO PERSONA_ESTUDIANTE (cedula_escolar, numero_hijo, lateralidad, persona_id,
-                                                pais_nacimiento_id, parroquia_nacimiento_id, antropometrico_id,
-                                                salud_id, extra_curricular_id, representante_principal_id,
-                                                representante_secundario_id, ESTADO)
-                VALUES (@cedulaEscolar, @numeroHijo, @lateralidad, @persona, @pais, @parroquia, @antropometrico,
-                        @salud, @extra, @representante, @representanteSecundario, @estado);
-                SELECT LAST_INSERT_ID();";
+        INSERT INTO PERSONA_ESTUDIANTE (cedula_escolar, numero_hijo, lateralidad, telefono_estudiante, correo_estudiante,
+                                        persona_id, pais_nacimiento_id, parroquia_nacimiento_id, antropometrico_id,
+                                        salud_id, extra_curricular_id, representante_principal_id, representante_secundario_id,
+                                        situacion_padres, convive_con, padre_cedula, padre_nombres_apellidos, padre_telefono, padre_vive,
+                                        madre_cedula, madre_nombres_apellidos, madre_telefono, madre_vive,
+                                        representante_legal_tipo, oficio_cpnna_tribunal, observaciones_custodia, ESTADO)
+        VALUES (@cedulaEscolar, @numeroHijo, @lateralidad, @telEst, @corrEst,
+                @persona, @pais, @parroquia, @antropometrico,
+                @salud, @extra, @representante, @representanteSecundario,
+                @sitPadres, @conviveCon, @padreCed, @padreNom, @padreTel, @padreVive,
+                @madreCed, @madreNom, @madreTel, @madreVive,
+                @repTipo, @oficioCpnna, @obsCustodia, @estado);
+        SELECT LAST_INSERT_ID();";
 
             using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
             {
                 comando.Parameters.AddWithValue("@cedulaEscolar", estudiante.CedulaEscolar);
                 comando.Parameters.AddWithValue("@numeroHijo", estudiante.NumeroHijo);
                 comando.Parameters.AddWithValue("@lateralidad", estudiante.Lateralidad);
+                comando.Parameters.AddWithValue("@telEst", PersonaDatos.Nulo(estudiante.TelefonoEstudiante));
+                comando.Parameters.AddWithValue("@corrEst", PersonaDatos.Nulo(estudiante.CorreoEstudiante));
                 comando.Parameters.AddWithValue("@persona", estudiante.PersonaId);
                 comando.Parameters.AddWithValue("@pais", estudiante.PaisNacimientoId);
                 comando.Parameters.AddWithValue("@parroquia", (object?)estudiante.ParroquiaNacimientoId ?? DBNull.Value);
@@ -183,6 +191,22 @@ namespace SistemaLiceo.Datos
                 comando.Parameters.AddWithValue("@extra", estudiante.ExtraCurricularId);
                 comando.Parameters.AddWithValue("@representante", estudiante.RepresentantePrincipalId);
                 comando.Parameters.AddWithValue("@representanteSecundario", (object?)estudiante.RepresentanteSecundarioId ?? DBNull.Value);
+
+                comando.Parameters.AddWithValue("@sitPadres", estudiante.SituacionPadres);
+                comando.Parameters.AddWithValue("@conviveCon", estudiante.ConviveCon);
+                comando.Parameters.AddWithValue("@padreCed", PersonaDatos.Nulo(estudiante.PadreCedula));
+                comando.Parameters.AddWithValue("@padreNom", PersonaDatos.Nulo(estudiante.PadreNombresApellidos));
+                comando.Parameters.AddWithValue("@padreTel", PersonaDatos.Nulo(estudiante.PadreTelefono));
+                comando.Parameters.AddWithValue("@padreVive", estudiante.PadreVive);
+
+                comando.Parameters.AddWithValue("@madreCed", PersonaDatos.Nulo(estudiante.MadreCedula));
+                comando.Parameters.AddWithValue("@madreNom", PersonaDatos.Nulo(estudiante.MadreNombresApellidos));
+                comando.Parameters.AddWithValue("@madreTel", PersonaDatos.Nulo(estudiante.MadreTelefono));
+                comando.Parameters.AddWithValue("@madreVive", estudiante.MadreVive);
+
+                comando.Parameters.AddWithValue("@repTipo", estudiante.RepresentanteLegalTipo);
+                comando.Parameters.AddWithValue("@oficioCpnna", PersonaDatos.Nulo(estudiante.OficioCpnnaTribunal));
+                comando.Parameters.AddWithValue("@obsCustodia", PersonaDatos.Nulo(estudiante.ObservacionesCustodia));
                 comando.Parameters.AddWithValue("@estado", estudiante.Estado);
 
                 return Convert.ToInt32(comando.ExecuteScalar());

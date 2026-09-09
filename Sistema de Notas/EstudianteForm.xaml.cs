@@ -344,7 +344,7 @@ namespace SistemaLiceo.Presentacion
                 Apellido2 = txtApellido2Rep.Text.Trim(),
                 FechaNacimiento = dpFechaNacimientoRep.SelectedDate,
                 Sexo = TextoCombo(cmbSexoRep, "F"),
-                Direccion = ArmarDireccionRepresentante()
+                Direccion = ArmarDireccionRepresentante() // Guarda la dirección de 11 campos del representante
             };
 
             return rep;
@@ -353,19 +353,35 @@ namespace SistemaLiceo.Presentacion
         private Estudiante ArmarEstudiante()
         {
             string cedulaIdentidad = txtCedula.Text.Trim();
-            string cedulaEscolar = txtCedulaEscolar.Text.Trim();
-
-            // Si la cédula escolar se deja vacía, se autoasigna la de identidad para cumplir con NOT NULL
-            if (string.IsNullOrWhiteSpace(cedulaEscolar))
-                cedulaEscolar = cedulaIdentidad;
+            string cedulaEscolar = string.IsNullOrWhiteSpace(txtCedulaEscolar.Text) ? cedulaIdentidad : txtCedulaEscolar.Text.Trim();
 
             Estudiante est = new Estudiante
             {
                 CedulaEscolar = cedulaEscolar,
                 NumeroHijo = AEntero(txtNumeroHijo.Text) ?? 1,
                 Lateralidad = TextoCombo(cmbLateralidad, "Derecha"),
+                TelefonoEstudiante = txtTelefonoEstudiante.Text.Trim(),
+                CorreoEstudiante = txtCorreoEstudiante.Text.Trim(),
                 PaisNacimientoId = ValorSeleccionado(cmbPaisNacimiento),
-                ParroquiaNacimientoId = ValorSeleccionadoOpcional(cmbParroquiaNacimiento)
+                ParroquiaNacimientoId = ValorSeleccionadoOpcional(cmbParroquiaNacimiento),
+
+                // 1. Situación Familiar y Consejo de Protección (CPNNA / Tribunales)
+                SituacionPadres = TextoCombo(cmbSituacionPadres, "Viven Juntos (Casados/Concubinato)"),
+                ConviveCon = TextoCombo(cmbConviveCon, "Ambos Padres"),
+                RepresentanteLegalTipo = TextoCombo(cmbRepresentanteLegalTipo, "Madre"),
+                OficioCpnnaTribunal = txtOficioCpnna.Text.Trim(),
+                ObservacionesCustodia = txtObservacionesCustodia.Text.Trim(),
+
+                // 2. Datos de Ambos Progenitores
+                PadreCedula = txtPadreCedula.Text.Trim(),
+                PadreNombresApellidos = txtPadreNombres.Text.Trim(),
+                PadreTelefono = txtPadreTelefono.Text.Trim(),
+                PadreVive = TextoCombo(cmbPadreVive, "Vivo (En el país)"),
+
+                MadreCedula = txtMadreCedula.Text.Trim(),
+                MadreNombresApellidos = txtMadreNombres.Text.Trim(),
+                MadreTelefono = txtMadreTelefono.Text.Trim(),
+                MadreVive = TextoCombo(cmbMadreVive, "Viva (En el país)")
             };
 
             est.Persona = new Persona
@@ -445,13 +461,14 @@ namespace SistemaLiceo.Presentacion
 
         private Direccion? ArmarDireccionRepresentante()
         {
-            // Si vive en la misma casa, hereda la dirección del estudiante
+            // Si la casilla está marcada, hereda exactamente la dirección del estudiante
             if (chkMismaDireccionEstudiante.IsChecked == true)
                 return ArmarDireccion();
 
+            // Si tiene dirección independiente, valida y toma los 11 campos
             int ciudadId = ValorSeleccionado(cmbCiudadDireccionRep);
             if (ciudadId == 0)
-                throw new Exception("Seleccione el estado y la ciudad de la dirección del representante, o marque la opción de heredar la dirección del estudiante.");
+                throw new Exception("Seleccione el estado y la ciudad de la dirección del representante legal, o marque la opción de heredar la dirección del estudiante.");
 
             return new Direccion
             {

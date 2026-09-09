@@ -375,6 +375,7 @@ namespace SistemaLiceo.Datos
             {
                 try
                 {
+                    GuardarPlanEvaluacionMpp(materiaProfePeriodoId, lapsoNombre, nombresEvaluaciones, ponderaciones, conexion, transaccion);
                     foreach (var fila in filas)
                     {
                         // 1. Cabeceras
@@ -469,6 +470,67 @@ namespace SistemaLiceo.Datos
                 cmdIn.Parameters.AddWithValue("@desc", descripcion);
                 cmdIn.Parameters.AddWithValue("@nota", nota);
                 return Convert.ToInt32(cmdIn.ExecuteScalar());
+            }
+        }
+        public List<PlanEvaluacionMpp> ObtenerPlanEvaluacionGuardado(int mppId, string lapsoNombre)
+        {
+            List<PlanEvaluacionMpp> lista = new List<PlanEvaluacionMpp>();
+
+            const string consulta = @"
+        SELECT id, materia_profesor_periodo_id, lapso, nro_evaluacion, nombre_actividad, porcentaje
+        FROM plan_evaluacion_mpp
+        WHERE materia_profesor_periodo_id = @mppId AND lapso = @lapso
+        ORDER BY nro_evaluacion ASC;";
+
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+            {
+                comando.Parameters.AddWithValue("@mppId", mppId);
+                comando.Parameters.AddWithValue("@lapso", lapsoNombre);
+
+                using (MySqlDataReader lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lista.Add(new PlanEvaluacionMpp
+                        {
+                            Id = lector.GetInt32("id"),
+                            MateriaProfesorPeriodoId = lector.GetInt32("materia_profesor_periodo_id"),
+                            Lapso = lector.GetString("lapso"),
+                            NroEvaluacion = lector.GetInt32("nro_evaluacion"),
+                            NombreActividad = lector.GetString("nombre_actividad"),
+                            Porcentaje = lector.GetDecimal("porcentaje")
+                        });
+                    }
+                }
+            }
+
+            return lista;
+        }
+
+        public void GuardarPlanEvaluacionMpp(int mppId, string lapsoNombre, string[] nombres, decimal[] porcentajes, MySqlConnection conexion, MySqlTransaction transaccion)
+        {
+            const string upsert = @"
+        INSERT INTO plan_evaluacion_mpp (materia_profesor_periodo_id, lapso, nro_evaluacion, nombre_actividad, porcentaje)
+        VALUES (@mpp, @lapso, @nro, @nombre, @porc)
+        ON DUPLICATE KEY UPDATE 
+            nombre_actividad = VALUES(nombre_actividad),
+            porcentaje = VALUES(porcentaje);";
+
+            for (int i = 0; i < nombres.Length; i++)
+            {
+                string nom = string.IsNullOrWhiteSpace(nombres[i]) ? $"Actividad {i + 1}" : nombres[i].Trim();
+                decimal porc = (i < porcentajes.Length && porcentajes[i] > 0) ? porcentajes[i] : 20;
+
+                using (MySqlCommand cmd = new MySqlCommand(upsert, conexion, transaccion))
+                {
+                    cmd.Parameters.AddWithValue("@mpp", mppId);
+                    cmd.Parameters.AddWithValue("@lapso", lapsoNombre);
+                    cmd.Parameters.AddWithValue("@nro", i + 1);
+                    cmd.Parameters.AddWithValue("@nombre", nom);
+                    cmd.Parameters.AddWithValue("@porc", porc);
+                    cmd.ExecuteNonQuery();
+                }
             }
         }
     }

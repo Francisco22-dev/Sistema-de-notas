@@ -143,6 +143,7 @@ namespace SistemaLiceo.Presentacion
 
         private void btnCargarPlanilla_Click(object sender, RoutedEventArgs e)
         {
+            
             if (cmbDocenteMateria.SelectedValue == null)
             {
                 Alerta.Mostrar("Advertencia", "Seleccione el año, sección y la materia asignada.", true);
@@ -151,7 +152,7 @@ namespace SistemaLiceo.Presentacion
 
             int mppId = Convert.ToInt32(cmbDocenteMateria.SelectedValue);
             string lapsoBD = ObtenerLapsoBD();
-
+            CargarActividadesPlanificadas(mppId, lapsoBD);
             try
             {
                 Configuracion_TextChanged(sender, null!);
@@ -290,6 +291,41 @@ namespace SistemaLiceo.Presentacion
             TableCell cell = new TableCell(p) { BorderBrush = Brushes.Black, BorderThickness = new Thickness(0.5) };
             if (fondo != null) cell.Background = fondo;
             return cell;
+        }
+        private void CargarActividadesPlanificadas(int mppId, string lapsoBD)
+        {
+            try
+            {
+                List<PlanEvaluacionMpp> plan = _notas.ObtenerPlanEvaluacionGuardado(mppId, lapsoBD);
+                if (plan.Count > 0)
+                {
+                    foreach (var act in plan)
+                    {
+                        switch (act.NroEvaluacion)
+                        {
+                            case 1: txtEval1.Text = act.NombreActividad; txtPorc1.Text = act.Porcentaje.ToString("0"); break;
+                            case 2: txtEval2.Text = act.NombreActividad; txtPorc2.Text = act.Porcentaje.ToString("0"); break;
+                            case 3: txtEval3.Text = act.NombreActividad; txtPorc3.Text = act.Porcentaje.ToString("0"); break;
+                            case 4: txtEval4.Text = act.NombreActividad; txtPorc4.Text = act.Porcentaje.ToString("0"); break;
+                            case 5: txtEval5.Text = act.NombreActividad; txtPorc5.Text = act.Porcentaje.ToString("0"); break;
+                            case 6: txtEval6.Text = act.NombreActividad; txtPorc6.Text = act.Porcentaje.ToString("0"); break;
+                        }
+                    }
+                }
+                else
+                {
+                    // Valores por defecto si es una planificación nueva
+                    txtEval1.Text = "Actividad 1"; txtPorc1.Text = "20";
+                    txtEval2.Text = "Actividad 2"; txtPorc2.Text = "20";
+                    txtEval3.Text = "Actividad 3"; txtPorc3.Text = "20";
+                    txtEval4.Text = "Actividad 4"; txtPorc4.Text = "20";
+                    txtEval5.Text = "Actividad 5"; txtPorc5.Text = "10";
+                    txtEval6.Text = "Actividad 6"; txtPorc6.Text = "10";
+                }
+
+                Configuracion_TextChanged(null!, null!);
+            }
+            catch { }
         }
     }
 }
