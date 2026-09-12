@@ -36,7 +36,7 @@ namespace SistemaLiceo.Datos
             }
         }
 
-        /// <summary>Inserta el representante dentro de una transaccion en curso.</summary>
+        /// <summary>Inserta el representante dentro de una transacción en curso.</summary>
         public static int Insertar(Representante representante, MySqlConnection conexion, MySqlTransaction transaccion)
         {
             if (representante.PersonaId == 0)
@@ -56,13 +56,13 @@ namespace SistemaLiceo.Datos
             }
 
             const string consulta = @"
-        INSERT INTO PERSONA_REPRESENTANTE (parentesco, estado_civil, ingreso_mensual, telefono_movil,
-                                           telefono_habitacion, correo_electronico, profesion,
-                                           empresa_trabajo, telefono_empresa, direccion_empresa,
-                                           persona_id, ESTADO)
-        VALUES (@parentesco, @estadoCivil, @ingreso, @movil, @habitacion, @correo, @profesion,
-                @empresa, @telefonoEmpresa, @direccionEmpresa, @persona, @estado);
-        SELECT LAST_INSERT_ID();";
+                INSERT INTO PERSONA_REPRESENTANTE (parentesco, estado_civil, ingreso_mensual, telefono_movil,
+                                                   telefono_habitacion, correo_electronico, profesion,
+                                                   empresa_trabajo, telefono_empresa, direccion_empresa,
+                                                   persona_id, ESTADO)
+                VALUES (@parentesco, @estadoCivil, @ingreso, @movil, @habitacion, @correo, @profesion,
+                        @empresa, @telefonoEmpresa, @direccionEmpresa, @persona, @estado);
+                SELECT LAST_INSERT_ID();";
 
             using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
             {
@@ -84,7 +84,78 @@ namespace SistemaLiceo.Datos
             }
         }
 
-        /// <summary>Busca un representante activo por la cedula de la persona.</summary>
+        /// <summary>Actualiza los datos del representante y de su persona asociada dentro de una transacción en curso.</summary>
+        public static void Actualizar(Representante representante, MySqlConnection conexion, MySqlTransaction transaccion)
+        {
+            // 1. Actualiza los datos de PERSONA y su DIRECCIÓN (si la tiene)
+            if (representante.Persona != null)
+            {
+                if (representante.Persona.Id == 0)
+                    representante.Persona.Id = representante.PersonaId;
+
+                PersonaDatos.ActualizarPersona(representante.Persona, conexion, transaccion);
+            }
+
+            // 2. Actualiza la tabla PERSONA_REPRESENTANTE
+            const string consulta = @"
+                UPDATE PERSONA_REPRESENTANTE 
+                SET parentesco = @parentesco, 
+                    estado_civil = @estadoCivil, 
+                    ingreso_mensual = @ingreso,
+                    telefono_movil = @movil, 
+                    telefono_habitacion = @habitacion, 
+                    correo_electronico = @correo,
+                    profesion = @profesion, 
+                    empresa_trabajo = @empresa, 
+                    telefono_empresa = @telefonoEmpresa,
+                    direccion_empresa = @direccionEmpresa, 
+                    ESTADO = @estado
+                WHERE id = @id;";
+
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
+            {
+                comando.Parameters.AddWithValue("@id", representante.Id);
+                comando.Parameters.AddWithValue("@parentesco", representante.Parentesco);
+                comando.Parameters.AddWithValue("@estadoCivil", representante.EstadoCivil);
+                comando.Parameters.AddWithValue("@ingreso", (object?)representante.IngresoMensual ?? DBNull.Value);
+                comando.Parameters.AddWithValue("@movil", PersonaDatos.Nulo(representante.TelefonoMovil));
+                comando.Parameters.AddWithValue("@habitacion", PersonaDatos.Nulo(representante.TelefonoHabitacion));
+                comando.Parameters.AddWithValue("@correo", PersonaDatos.Nulo(representante.CorreoElectronico));
+                comando.Parameters.AddWithValue("@profesion", PersonaDatos.Nulo(representante.Profesion));
+                comando.Parameters.AddWithValue("@empresa", PersonaDatos.Nulo(representante.EmpresaTrabajo));
+                comando.Parameters.AddWithValue("@telefonoEmpresa", PersonaDatos.Nulo(representante.TelefonoEmpresa));
+                comando.Parameters.AddWithValue("@direccionEmpresa", PersonaDatos.Nulo(representante.DireccionEmpresa));
+                comando.Parameters.AddWithValue("@estado", representante.Estado);
+
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>Actualiza el representante de forma independiente sin transacción externa.</summary>
+        public void Actualizar(Representante representante)
+        {
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlTransaction transaccion = conexion.BeginTransaction())
+            {
+                try
+                {
+                    Actualizar(representante, conexion, transaccion);
+                    transaccion.Commit();
+                }
+                catch (MySqlException ex)
+                {
+                    transaccion.Rollback();
+                    throw new Exception(ConexionBD.TraducirError(ex), ex);
+                }
+                catch
+                {
+                    transaccion.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>Busca un representante activo por la cédula de la persona.</summary>
         public Representante? BuscarPorCedula(string cedula)
         {
             const string consulta = @"
@@ -92,9 +163,14 @@ namespace SistemaLiceo.Datos
                        r.telefono_habitacion, r.correo_electronico, r.profesion, r.empresa_trabajo,
                        r.telefono_empresa, r.direccion_empresa, r.persona_id, r.ESTADO,
                        p.id AS p_id, p.nacionalidad, p.cedula_identidad, p.nombre_1, p.nombre_2,
-                       p.apellido_1, p.apellido_2, p.fecha_nacimiento, p.sexo, p.direccion_id
+                       p.apellido_1, p.apellido_2, p.fecha_nacimiento, p.sexo, p.direccion_id,
+                       d.id AS d_id, d.ciudad_id, d.sector, d.avenida, d.calle, d.manzana, d.vereda,
+                       d.numero_vivienda, d.tipo_vivienda, d.condicion_vivienda, d.infraestructura_vivienda,
+                       c.estado_id AS dir_estado_id
                 FROM PERSONA_REPRESENTANTE r
                 INNER JOIN PERSONA p ON p.id = r.persona_id
+                LEFT JOIN DIRECCION d ON d.id = p.direccion_id
+                LEFT JOIN CIUDAD c ON c.id = d.ciudad_id
                 WHERE p.cedula_identidad = @cedula AND r.ESTADO = 'Activo'
                 LIMIT 1;";
 
@@ -137,6 +213,24 @@ namespace SistemaLiceo.Datos
                         Sexo = lector.GetString("sexo"),
                         DireccionId = lector.IsDBNull(lector.GetOrdinal("direccion_id")) ? null : lector.GetInt32("direccion_id")
                     };
+
+                    if (!lector.IsDBNull(lector.GetOrdinal("d_id")))
+                    {
+                        representante.Persona.Direccion = new Direccion
+                        {
+                            Id = lector.GetInt32("d_id"),
+                            CiudadId = lector.GetInt32("ciudad_id"),
+                            Sector = Texto(lector, "sector"),
+                            Avenida = Texto(lector, "avenida"),
+                            Calle = Texto(lector, "calle"),
+                            Manzana = Texto(lector, "manzana"),
+                            Vereda = Texto(lector, "vereda"),
+                            NumeroVivienda = Texto(lector, "numero_vivienda"),
+                            TipoVivienda = lector.GetString("tipo_vivienda"),
+                            CondicionVivienda = lector.GetString("condicion_vivienda"),
+                            InfraestructuraVivienda = lector.GetString("infraestructura_vivienda")
+                        };
+                    }
 
                     return representante;
                 }
