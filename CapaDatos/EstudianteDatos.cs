@@ -293,18 +293,21 @@ namespace SistemaLiceo.Datos
         public Estudiante? ObtenerPorId(int estudianteId)
         {
             const string consulta = @"
-        SELECT e.id AS e_id, e.cedula_escolar, e.numero_hijo, e.lateralidad, e.persona_id,
-               e.pais_nacimiento_id, e.parroquia_nacimiento_id, e.antropometrico_id, e.salud_id,
-               e.extra_curricular_id, e.representante_principal_id, e.representante_secundario_id, e.ESTADO,
-               -- PERSONA
+        SELECT e.id AS e_id, e.cedula_escolar, e.numero_hijo, e.lateralidad, e.telefono_estudiante, e.correo_estudiante,
+               e.persona_id, e.pais_nacimiento_id, e.parroquia_nacimiento_id, e.antropometrico_id, e.salud_id,
+               e.extra_curricular_id, e.representante_principal_id, e.representante_secundario_id,
+               e.situacion_padres, e.convive_con, e.padre_cedula, e.padre_nombres_apellidos, e.padre_telefono, e.padre_vive,
+               e.madre_cedula, e.madre_nombres_apellidos, e.madre_telefono, e.madre_vive,
+               e.representante_legal_tipo, e.oficio_cpnna_tribunal, e.observaciones_custodia, e.ESTADO,
+               -- DATOS PERSONALES DEL ESTUDIANTE
                p.id AS p_id, p.nacionalidad, p.cedula_identidad, p.nombre_1, p.nombre_2,
                p.apellido_1, p.apellido_2, p.fecha_nacimiento, p.sexo, p.direccion_id,
-               -- DIRECCION
+               -- DIRECCION DEL ESTUDIANTE
                d.id AS d_id, d.ciudad_id, d.sector, d.avenida, d.calle, d.manzana, d.vereda,
                d.numero_vivienda, d.tipo_vivienda, d.condicion_vivienda, d.infraestructura_vivienda,
-               c.estado_id AS dir_estado_id,
-               -- LUGAR NACIMIENTO (para cascada)
-               m.id AS nac_municipio_id, es.id AS nac_estado_id,
+               c.nombre AS ciudad_estudiante, est_dir.nombre AS estado_estudiante,
+               -- NACIMIENTO
+               pais.nombre AS pais_nac, par.nombre AS parroquia_nac, mun.nombre AS municipio_nac, est_nac.nombre AS estado_nac,
                -- ANTROPOMETRICOS
                ant.estatura, ant.peso, ant.talla_camisa, ant.talla_pantalon, ant.talla_zapato,
                -- SALUD
@@ -315,21 +318,35 @@ namespace SistemaLiceo.Datos
                ex.realiza_deportes, ex.cuales_deportes, ex.posee_canaima, ex.fecha_asignacion_canaima,
                ex.serial_canaima, ex.estado_canaima, ex.falla_canaima, ex.posee_cargador,
                ex.estado_cargador, ex.falla_cargador,
-               -- ULTIMA INSCRIPCION
-               i.id AS inscripcion_id, i.periodo_id, i.grado_seccion_id, i.tipo_ingreso,
-               i.colegio_procedencia, i.nivel_academico, gs.grado_id, gs.seccion_id
+               -- REPRESENTANTE LEGAL PRINCIPAL
+               r.id AS r_id, r.parentesco, r.estado_civil, r.ingreso_mensual, r.telefono_movil,
+               r.telefono_habitacion, r.correo_electronico, r.profesion, r.empresa_trabajo,
+               r.telefono_empresa, r.direccion_empresa, r.persona_id AS r_persona_id,
+               prep.nacionalidad AS r_nac, prep.cedula_identidad AS r_cedula,
+               prep.nombre_1 AS r_nom1, prep.nombre_2 AS r_nom2,
+               prep.apellido_1 AS r_ape1, prep.apellido_2 AS r_ape2,
+               prep.fecha_nacimiento AS r_fnac, prep.sexo AS r_sexo,
+               -- DIRECCION DEL REPRESENTANTE
+               drep.id AS drep_id, drep.sector AS drep_sector, drep.calle AS drep_calle,
+               drep.numero_vivienda AS drep_num, drep.tipo_vivienda AS drep_tipo,
+               crep.nombre AS ciudad_representante, est_rep.nombre AS estado_representante
         FROM PERSONA_ESTUDIANTE e
         INNER JOIN PERSONA p ON p.id = e.persona_id
         LEFT JOIN DIRECCION d ON d.id = p.direccion_id
         LEFT JOIN CIUDAD c ON c.id = d.ciudad_id
+        LEFT JOIN ESTADO est_dir ON est_dir.id = c.estado_id
+        LEFT JOIN PAIS pais ON pais.id = e.pais_nacimiento_id
         LEFT JOIN PARROQUIA par ON par.id = e.parroquia_nacimiento_id
-        LEFT JOIN MUNICIPIO m ON m.id = par.municipio_id
-        LEFT JOIN ESTADO es ON es.id = m.estado_id
+        LEFT JOIN MUNICIPIO mun ON mun.id = par.municipio_id
+        LEFT JOIN ESTADO est_nac ON est_nac.id = mun.estado_id
         LEFT JOIN ANTROPOMETRICOS ant ON ant.id = e.antropometrico_id
         LEFT JOIN SALUD s ON s.id = e.salud_id
         LEFT JOIN EXTRA_CURRICULAR ex ON ex.id = e.extra_curricular_id
-        LEFT JOIN INSCRIPCION i ON i.id = (SELECT MAX(id) FROM INSCRIPCION WHERE estudiante_id = e.id)
-        LEFT JOIN GRADO_SECCION gs ON gs.id = i.grado_seccion_id
+        LEFT JOIN PERSONA_REPRESENTANTE r ON r.id = e.representante_principal_id
+        LEFT JOIN PERSONA prep ON prep.id = r.persona_id
+        LEFT JOIN DIRECCION drep ON drep.id = prep.direccion_id
+        LEFT JOIN CIUDAD crep ON crep.id = drep.ciudad_id
+        LEFT JOIN ESTADO est_rep ON est_rep.id = crep.estado_id
         WHERE e.id = @id LIMIT 1;";
 
             using (MySqlConnection conexion = _conexion.AbrirConexion())
@@ -346,42 +363,60 @@ namespace SistemaLiceo.Datos
                         CedulaEscolar = lector.GetString("cedula_escolar"),
                         NumeroHijo = lector.GetInt32("numero_hijo"),
                         Lateralidad = lector.GetString("lateralidad"),
+                        TelefonoEstudiante = lector.IsDBNull(lector.GetOrdinal("telefono_estudiante")) ? null : lector.GetString("telefono_estudiante"),
+                        CorreoEstudiante = lector.IsDBNull(lector.GetOrdinal("correo_estudiante")) ? null : lector.GetString("correo_estudiante"),
                         PersonaId = lector.GetInt32("persona_id"),
                         PaisNacimientoId = lector.GetInt32("pais_nacimiento_id"),
-                        ParroquiaNacimientoId = lector.IsDBNull("parroquia_nacimiento_id") ? null : lector.GetInt32("parroquia_nacimiento_id"),
+                        ParroquiaNacimientoId = lector.IsDBNull(lector.GetOrdinal("parroquia_nacimiento_id")) ? null : lector.GetInt32("parroquia_nacimiento_id"),
                         AntropometricoId = lector.GetInt32("antropometrico_id"),
                         SaludId = lector.GetInt32("salud_id"),
                         ExtraCurricularId = lector.GetInt32("extra_curricular_id"),
                         RepresentantePrincipalId = lector.GetInt32("representante_principal_id"),
-                        RepresentanteSecundarioId = lector.IsDBNull("representante_secundario_id") ? null : lector.GetInt32("representante_secundario_id"),
+                        RepresentanteSecundarioId = lector.IsDBNull(lector.GetOrdinal("representante_secundario_id")) ? null : lector.GetInt32("representante_secundario_id"),
+
+                        // Familia y CPNNA
+                        SituacionPadres = lector.IsDBNull(lector.GetOrdinal("situacion_padres")) ? "Viven Juntos" : lector.GetString("situacion_padres"),
+                        ConviveCon = lector.IsDBNull(lector.GetOrdinal("convive_con")) ? "Ambos Padres" : lector.GetString("convive_con"),
+                        PadreCedula = lector.IsDBNull(lector.GetOrdinal("padre_cedula")) ? null : lector.GetString("padre_cedula"),
+                        PadreNombresApellidos = lector.IsDBNull(lector.GetOrdinal("padre_nombres_apellidos")) ? null : lector.GetString("padre_nombres_apellidos"),
+                        PadreTelefono = lector.IsDBNull(lector.GetOrdinal("padre_telefono")) ? null : lector.GetString("padre_telefono"),
+                        PadreVive = lector.IsDBNull(lector.GetOrdinal("padre_vive")) ? "Si" : lector.GetString("padre_vive"),
+                        MadreCedula = lector.IsDBNull(lector.GetOrdinal("madre_cedula")) ? null : lector.GetString("madre_cedula"),
+                        MadreNombresApellidos = lector.IsDBNull(lector.GetOrdinal("madre_nombres_apellidos")) ? null : lector.GetString("madre_nombres_apellidos"),
+                        MadreTelefono = lector.IsDBNull(lector.GetOrdinal("madre_telefono")) ? null : lector.GetString("madre_telefono"),
+                        MadreVive = lector.IsDBNull(lector.GetOrdinal("madre_vive")) ? "Si" : lector.GetString("madre_vive"),
+                        RepresentanteLegalTipo = lector.IsDBNull(lector.GetOrdinal("representante_legal_tipo")) ? "Madre" : lector.GetString("representante_legal_tipo"),
+                        OficioCpnnaTribunal = lector.IsDBNull(lector.GetOrdinal("oficio_cpnna_tribunal")) ? null : lector.GetString("oficio_cpnna_tribunal"),
+                        ObservacionesCustodia = lector.IsDBNull(lector.GetOrdinal("observaciones_custodia")) ? null : lector.GetString("observaciones_custodia"),
                         Estado = lector.GetString("ESTADO"),
+
                         Persona = new Persona
                         {
                             Id = lector.GetInt32("p_id"),
                             Nacionalidad = lector.GetString("nacionalidad"),
-                            CedulaIdentidad = lector.IsDBNull("cedula_identidad") ? null : lector.GetString("cedula_identidad"),
+                            CedulaIdentidad = lector.IsDBNull(lector.GetOrdinal("cedula_identidad")) ? null : lector.GetString("cedula_identidad"),
                             Nombre1 = lector.GetString("nombre_1"),
-                            Nombre2 = lector.IsDBNull("nombre_2") ? null : lector.GetString("nombre_2"),
+                            Nombre2 = lector.IsDBNull(lector.GetOrdinal("nombre_2")) ? null : lector.GetString("nombre_2"),
                             Apellido1 = lector.GetString("apellido_1"),
-                            Apellido2 = lector.IsDBNull("apellido_2") ? null : lector.GetString("apellido_2"),
-                            FechaNacimiento = lector.IsDBNull("fecha_nacimiento") ? null : lector.GetDateTime("fecha_nacimiento"),
+                            Apellido2 = lector.IsDBNull(lector.GetOrdinal("apellido_2")) ? null : lector.GetString("apellido_2"),
+                            FechaNacimiento = lector.IsDBNull(lector.GetOrdinal("fecha_nacimiento")) ? null : lector.GetDateTime("fecha_nacimiento"),
                             Sexo = lector.GetString("sexo"),
-                            DireccionId = lector.IsDBNull("direccion_id") ? null : lector.GetInt32("direccion_id")
+                            DireccionId = lector.IsDBNull(lector.GetOrdinal("direccion_id")) ? null : lector.GetInt32("direccion_id")
                         }
                     };
 
-                    if (!lector.IsDBNull("d_id"))
+                    if (!lector.IsDBNull(lector.GetOrdinal("d_id")))
                     {
                         est.Persona.Direccion = new Direccion
                         {
                             Id = lector.GetInt32("d_id"),
                             CiudadId = lector.GetInt32("ciudad_id"),
-                            Sector = lector.IsDBNull("sector") ? null : lector.GetString("sector"),
-                            Avenida = lector.IsDBNull("avenida") ? null : lector.GetString("avenida"),
-                            Calle = lector.IsDBNull("calle") ? null : lector.GetString("calle"),
-                            Manzana = lector.IsDBNull("manzana") ? null : lector.GetString("manzana"),
-                            Vereda = lector.IsDBNull("vereda") ? null : lector.GetString("vereda"),
-                            NumeroVivienda = lector.IsDBNull("numero_vivienda") ? null : lector.GetString("numero_vivienda"),
+                            Sector = lector.IsDBNull(lector.GetOrdinal("sector")) ? null : lector.GetString("sector"),
+                            Avenida = lector.IsDBNull(lector.GetOrdinal("avenida")) ? null : lector.GetString("avenida"),
+                            Calle = lector.IsDBNull(lector.GetOrdinal("calle")) ? null : lector.GetString("calle"),
+                            Manzana = lector.IsDBNull(lector.GetOrdinal("manzana")) ? null : lector.GetString("manzana"),
+                            Vereda = lector.IsDBNull(lector.GetOrdinal("vereda")) ? null : lector.GetString("vereda"),
+                            NumeroVivienda = lector.IsDBNull(lector.GetOrdinal("numero_vivienda")) ? null : lector.GetString("numero_vivienda"),
                             TipoVivienda = lector.GetString("tipo_vivienda"),
                             CondicionVivienda = lector.GetString("condicion_vivienda"),
                             InfraestructuraVivienda = lector.GetString("infraestructura_vivienda")
@@ -391,40 +426,40 @@ namespace SistemaLiceo.Datos
                     est.Antropometricos = new Antropometricos
                     {
                         Id = est.AntropometricoId,
-                        Estatura = lector.IsDBNull("estatura") ? null : lector.GetDecimal("estatura"),
-                        Peso = lector.IsDBNull("peso") ? null : lector.GetDecimal("peso"),
-                        TallaCamisa = lector.IsDBNull("talla_camisa") ? null : lector.GetString("talla_camisa"),
-                        TallaPantalon = lector.IsDBNull("talla_pantalon") ? null : lector.GetString("talla_pantalon"),
-                        TallaZapato = lector.IsDBNull("talla_zapato") ? null : lector.GetInt32("talla_zapato")
+                        Estatura = lector.IsDBNull(lector.GetOrdinal("estatura")) ? null : lector.GetDecimal("estatura"),
+                        Peso = lector.IsDBNull(lector.GetOrdinal("peso")) ? null : lector.GetDecimal("peso"),
+                        TallaCamisa = lector.IsDBNull(lector.GetOrdinal("talla_camisa")) ? null : lector.GetString("talla_camisa"),
+                        TallaPantalon = lector.IsDBNull(lector.GetOrdinal("talla_pantalon")) ? null : lector.GetString("talla_pantalon"),
+                        TallaZapato = lector.IsDBNull(lector.GetOrdinal("talla_zapato")) ? null : lector.GetInt32("talla_zapato")
                     };
 
                     est.Salud = new Salud
                     {
                         Id = est.SaludId,
                         ReaccionesAlergicas = lector.GetString("reacciones_alergicas"),
-                        CualesAlergias = lector.IsDBNull("cuales_alergias") ? null : lector.GetString("cuales_alergias"),
-                        EnfermedadesPadecidas = lector.IsDBNull("enfermedades_padecidas") ? null : lector.GetString("enfermedades_padecidas"),
+                        CualesAlergias = lector.IsDBNull(lector.GetOrdinal("cuales_alergias")) ? null : lector.GetString("cuales_alergias"),
+                        EnfermedadesPadecidas = lector.IsDBNull(lector.GetOrdinal("enfermedades_padecidas")) ? null : lector.GetString("enfermedades_padecidas"),
                         AtencionEspecial = lector.GetString("atencion_especial"),
-                        HorarioTratamiento = lector.IsDBNull("horario_tratamiento") ? null : lector.GetString("horario_tratamiento"),
+                        HorarioTratamiento = lector.IsDBNull(lector.GetOrdinal("horario_tratamiento")) ? null : lector.GetString("horario_tratamiento"),
                         AtendidoPorEspecialista = lector.GetString("atendido_por_especialista"),
-                        NombreEspecialista = lector.IsDBNull("nombre_especialista") ? null : lector.GetString("nombre_especialista"),
-                        FechaInicioEspecialista = lector.IsDBNull("fecha_inicio_especialista") ? null : lector.GetDateTime("fecha_inicio_especialista"),
-                        CondicionAtencion = lector.IsDBNull("condicion_atencion") ? null : lector.GetString("condicion_atencion")
+                        NombreEspecialista = lector.IsDBNull(lector.GetOrdinal("nombre_especialista")) ? null : lector.GetString("nombre_especialista"),
+                        FechaInicioEspecialista = lector.IsDBNull(lector.GetOrdinal("fecha_inicio_especialista")) ? null : lector.GetDateTime("fecha_inicio_especialista"),
+                        CondicionAtencion = lector.IsDBNull(lector.GetOrdinal("condicion_atencion")) ? null : lector.GetString("condicion_atencion")
                     };
 
                     est.ExtraCurricular = new ExtraCurricular
                     {
                         Id = est.ExtraCurricularId,
                         RealizaDeportes = lector.GetString("realiza_deportes"),
-                        CualesDeportes = lector.IsDBNull("cuales_deportes") ? null : lector.GetString("cuales_deportes"),
+                        CualesDeportes = lector.IsDBNull(lector.GetOrdinal("cuales_deportes")) ? null : lector.GetString("cuales_deportes"),
                         PoseeCanaima = lector.GetString("posee_canaima"),
-                        FechaAsignacionCanaima = lector.IsDBNull("fecha_asignacion_canaima") ? null : lector.GetDateTime("fecha_asignacion_canaima"),
-                        SerialCanaima = lector.IsDBNull("serial_canaima") ? null : lector.GetString("serial_canaima"),
-                        EstadoCanaima = lector.IsDBNull("estado_canaima") ? null : lector.GetString("estado_canaima"),
-                        FallaCanaima = lector.IsDBNull("falla_canaima") ? null : lector.GetString("falla_canaima"),
+                        FechaAsignacionCanaima = lector.IsDBNull(lector.GetOrdinal("fecha_asignacion_canaima")) ? null : lector.GetDateTime("fecha_asignacion_canaima"),
+                        SerialCanaima = lector.IsDBNull(lector.GetOrdinal("serial_canaima")) ? null : lector.GetString("serial_canaima"),
+                        EstadoCanaima = lector.IsDBNull(lector.GetOrdinal("estado_canaima")) ? null : lector.GetString("estado_canaima"),
+                        FallaCanaima = lector.IsDBNull(lector.GetOrdinal("falla_canaima")) ? null : lector.GetString("falla_canaima"),
                         PoseeCargador = lector.GetString("posee_cargador"),
-                        EstadoCargador = lector.IsDBNull("estado_cargador") ? null : lector.GetString("estado_cargador"),
-                        FallaCargador = lector.IsDBNull("falla_cargador") ? null : lector.GetString("falla_cargador")
+                        EstadoCargador = lector.IsDBNull(lector.GetOrdinal("estado_cargador")) ? null : lector.GetString("estado_cargador"),
+                        FallaCargador = lector.IsDBNull(lector.GetOrdinal("falla_cargador")) ? null : lector.GetString("falla_cargador")
                     };
 
                     return est;

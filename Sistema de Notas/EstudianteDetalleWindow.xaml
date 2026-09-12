@@ -1,0 +1,344 @@
+﻿<Window x:Class="SistemaLiceo.Presentacion.EstudianteDetalleWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Expediente Integral del Estudiante" Height="700" Width="980"
+        WindowStartupLocation="CenterScreen" Background="#F1F5F9" ResizeMode="CanResizeWithGrip">
+
+    <Window.Resources>
+        <Style TargetType="TextBlock" x:Key="LblCampo">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#64748B"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="TxtValor">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ================= BANNER SUPERIOR CON RESUMEN ================= -->
+        <Border Grid.Row="0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="65"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Width="55" Height="55" Background="#EEF2FF" CornerRadius="28" BorderBrush="#6366F1" BorderThickness="1.5">
+                    <TextBlock Text="👨‍🎓" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0">
+                    <TextBlock x:Name="txtNombreEstudianteHeader" Text="APELLIDOS Y NOMBRES DEL ALUMNO" FontSize="19" FontWeight="Black" Foreground="#1E3A8A"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                        <TextBlock Text="Cédula: " FontWeight="SemiBold" Foreground="#475569"/>
+                        <TextBlock x:Name="txtCedulaHeader" Text="V-00.000.000" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,15,0"/>
+                        <TextBlock Text="Cédula Escolar: " FontWeight="SemiBold" Foreground="#475569"/>
+                        <TextBlock x:Name="txtCedulaEscolarHeader" Text="0000000000" FontWeight="Bold" Foreground="#0F172A"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Badge de Estado -->
+                <Border x:Name="badgeEstado" Grid.Column="2" Background="#DCFCE7" BorderBrush="#16A34A" BorderThickness="1" CornerRadius="20" Padding="14,6" VerticalAlignment="Center">
+                    <TextBlock x:Name="txtEstadoHeader" Text="ACTIVO" FontWeight="Black" Foreground="#15803D" FontSize="13"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ================= PESTAÑAS DE INFORMACIÓN DETALLADA ================= -->
+        <TabControl Grid.Row="1" Background="White" BorderBrush="#CBD5E1" BorderThickness="1">
+
+            <!-- TAB 1: DATOS PERSONALES Y CONTACTO -->
+            <TabItem Header=" 🎓 Alumno y Contacto " Padding="12,6" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="15">
+                        <GroupBox Header="Información Personal y Nacimiento" Padding="12" Margin="0,0,0,12">
+                            <UniformGrid Columns="3">
+                                <StackPanel>
+                                    <TextBlock Text="Fecha de Nacimiento" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtFechaNac" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Sexo / Género" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtSexo" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Lateralidad" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtLateralidad" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Lugar de Nacimiento" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtLugarNac" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Teléfono Personal del Alumno" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtTelAlumno" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Correo Electrónico del Alumno" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtCorreoAlumno" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </GroupBox>
+
+                        <GroupBox Header="Dirección de Habitación del Alumno" Padding="12">
+                            <UniformGrid Columns="3">
+                                <StackPanel>
+                                    <TextBlock Text="Estado / Ciudad" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtEstadoCiudadAlumno" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Sector / Urbanización" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtSectorAlumno" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Calle / Avenida" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtCalleAlumno" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Nº Casa / Apto / Manzana" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtViviendaDetalleAlumno" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Tipo de Vivienda" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtTipoViviendaAlumno" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Condición e Infraestructura" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtCondicionInfraAlumno" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 2: PADRES, FAMILIA Y CONSEJO DE PROTECCIÓN (CPNNA) -->
+            <TabItem Header=" 👨‍👩‍👧 Padres y Representación Legal " Padding="12,6" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="15">
+
+                        <!-- Tarjeta de Dictamen y CPNNA -->
+                        <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1.5" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+                            <UniformGrid Columns="3">
+                                <StackPanel>
+                                    <TextBlock Text="Situación Conyugal de los Padres" Style="{StaticResource LblCampo}" Foreground="#166534"/>
+                                    <TextBlock x:Name="txtSituacionPadres" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="El Estudiante Convive Con" Style="{StaticResource LblCampo}" Foreground="#166534"/>
+                                    <TextBlock x:Name="txtConviveCon" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Representante Legal Designado" Style="{StaticResource LblCampo}" Foreground="#166534"/>
+                                    <TextBlock x:Name="txtRepresentanteTipo" Style="{StaticResource TxtValor}" Foreground="#1E3A8A"/>
+                                </StackPanel>
+                                <StackPanel Grid.ColumnSpan="3" Margin="0,4,0,0">
+                                    <TextBlock Text="Nº Oficio / Acta CPNNA o Sentencia del Tribunal de Protección:" Style="{StaticResource LblCampo}" Foreground="#166534"/>
+                                    <TextBlock x:Name="txtOficioCpnna" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel Grid.ColumnSpan="3">
+                                    <TextBlock Text="Observaciones de Custodia / Régimen de Convivencia:" Style="{StaticResource LblCampo}" Foreground="#166534"/>
+                                    <TextBlock x:Name="txtObsCustodia" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </Border>
+
+                        <!-- Datos de Ambos Progenitores -->
+                        <GroupBox Header="Filiación Biológica / Legal (Padre y Madre)" Padding="12" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="15"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Padre -->
+                                <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10">
+                                    <StackPanel>
+                                        <TextBlock Text="👨 Progenitor (Padre)" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
+                                        <TextBlock Text="Nombres y Apellidos:" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtPadreNombre" Style="{StaticResource TxtValor}"/>
+                                        <TextBlock Text="Cédula de Identidad:" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtPadreCedula" Style="{StaticResource TxtValor}"/>
+                                        <TextBlock Text="Teléfono de Contacto:" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtPadreTel" Style="{StaticResource TxtValor}"/>
+                                        <TextBlock Text="Condición / Estado de Vida:" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtPadreCondicion" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Madre -->
+                                <Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10">
+                                    <StackPanel>
+                                        <TextBlock Text="👩 Progenitora (Madre)" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
+                                        <TextBlock Text="Nombres y Apellidos:" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtMadreNombre" Style="{StaticResource TxtValor}"/>
+                                        <TextBlock Text="Cédula de Identidad:" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtMadreCedula" Style="{StaticResource TxtValor}"/>
+                                        <TextBlock Text="Teléfono de Contacto:" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtMadreTel" Style="{StaticResource TxtValor}"/>
+                                        <TextBlock Text="Condición / Estado de Vida:" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtMadreCondicion" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </GroupBox>
+
+                        <!-- Ficha del Representante Legal Principal -->
+                        <GroupBox Header="Representante Legal Principal ante el Plantel" Padding="12">
+                            <StackPanel>
+                                <UniformGrid Columns="3">
+                                    <StackPanel>
+                                        <TextBlock Text="Nombre Completo del Representante" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtRepNombre" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Cédula de Identidad" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtRepCedula" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Parentesco con el Estudiante" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtRepParentesco" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Teléfono Móvil" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtRepMovil" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Teléfono de Habitación" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtRepHab" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Correo Electrónico" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtRepCorreo" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Profesión u Oficio" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtRepProfesion" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Empresa donde Labora" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtRepEmpresa" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Teléfono de la Empresa" Style="{StaticResource LblCampo}"/>
+                                        <TextBlock x:Name="txtRepTelEmpresa" Style="{StaticResource TxtValor}"/>
+                                    </StackPanel>
+                                </UniformGrid>
+
+                                <Separator Margin="0,6,0,10"/>
+
+                                <TextBlock Text="Dirección de Habitación del Representante:" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="txtRepDireccionHabitacion" Style="{StaticResource TxtValor}"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 3: SALUD, TALLAS Y PROYECTO CANAIMA -->
+            <TabItem Header=" 🩺 Salud y Antropometría " Padding="12,6" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="15">
+                        <GroupBox Header="Medidas Antropométricas" Padding="12" Margin="0,0,0,12">
+                            <UniformGrid Columns="5">
+                                <StackPanel>
+                                    <TextBlock Text="Estatura" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtEstatura" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Peso Corporal" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtPeso" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Talla Camisa" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtTallaCamisa" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Talla Pantalón" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtTallaPantalon" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Talla Zapato" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtTallaZapato" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </GroupBox>
+
+                        <GroupBox Header="Ficha Médica y Cuidados Especiales" Padding="12" Margin="0,0,0,12">
+                            <UniformGrid Columns="3">
+                                <StackPanel>
+                                    <TextBlock Text="¿Presenta Alergias?" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtAlergias" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Enfermedades Padecidas" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtEnfermedades" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="¿Requiere Atención Especial?" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtAtencionEspecial" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Horario de Tratamiento" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtHorarioTratamiento" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Especialista Tratante" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtEspecialista" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Condición Atendida" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtCondicionAtendida" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </GroupBox>
+
+                        <GroupBox Header="Proyecto Canaima y Deportes" Padding="12">
+                            <UniformGrid Columns="4">
+                                <StackPanel>
+                                    <TextBlock Text="¿Realiza Deportes?" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtDeportes" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="¿Posee Canaima Educativa?" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtPoseeCanaima" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Serial de la Canaima" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtSerialCanaima" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Estado del Equipo" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtEstadoCanaima" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- ================= BOTONES DE ACCIÓN INFERIORES ================= -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="btnEditarFicha" Content="✏️ Editar Ficha" Width="140" Height="34" Margin="0,0,10,0"
+                    Background="#F59E0B" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnEditarFicha_Click"/>
+            <Button x:Name="btnCerrar" Content="Cerrar" Width="100" Height="34"
+                    Background="#64748B" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnCerrar_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

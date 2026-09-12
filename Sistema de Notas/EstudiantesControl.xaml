@@ -14,18 +14,23 @@
         <Grid Grid.Row="0" Margin="0,0,0,15">
             <TextBlock Text="Gestión de Estudiantes" FontSize="24" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Left"/>
 
+            <!-- En la barra de botones de EstudiantesControl.xaml -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="btnVerFicha" Content="👁️ Ver Ficha Completa" Width="160" Height="35"
+            Background="#4F46E5" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
+            BorderThickness="0" Cursor="Hand" Click="btnVerFicha_Click"/>
+
                 <Button x:Name="btnEditarEstudiante" Content="✏️ Editar" Width="100" Height="35"
-                        Background="#F59E0B" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
-                        BorderThickness="0" Cursor="Hand" Click="btnEditarEstudiante_Click"/>
+            Background="#F59E0B" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
+            BorderThickness="0" Cursor="Hand" Click="btnEditarEstudiante_Click"/>
 
                 <Button x:Name="btnRetirarEstudiante" Content="🚫 Retirar" Width="100" Height="35"
-                        Background="#EF4444" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
-                        BorderThickness="0" Cursor="Hand" Click="btnRetirarEstudiante_Click"/>
+            Background="#EF4444" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
+            BorderThickness="0" Cursor="Hand" Click="btnRetirarEstudiante_Click"/>
 
                 <Button x:Name="btnNuevoEstudiante" Content="+ Nuevo Estudiante"
-                        Width="150" Height="35" Background="#3B82F6" Foreground="White" FontWeight="Bold"
-                        BorderThickness="0" Cursor="Hand" Click="btnNuevoEstudiante_Click"/>
+            Width="150" Height="35" Background="#3B82F6" Foreground="White" FontWeight="Bold"
+            BorderThickness="0" Cursor="Hand" Click="btnNuevoEstudiante_Click"/>
             </StackPanel>
         </Grid>
 
@@ -54,8 +59,9 @@
         </Border>
 
         <DataGrid x:Name="gridEstudiantes" Grid.Row="2" AutoGenerateColumns="True"
-                  IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
-                  Background="White" BorderBrush="#D1D5DB" BorderThickness="1"
-                  RowHeight="35" FontSize="14" AlternatingRowBackground="#F9FAFB"/>
+          IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
+          Background="White" BorderBrush="#D1D5DB" BorderThickness="1"
+          RowHeight="35" FontSize="14" AlternatingRowBackground="#F9FAFB"
+          MouseDoubleClick="gridEstudiantes_MouseDoubleClick"/>
     </Grid>
 </UserControl>

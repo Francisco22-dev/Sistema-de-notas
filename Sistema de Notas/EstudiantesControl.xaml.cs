@@ -145,5 +145,25 @@ namespace SistemaLiceo.Presentacion
                 }
             }
         }
+        private void btnVerFicha_Click(object sender, RoutedEventArgs e)
+        {
+            AbrirDetalleSeleccionado();
+        }
+
+        private void gridEstudiantes_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            AbrirDetalleSeleccionado();
+        }
+
+        private void AbrirDetalleSeleccionado()
+        {
+            int? estudianteId = ObtenerIdSeleccionado();
+            if (estudianteId.HasValue)
+            {
+                EstudianteDetalleWindow ventana = new EstudianteDetalleWindow(estudianteId.Value);
+                ventana.ShowDialog();
+                CargarDatos();
+            }
+        }
     }
 }
