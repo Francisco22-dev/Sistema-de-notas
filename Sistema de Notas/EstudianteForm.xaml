@@ -295,6 +295,29 @@
                                     <TextBlock Text="Condición que se atiende" Style="{StaticResource Etiqueta}"/>
                                     <TextBox x:Name="txtCondicionAtencion"/>
                                 </StackPanel>
+                                <StackPanel Margin="6">
+                                    <TextBlock Text="¿Pertenece a Población Indígena?" Style="{StaticResource Etiqueta}"/>
+                                    <ComboBox x:Name="cmbPoblacionIndigena" SelectedIndex="1">
+                                        <ComboBoxItem Content="Si"/>
+                                        <ComboBoxItem Content="No"/>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Margin="6">
+                                    <TextBlock Text="¿Estudiante Embarazada? (Solo Femenino)" Style="{StaticResource Etiqueta}"/>
+                                    <ComboBox x:Name="cmbEmbarazada" SelectedIndex="1">
+                                        <ComboBoxItem Content="Si"/>
+                                        <ComboBoxItem Content="No"/>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Margin="6">
+                                    <TextBlock Text="¿Posee Alguna Discapacidad / NEE?" Style="{StaticResource Etiqueta}"/>
+                                    <ComboBox x:Name="cmbPoseeDiscapacidad" SelectedIndex="1">
+                                        <ComboBoxItem Content="Si"/>
+                                        <ComboBoxItem Content="No"/>
+                                    </ComboBox>
+                                </StackPanel>
                             </UniformGrid>
                         </GroupBox>
 

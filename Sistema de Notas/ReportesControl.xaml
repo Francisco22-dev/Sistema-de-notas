@@ -63,6 +63,7 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <StackPanel x:Name="panelBuscarCedula" Grid.Column="0" Margin="0,0,10,0">
@@ -79,12 +80,16 @@
                     <Button x:Name="btnGenerar" Grid.Column="2" Content="🔍 Vista Previa" Width="130" Height="30"
                             VerticalAlignment="Bottom" Background="#3B82F6" Foreground="White" FontWeight="Bold"
                             BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="btnGenerar_Click"/>
+                    
+                    <Button x:Name="btnExportarExcel" Grid.Column="3" Content="📊 Exportar Excel" Width="135" Height="30"
+        VerticalAlignment="Bottom" Background="#16A34A" Foreground="White" FontWeight="Bold"
+        BorderThickness="0" Cursor="Hand" Margin="0,0,6,0" Click="btnExportarExcel_Click"/>
 
-                    <Button x:Name="btnExportarPdf" Grid.Column="3" Content="📄 Exportar a PDF" Width="145" Height="30"
+                    <Button x:Name="btnExportarPdf" Grid.Column="4" Content="📄 Exportar a PDF" Width="145" Height="30"
                             VerticalAlignment="Bottom" Background="#0284C7" Foreground="White" FontWeight="Bold"
                             BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="btnExportarPdf_Click"/>
 
-                    <Button x:Name="btnImprimir" Grid.Column="4" Content="🖨️ Imprimir" Width="110" Height="30"
+                    <Button x:Name="btnImprimir" Grid.Column="5" Content="🖨️ Imprimir" Width="110" Height="30"
                             VerticalAlignment="Bottom" Background="#10B981" Foreground="White" FontWeight="Bold"
                             BorderThickness="0" Cursor="Hand" Click="btnImprimir_Click"/>
                 </Grid>

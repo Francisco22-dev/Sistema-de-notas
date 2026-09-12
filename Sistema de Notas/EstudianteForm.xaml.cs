@@ -500,7 +500,9 @@ namespace SistemaLiceo.Presentacion
                 PoseeCargador = TextoCombo(cmbPoseeCargador, "No"),
                 EstadoCargador = TextoCombo(cmbEstadoCargador, "Operativo")
             };
-
+            est.PoblacionIndigena = TextoCombo(cmbPoblacionIndigena, "No");
+            est.Embarazada = TextoCombo(cmbEmbarazada, "No");
+            est.PoseeDiscapacidad = TextoCombo(cmbPoseeDiscapacidad, "No");
             return est;
         }
 

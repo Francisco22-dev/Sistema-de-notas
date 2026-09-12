@@ -41,6 +41,9 @@ namespace Entidades
         public string? ObservacionesCustodia { get; set; }
 
         public string Estado { get; set; } = "Activo";
+        public string PoblacionIndigena { get; set; } = "No";
+        public string Embarazada { get; set; } = "No";
+        public string PoseeDiscapacidad { get; set; } = "No";
 
         public Persona Persona { get; set; } = new Persona();
         public Antropometricos Antropometricos { get; set; } = new Antropometricos();

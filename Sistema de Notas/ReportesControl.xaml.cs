@@ -694,71 +694,235 @@ namespace SistemaLiceo.Presentacion
             AgregarFirmas(doc);
             return doc;
         }
+        private void btnExportarExcel_Click(object sender, RoutedEventArgs e)
+        {
+            if (cmbPeriodo.SelectedValue == null)
+            {
+                Alerta.Mostrar("Advertencia", "Seleccione el período académico a exportar.", true);
+                return;
+            }
+
+            int periodoId = Convert.ToInt32(cmbPeriodo.SelectedValue);
+            string periodoNombre = cmbPeriodo.Text;
+
+            string nombreSugerido = $"SAZE_Matricula_Inicial_{periodoNombre.Replace("-", "_")}_{DateTime.Now:yyyyMMdd}.xlsx";
+
+            SaveFileDialog sfd = new SaveFileDialog
+            {
+                Title = "Guardar Reporte SAZE en Formato Excel",
+                Filter = "Libro de Excel (*.xlsx)|*.xlsx",
+                FileName = nombreSugerido,
+                DefaultExt = ".xlsx"
+            };
+
+            if (sfd.ShowDialog() == true)
+            {
+                try
+                {
+                    _reportes.ExportarSazeMatriculaAExcel(periodoId, periodoNombre, sfd.FileName);
+                    Alerta.Mostrar("Éxito", $"¡Reporte SAZE generado exitosamente en Excel!\n{Path.GetFileName(sfd.FileName)}", false);
+
+                    // Pregunta opcional para abrir el archivo inmediatamente
+                    MessageBoxResult res = MessageBox.Show(
+                        "¿Desea abrir el archivo Excel generado ahora mismo?",
+                        "Abrir Reporte",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (res == MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = sfd.FileName,
+                            UseShellExecute = true
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Alerta.Mostrar("Error", "Error al exportar archivo Excel: " + ex.Message, true);
+                }
+            }
+        }
 
         private FlowDocument GenerarDocumentoSazeMatricula(int gradoSeccionId, int periodoId, string estiloCedula)
         {
-            List<FilaSazeMatriculaDto> lista = _reportes.ObtenerSazeMatriculaInicial(gradoSeccionId, periodoId);
-            FlowDocument doc = CrearDocumentoBase();
+            ConfiguracionPlantelDatos confDatos = new ConfiguracionPlantelDatos();
+            ConfiguracionPlantel conf = confDatos.Obtener();
+            List<EstadisticaAnoSazeDto> estadisticas = _reportes.ObtenerEstadisticasSazeMatriculaPorEdades(periodoId);
+
+            FlowDocument doc = new FlowDocument
+            {
+                PagePadding = new Thickness(25),
+                FontFamily = new FontFamily("Segoe UI"),
+                FontSize = 9.5,
+                PageWidth = 840
+            };
+
             AgregarMembrete(doc);
 
-            Paragraph pTitulo = new Paragraph(new Run("FORMATO OFICIAL SAZE - REGISTRO DE MATRÍCULA INICIAL"))
+            Paragraph pTitulo = new Paragraph(new Bold(new Run("FORMATO ESTADÍSTICO SAZE - RESUMEN DE MATRÍCULA INICIAL POR EDAD Y GÉNERO")))
             {
-                FontSize = 15,
-                FontWeight = FontWeights.Bold,
+                FontSize = 12,
                 TextAlignment = TextAlignment.Center,
-                Margin = new Thickness(0, 5, 0, 15)
+                Margin = new Thickness(0, 5, 0, 10)
             };
             doc.Blocks.Add(pTitulo);
 
-            int totalM = lista.Count(x => x.Sexo == "M");
-            int totalF = lista.Count(x => x.Sexo == "F");
-
-            Paragraph pResumen = new Paragraph(new Run($"Total Inscritos: {lista.Count}   |   Varones (M): {totalM}   |   Hembras (F): {totalF}"))
+            // ================= 1. TABLA POR CADA AÑO ESCOLAR (1° A 5° AÑO) =================
+            foreach (var ano in estadisticas)
             {
-                FontWeight = FontWeights.SemiBold,
-                TextAlignment = TextAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 10)
-            };
-            doc.Blocks.Add(pResumen);
+                Table tAno = CrearTablaMarco();
+                int cantEdades = ano.DistribucionEdades.Count;
 
-            Table tabla = new Table { CellSpacing = 0, BorderBrush = Brushes.Black, BorderThickness = new Thickness(1) };
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(30) });
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(100) });
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(180) });
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(35) });
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(45) });
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(110) });
-            tabla.Columns.Add(new TableColumn { Width = new GridLength(90) });
+                // Columnas: Indicador (140px) + 2 subcolumnas (V y H) por cada edad + 3 columnas totales
+                tAno.Columns.Add(new TableColumn { Width = new GridLength(160) });
+                for (int i = 0; i < cantEdades; i++)
+                {
+                    tAno.Columns.Add(new TableColumn { Width = new GridLength(28) }); // V
+                    tAno.Columns.Add(new TableColumn { Width = new GridLength(28) }); // H
+                }
+                tAno.Columns.Add(new TableColumn { Width = new GridLength(45) }); // Total V
+                tAno.Columns.Add(new TableColumn { Width = new GridLength(45) }); // Total H
+                tAno.Columns.Add(new TableColumn { Width = new GridLength(55) }); // Total General
 
-            TableRowGroup grupo = new TableRowGroup();
-            TableRow cab = new TableRow { Background = Brushes.LightGray };
-            cab.Cells.Add(CrearCelda("Nº", true));
-            cab.Cells.Add(CrearCelda("Cédula", true));
-            cab.Cells.Add(CrearCelda("Apellidos y Nombres", true));
-            cab.Cells.Add(CrearCelda("Sexo", true));
-            cab.Cells.Add(CrearCelda("Edad", true));
-            cab.Cells.Add(CrearCelda("Lugar Nacimiento", true));
-            cab.Cells.Add(CrearCelda("Condición", true));
-            grupo.Rows.Add(cab);
+                TableRowGroup grp = new TableRowGroup();
 
-            foreach (var r in lista)
-            {
-                TableRow fila = new TableRow();
-                fila.Cells.Add(CrearCelda(r.Numero.ToString()));
-                fila.Cells.Add(CrearCelda(FormatearCedula(r.Cedula, estiloCedula)));
-                fila.Cells.Add(CrearCelda($"{r.Apellidos} {r.Nombres}"));
-                fila.Cells.Add(CrearCelda(r.Sexo));
-                fila.Cells.Add(CrearCelda(r.Edad.ToString()));
-                fila.Cells.Add(CrearCelda(r.LugarNacimiento));
-                fila.Cells.Add(CrearCelda(r.TipoIngreso));
-                grupo.Rows.Add(fila);
+                // Fila Título del Año
+                TableRow rTit = new TableRow { Background = Brushes.WhiteSmoke };
+                int totalCols = 1 + (cantEdades * 2) + 3;
+                TableCell cTit = new TableCell(new Paragraph(new Bold(new Run($"ESTADÍSTICA DE MATRÍCULA: {ano.Grado}"))) { Margin = new Thickness(3) })
+                {
+                    ColumnSpan = totalCols
+                };
+                rTit.Cells.Add(cTit);
+                grp.Rows.Add(rTit);
+
+                // Fila Encabezados de Edad
+                TableRow rEdades = new TableRow { Background = Brushes.LightGray, FontSize = 8.5 };
+                TableCell cRango = new TableCell(new Paragraph(new Bold(new Run("DISTRIBUCIÓN POR EDAD"))) { Margin = new Thickness(2) })
+                {
+                    RowSpan = 2
+                };
+                rEdades.Cells.Add(cRango);
+
+                foreach (var edad in ano.DistribucionEdades.Keys)
+                {
+                    TableCell cEdad = new TableCell(new Paragraph(new Bold(new Run($"{edad} AÑOS"))) { TextAlignment = TextAlignment.Center, Margin = new Thickness(1) })
+                    {
+                        ColumnSpan = 2
+                    };
+                    rEdades.Cells.Add(cEdad);
+                }
+
+                TableCell cTotV = new TableCell(new Paragraph(new Bold(new Run("TOT. V"))) { TextAlignment = TextAlignment.Center, Margin = new Thickness(1) }) { RowSpan = 2 };
+                TableCell cTotH = new TableCell(new Paragraph(new Bold(new Run("TOT. H"))) { TextAlignment = TextAlignment.Center, Margin = new Thickness(1) }) { RowSpan = 2 };
+                TableCell cTotG = new TableCell(new Paragraph(new Bold(new Run("TOTAL"))) { TextAlignment = TextAlignment.Center, Margin = new Thickness(1) }) { RowSpan = 2 };
+                rEdades.Cells.Add(cTotV);
+                rEdades.Cells.Add(cTotH);
+                rEdades.Cells.Add(cTotG);
+                grp.Rows.Add(rEdades);
+
+                // Fila Sub-encabezados V y H
+                TableRow rSub = new TableRow { Background = Brushes.LightGray, FontSize = 8 };
+                for (int i = 0; i < cantEdades; i++)
+                {
+                    rSub.Cells.Add(CrearCeldaCentro("V"));
+                    rSub.Cells.Add(CrearCeldaCentro("H"));
+                }
+                grp.Rows.Add(rSub);
+
+                // Fila de Valores de Edad
+                TableRow rValores = new TableRow { FontSize = 8.5 };
+                rValores.Cells.Add(CrearCeldaTexto("N° de Estudiantes"));
+                foreach (var (m, f) in ano.DistribucionEdades.Values)
+                {
+                    rValores.Cells.Add(CrearCeldaCentro(m.ToString()));
+                    rValores.Cells.Add(CrearCeldaCentro(f.ToString()));
+                }
+                rValores.Cells.Add(CrearCeldaCentro(ano.TotalVarones.ToString(), true));
+                rValores.Cells.Add(CrearCeldaCentro(ano.TotalHembras.ToString(), true));
+                rValores.Cells.Add(CrearCeldaCentro(ano.TotalGeneral.ToString(), true, Brushes.LightYellow));
+                grp.Rows.Add(rValores);
+
+                tAno.RowGroups.Add(grp);
+                doc.Blocks.Add(tAno);
+
+                // Subtabla de Poblaciones Especiales del Año
+                Table tDetalle = CrearTablaMarco();
+                tDetalle.Columns.Add(new TableColumn { Width = new GridLength(160) });
+                tDetalle.Columns.Add(new TableColumn { Width = new GridLength(125) });
+                tDetalle.Columns.Add(new TableColumn { Width = new GridLength(125) });
+                tDetalle.Columns.Add(new TableColumn { Width = new GridLength(125) });
+                tDetalle.Columns.Add(new TableColumn { Width = new GridLength(125) });
+                tDetalle.Columns.Add(new TableColumn { Width = new GridLength(130) });
+
+                TableRowGroup grpDet = new TableRowGroup();
+                TableRow rDetHead = new TableRow { Background = Brushes.WhiteSmoke, FontSize = 8 };
+                rDetHead.Cells.Add(CrearCeldaHeader("INDICADORES"));
+                rDetHead.Cells.Add(CrearCeldaHeader("VENEZOLANOS"));
+                rDetHead.Cells.Add(CrearCeldaHeader("EXTRANJEROS"));
+                rDetHead.Cells.Add(CrearCeldaHeader("INDÍGENAS"));
+                rDetHead.Cells.Add(CrearCeldaHeader("CON DISCAPACIDAD"));
+                rDetHead.Cells.Add(CrearCeldaHeader("EMBARAZADAS (H)"));
+                grpDet.Rows.Add(rDetHead);
+
+                TableRow rDetVal = new TableRow { FontSize = 8.5 };
+                rDetVal.Cells.Add(CrearCeldaTexto("Desglose (V / H / Total)"));
+                rDetVal.Cells.Add(CrearCeldaCentro($"V: {ano.VenezolanosM} | H: {ano.VenezolanosF} ({ano.VenezolanosM + ano.VenezolanosF})"));
+                rDetVal.Cells.Add(CrearCeldaCentro($"V: {ano.ExtranjerosM} | H: {ano.ExtranjerosF} ({ano.ExtranjerosM + ano.ExtranjerosF})"));
+                rDetVal.Cells.Add(CrearCeldaCentro($"V: {ano.IndigenasM} | H: {ano.IndigenasF} ({ano.IndigenasM + ano.IndigenasF})"));
+                rDetVal.Cells.Add(CrearCeldaCentro($"V: {ano.DiscapacidadM} | H: {ano.DiscapacidadF} ({ano.DiscapacidadM + ano.DiscapacidadF})"));
+                rDetVal.Cells.Add(CrearCeldaCentro($"{ano.EmbarazadasF}"));
+                grpDet.Rows.Add(rDetVal);
+
+                tDetalle.RowGroups.Add(grpDet);
+                doc.Blocks.Add(tDetalle);
+                doc.Blocks.Add(new Paragraph(new Run()) { Margin = new Thickness(0, 0, 0, 4) });
             }
 
-            tabla.RowGroups.Add(grupo);
-            doc.Blocks.Add(tabla);
-            doc.Blocks.Add(new Paragraph(new Run("\n")));
+            // ================= 2. CONSOLIDADO GENERAL INSTITUCIONAL =================
+            Table tTotalInst = CrearTablaMarco();
+            tTotalInst.Columns.Add(new TableColumn { Width = new GridLength(200) });
+            tTotalInst.Columns.Add(new TableColumn { Width = new GridLength(140) });
+            tTotalInst.Columns.Add(new TableColumn { Width = new GridLength(140) });
+            tTotalInst.Columns.Add(new TableColumn { Width = new GridLength(150) });
+            tTotalInst.Columns.Add(new TableColumn { Width = new GridLength(160) });
+
+            int granTotalM = estadisticas.Sum(x => x.TotalVarones);
+            int granTotalF = estadisticas.Sum(x => x.TotalHembras);
+            int granTotalGen = estadisticas.Sum(x => x.TotalGeneral);
+            int granTotalInd = estadisticas.Sum(x => x.IndigenasM + x.IndigenasF);
+            int granTotalDisc = estadisticas.Sum(x => x.DiscapacidadM + x.DiscapacidadF);
+            int granTotalEmb = estadisticas.Sum(x => x.EmbarazadasF);
+
+            TableRowGroup grpTot = new TableRowGroup();
+            TableRow rTotTit = new TableRow { Background = Brushes.LightGray };
+            rTotTit.Cells.Add(CrearCeldaHeader("MATRÍCULA TOTAL PLANTEL"));
+            rTotTit.Cells.Add(CrearCeldaHeader($"VARONES (M): {granTotalM}"));
+            rTotTit.Cells.Add(CrearCeldaHeader($"HEMBRAS (F): {granTotalF}"));
+            rTotTit.Cells.Add(CrearCeldaHeader($"TOTAL GENERAL: {granTotalGen}"));
+            rTotTit.Cells.Add(CrearCeldaHeader($"IND: {granTotalInd} | DISC: {granTotalDisc} | EMB: {granTotalEmb}"));
+            grpTot.Rows.Add(rTotTit);
+
+            tTotalInst.RowGroups.Add(grpTot);
+            doc.Blocks.Add(tTotalInst);
+
             AgregarFirmas(doc);
             return doc;
+        }
+
+        private static TableCell CrearCeldaCentro(string texto, bool esBold = false, Brush? fondo = null)
+        {
+            Paragraph p = new Paragraph(new Run(texto)) { Margin = new Thickness(1), TextAlignment = TextAlignment.Center };
+            if (esBold) p.FontWeight = FontWeights.Bold;
+            TableCell cell = new TableCell(p)
+            {
+                BorderBrush = Brushes.Black,
+                BorderThickness = new Thickness(0.5)
+            };
+            if (fondo != null) cell.Background = fondo;
+            return cell;
         }
 
         private FlowDocument GenerarDocumentoSazeRendimiento(int gradoSeccionId, int periodoId)

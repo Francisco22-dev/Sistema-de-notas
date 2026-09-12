@@ -35,6 +35,7 @@ namespace Entidades
         public string Representante { get; set; } = string.Empty;
         public string TelefonoRepresentante { get; set; } = string.Empty;
     }
+
     public class FilaSazeMatriculaDto
     {
         public int Numero { get; set; }
@@ -59,6 +60,7 @@ namespace Entidades
         public int Aplazados { get; set; }
         public decimal PorcentajeAprobados => Evaluados > 0 ? Math.Round((decimal)Aprobados / Evaluados * 100, 1) : 0;
     }
+
     public class FilaNotaCertificadaDto
     {
         public string Grado { get; set; } = string.Empty;
@@ -91,8 +93,27 @@ namespace Entidades
         public string Materia { get; set; } = string.Empty;
         public int? NotaNumero { get; set; }
         public string NotaLetras { get; set; } = "--";
-        public string TipoEvaluacion { get; set; } = "F"; // F = Final, R = Reparación
+        public string TipoEvaluacion { get; set; } = "F";
         public string MesAno { get; set; } = "07 2026";
         public int InstitucionNro { get; set; } = 1;
+    }
+
+    public class EstadisticaAnoSazeDto
+    {
+        public string Grado { get; set; } = string.Empty;
+        public int GradoNro { get; set; }
+        public Dictionary<int, (int M, int F)> DistribucionEdades { get; set; } = new();
+        public int VenezolanosM { get; set; }
+        public int VenezolanosF { get; set; }
+        public int ExtranjerosM { get; set; }
+        public int ExtranjerosF { get; set; }
+        public int IndigenasM { get; set; }
+        public int IndigenasF { get; set; }
+        public int DiscapacidadM { get; set; }
+        public int DiscapacidadF { get; set; }
+        public int EmbarazadasF { get; set; }
+        public int TotalVarones { get; set; }
+        public int TotalHembras { get; set; }
+        public int TotalGeneral => TotalVarones + TotalHembras;
     }
 }

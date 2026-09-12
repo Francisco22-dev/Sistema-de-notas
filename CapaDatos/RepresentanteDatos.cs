@@ -1,8 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Data;
+using ClosedXML.Excel;
 using Entidades;
 using MySqlConnector;
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+using System.Data;
 
 namespace SistemaLiceo.Datos
 {
@@ -260,6 +263,7 @@ namespace SistemaLiceo.Datos
             }
             return tabla;
         }
+        
 
         private static string? Texto(MySqlDataReader lector, string columna) =>
             lector.IsDBNull(lector.GetOrdinal(columna)) ? null : lector.GetString(columna);
