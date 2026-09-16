@@ -333,23 +333,50 @@ namespace SistemaLiceo.Datos
                 _ => nota.Value.ToString()
             };
         }
+        // =========================================================================
+        // CÁLCULO DEL PROMEDIO REAL Y EXPORTACIÓN A EXCEL DE NOTAS CERTIFICADAS
+        // =========================================================================
+
+        public static decimal CalcularPromedioGeneralReal(CertificacionEstudianteCompletaDto dto)
+        {
+            List<decimal> notasReales = new List<decimal>();
+
+            void Recolectar(List<FilaMateriaPensumDto> lista)
+            {
+                foreach (var m in lista)
+                {
+                    if (m.NotaNumero.HasValue && m.NotaNumero.Value >= 0 && m.NotaNumero.Value <= 20)
+                    {
+                        notasReales.Add(m.NotaNumero.Value);
+                    }
+                }
+            }
+
+            Recolectar(dto.PrimerAno);
+            Recolectar(dto.SegundoAno);
+            Recolectar(dto.TercerAno);
+            Recolectar(dto.CuartoAno);
+            Recolectar(dto.QuintoAno);
+
+            return notasReales.Count > 0 ? Math.Round(notasReales.Average(), 3) : 0.000m;
+        }
 
         public CertificacionEstudianteCompletaDto? ObtenerCertificacionOficialCompleta(int estudianteId)
         {
             const string consultaEstudiante = @"
-                SELECT p.nombre_1, p.nombre_2, p.apellido_1, p.apellido_2,
-                       CONCAT(p.nacionalidad, '-', IFNULL(p.cedula_identidad, 'S/C')) AS Cedula,
-                       p.fecha_nacimiento,
-                       pais.nombre AS PaisNac,
-                       IFNULL(e.nombre, 'CARABOBO') AS EstadoNac,
-                       IFNULL(m.nombre, 'VALENCIA') AS MunNac
-                FROM PERSONA_ESTUDIANTE pe
-                INNER JOIN PERSONA p ON p.id = pe.persona_id
-                INNER JOIN PAIS pais ON pais.id = pe.pais_nacimiento_id
-                LEFT JOIN PARROQUIA par ON par.id = pe.parroquia_nacimiento_id
-                LEFT JOIN MUNICIPIO m ON m.id = par.municipio_id
-                LEFT JOIN ESTADO e ON e.id = m.estado_id
-                WHERE pe.id = @estId LIMIT 1;";
+        SELECT p.nombre_1, p.nombre_2, p.apellido_1, p.apellido_2,
+               CONCAT(p.nacionalidad, '-', IFNULL(p.cedula_identidad, 'S/C')) AS Cedula,
+               p.fecha_nacimiento,
+               pais.nombre AS PaisNac,
+               IFNULL(e.nombre, 'CARABOBO') AS EstadoNac,
+               IFNULL(m.nombre, 'VALENCIA') AS MunNac
+        FROM PERSONA_ESTUDIANTE pe
+        INNER JOIN PERSONA p ON p.id = pe.persona_id
+        INNER JOIN PAIS pais ON pais.id = pe.pais_nacimiento_id
+        LEFT JOIN PARROQUIA par ON par.id = pe.parroquia_nacimiento_id
+        LEFT JOIN MUNICIPIO m ON m.id = par.municipio_id
+        LEFT JOIN ESTADO e ON e.id = m.estado_id
+        WHERE pe.id = @estId LIMIT 1;";
 
             CertificacionEstudianteCompletaDto dto = new CertificacionEstudianteCompletaDto();
 
@@ -373,22 +400,20 @@ namespace SistemaLiceo.Datos
                 }
 
                 const string consultaNotas = @"
-                    SELECT g.nombre AS Grado,
-                           m.nombre AS Materia,
-                           npi.nota AS Definitiva,
-                           pa.nombre AS Periodo
-                    FROM INSCRIPCION i
-                    INNER JOIN GRADO_SECCION gs ON gs.id = i.grado_seccion_id
-                    INNER JOIN GRADO g ON g.id = gs.grado_id
-                    INNER JOIN PERIODO_ACADEMICO pa ON pa.id = i.periodo_id
-                    INNER JOIN MATERIA_PROFESOR_PERIODO mpp ON mpp.grado_seccion_id = gs.id AND mpp.periodo_id = pa.id
-                    INNER JOIN GRADO_MATERIA gm ON gm.id = mpp.grado_materia_id
-                    INNER JOIN MATERIA m ON m.id = gm.materia_id
-                    LEFT JOIN NOTA_PERIODO_INSCRIPCION npi ON npi.inscripcion_id = i.id AND npi.materia_profe_periodo_id = mpp.id
-                    WHERE i.estudiante_id = @estId
-                    ORDER BY g.id, m.nombre;";
-
-                List<decimal> notasParaPromedio = new List<decimal>();
+            SELECT g.nombre AS Grado,
+                   m.nombre AS Materia,
+                   npi.nota AS Definitiva,
+                   pa.nombre AS Periodo
+            FROM INSCRIPCION i
+            INNER JOIN GRADO_SECCION gs ON gs.id = i.grado_seccion_id
+            INNER JOIN GRADO g ON g.id = gs.grado_id
+            INNER JOIN PERIODO_ACADEMICO pa ON pa.id = i.periodo_id
+            INNER JOIN MATERIA_PROFESOR_PERIODO mpp ON mpp.grado_seccion_id = gs.id AND mpp.periodo_id = pa.id
+            INNER JOIN GRADO_MATERIA gm ON gm.id = mpp.grado_materia_id
+            INNER JOIN MATERIA m ON m.id = gm.materia_id
+            LEFT JOIN NOTA_PERIODO_INSCRIPCION npi ON npi.inscripcion_id = i.id AND npi.materia_profe_periodo_id = mpp.id
+            WHERE i.estudiante_id = @estId
+            ORDER BY g.id, m.nombre;";
 
                 using (MySqlCommand cmdNotas = new MySqlCommand(consultaNotas, conexion))
                 {
@@ -400,8 +425,6 @@ namespace SistemaLiceo.Datos
                             string grado = lector.GetString("Grado").ToUpper();
                             string materia = lector.GetString("Materia").ToUpper();
                             int? nota = lector.IsDBNull(lector.GetOrdinal("Definitiva")) ? null : lector.GetInt32("Definitiva");
-
-                            if (nota.HasValue) notasParaPromedio.Add(nota.Value);
 
                             var item = new FilaMateriaPensumDto
                             {
@@ -423,11 +446,12 @@ namespace SistemaLiceo.Datos
                 }
 
                 LlenarPensumOficialBase(dto);
-                dto.PromedioGeneral = notasParaPromedio.Count > 0 ? Math.Round(notasParaPromedio.Average(), 3) : 20.000m;
+                dto.PromedioGeneral = CalcularPromedioGeneralReal(dto);
             }
 
             return dto;
         }
+
 
         private static void LlenarPensumOficialBase(CertificacionEstudianteCompletaDto dto)
         {
@@ -855,6 +879,479 @@ namespace SistemaLiceo.Datos
 
                 // Guardar archivo Excel
                 wb.SaveAs(rutaArchivo);
+            }
+        }
+        public void ExportarConstanciaAExcel(ConstanciaEstudioDto datos, ConfiguracionPlantel conf, string titulo, bool esConducta, string rutaArchivo, string estiloCedula)
+        {
+            using (var wb = new XLWorkbook())
+            {
+                var ws = wb.Worksheets.Add("Constancia");
+                ws.ShowGridLines = false;
+
+                ws.Column(1).Width = 5;
+                ws.Column(2).Width = 75;
+                ws.Column(3).Width = 5;
+
+                // Membrete
+                ws.Cell("B2").Value = "REPÚBLICA BOLIVARIANA DE VENEZUELA";
+                ws.Cell("B3").Value = "MINISTERIO DEL PODER POPULAR PARA LA EDUCACIÓN";
+                ws.Cell("B4").Value = conf.Eponimo;
+                ws.Cell("B5").Value = $"{conf.CodigoPlantel} | {conf.Direccion}";
+
+                for (int r = 2; r <= 5; r++)
+                {
+                    ws.Cell(r, 2).Style.Font.Bold = true;
+                    ws.Cell(r, 2).Style.Font.FontSize = (r == 4) ? 12 : 9.5;
+                    ws.Cell(r, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                // Título
+                ws.Cell("B8").Value = titulo;
+                ws.Cell("B8").Style.Font.Bold = true;
+                ws.Cell("B8").Style.Font.FontSize = 15;
+                ws.Cell("B8").Style.Font.FontColor = XLColor.FromHtml("#1E3A8A");
+                ws.Cell("B8").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                string cedulaFormateada = FormatearCedula(datos.Cedula, estiloCedula);
+
+                // Cuerpo del documento (Texto editable)
+                string cuerpo = esConducta
+                    ? $"Quien suscribe, la Dirección de la institución {conf.Eponimo}, hace constar por medio de la presente que el/la estudiante {datos.EstudianteNombreCompleto}, titular de la Cédula de Identidad Nº {cedulaFormateada}, cursante del {datos.Grado}, Sección \"{datos.Seccion}\", durante el año escolar {datos.Periodo}, ha demostrado una EXCELENTE CONDUCTA, acatando las normas de convivencia escolar y demostrando respeto y colaboración."
+                    : $"Quien suscribe, la Dirección de la institución {conf.Eponimo}, hace constar por medio de la presente que el/la estudiante {datos.EstudianteNombreCompleto}, titular de la Cédula de Identidad Nº {cedulaFormateada} (Cédula Escolar Nº {datos.CedulaEscolar}), se encuentra debidamente inscrito(a) en este plantel cursando el {datos.Grado}, Sección \"{datos.Seccion}\" de Educación {datos.NivelAcademico}, durante el Año Escolar {datos.Periodo}.";
+
+                var cCuerpo = ws.Cell("B11");
+                cCuerpo.Value = cuerpo;
+                cCuerpo.Style.Alignment.WrapText = true;
+                cCuerpo.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                cCuerpo.Style.Font.FontSize = 11;
+                ws.Row(11).Height = 85;
+
+                string fechaHoy = DateTime.Now.ToString("dd 'días del mes de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
+                var cFecha = ws.Cell("B14");
+                cFecha.Value = $"Constancia que se expide a petición de la parte interesada, en la ciudad de {conf.Municipio}, a los {fechaHoy}.";
+                cFecha.Style.Font.FontSize = 10.5;
+                cFecha.Style.Alignment.WrapText = true;
+
+                // Firmas
+                ws.Cell("B19").Value = "_________________________________                     _________________________________";
+                ws.Cell("B20").Value = $"{conf.DirectorNombre}                                         Control de Estudios y Evaluación";
+                ws.Cell("B21").Value = $"Director(a) - C.I. {conf.DirectorCedula}                                              Sello del Plantel";
+
+                for (int r = 19; r <= 21; r++)
+                {
+                    ws.Cell(r, 2).Style.Font.Bold = true;
+                    ws.Cell(r, 2).Style.Font.FontSize = 9.5;
+                    ws.Cell(r, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                wb.SaveAs(rutaArchivo);
+            }
+        }
+
+        public void ExportarBoletaAExcel(ConstanciaEstudioDto est, List<FilaBoletaDto> notas, ConfiguracionPlantel conf, string rutaArchivo, string estiloCedula)
+        {
+            using (var wb = new XLWorkbook())
+            {
+                var ws = wb.Worksheets.Add("Boletín de Calificaciones");
+                ws.ShowGridLines = true;
+
+                ws.Column(1).Width = 32; // Asignatura
+                ws.Column(2).Width = 28; // Docente
+                ws.Column(3).Width = 14; // Lapso 1
+                ws.Column(4).Width = 14; // Lapso 2
+                ws.Column(5).Width = 14; // Lapso 3
+                ws.Column(6).Width = 16; // Definitiva
+
+                // Encabezado
+                ws.Range("A1:F1").Merge().Value = conf.Eponimo;
+                ws.Range("A2:F2").Merge().Value = "BOLETÍN INFORMATIVO DE CALIFICACIONES";
+                ws.Range("A1:F2").Style.Font.Bold = true;
+                ws.Range("A1:F2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Cell("A1").Style.Font.FontSize = 13;
+                ws.Cell("A2").Style.Font.FontSize = 11;
+                ws.Cell("A2").Style.Font.FontColor = XLColor.FromHtml("#1E3A8A");
+
+                // Datos del Estudiante
+                string cedula = FormatearCedula(est.Cedula, estiloCedula);
+                ws.Cell("A4").Value = $"Estudiante: {est.EstudianteNombreCompleto}";
+                ws.Cell("D4").Value = $"Cédula: {cedula}";
+                ws.Cell("A5").Value = $"Año y Sección: {est.Grado} \"{est.Seccion}\"";
+                ws.Cell("D5").Value = $"Año Escolar: {est.Periodo}";
+                ws.Range("A4:F5").Style.Font.Bold = true;
+
+                // Tabla de Notas
+                int r = 7;
+                string[] headers = { "ASIGNATURA", "DOCENTE", "1ER LAPSO", "2DO LAPSO", "3ER LAPSO", "DEFINITIVA" };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    var c = ws.Cell(r, i + 1);
+                    c.Value = headers[i];
+                    c.Style.Font.Bold = true;
+                    c.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A8A");
+                    c.Style.Font.FontColor = XLColor.White;
+                    c.Style.Alignment.Horizontal = (i < 2) ? XLAlignmentHorizontalValues.Left : XLAlignmentHorizontalValues.Center;
+                }
+                r++;
+
+                foreach (var n in notas)
+                {
+                    ws.Cell(r, 1).Value = n.Materia;
+                    ws.Cell(r, 2).Value = n.Docente;
+                    ws.Cell(r, 3).Value = n.NotaLapso1.HasValue ? n.NotaLapso1.Value.ToString("D2") : "--";
+                    ws.Cell(r, 4).Value = n.NotaLapso2.HasValue ? n.NotaLapso2.Value.ToString("D2") : "--";
+                    ws.Cell(r, 5).Value = n.NotaLapso3.HasValue ? n.NotaLapso3.Value.ToString("D2") : "--";
+                    ws.Cell(r, 6).Value = n.NotaDefinitiva.HasValue ? n.NotaDefinitiva.Value.ToString("D2") : "--";
+
+                    for (int col = 3; col <= 6; col++)
+                        ws.Cell(r, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    ws.Cell(r, 6).Style.Font.Bold = true;
+                    ws.Cell(r, 6).Style.Fill.BackgroundColor = XLColor.FromHtml("#FEF08A");
+                    r++;
+                }
+
+                var rangoTabla = ws.Range(7, 1, r - 1, 6);
+                rangoTabla.Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+                rangoTabla.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+                // Firmas
+                r += 3;
+                ws.Range(r, 1, r, 3).Merge().Value = "____________________________________";
+                ws.Range(r, 4, r, 6).Merge().Value = "____________________________________";
+                ws.Range(r + 1, 1, r + 1, 3).Merge().Value = $"Prof(a). {conf.DirectorNombre}\nDirector(a)";
+                ws.Range(r + 1, 4, r + 1, 6).Merge().Value = "Control de Estudios y Evaluación\nSello del Plantel";
+                ws.Range(r, 1, r + 1, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Range(r + 1, 1, r + 1, 6).Style.Font.Bold = true;
+
+                wb.SaveAs(rutaArchivo);
+            }
+        }
+        public void ExportarNominaAExcel(List<FilaNominaSeccionDto> lista, string gradoSeccion, string periodo, ConfiguracionPlantel conf, string rutaArchivo, string estiloCedula)
+        {
+            using (var wb = new XLWorkbook())
+            {
+                var ws = wb.Worksheets.Add("Nómina de Matrícula");
+                ws.ShowGridLines = true;
+
+                ws.Column(1).Width = 8;  // Nº
+                ws.Column(2).Width = 16; // Cédula
+                ws.Column(3).Width = 35; // Estudiante
+                ws.Column(4).Width = 8;  // Sexo
+                ws.Column(5).Width = 32; // Representante
+                ws.Column(6).Width = 18; // Teléfono
+
+                // Encabezado
+                ws.Range("A1:F1").Merge().Value = conf.Eponimo;
+                ws.Range("A2:F2").Merge().Value = $"NÓMINA DE MATRÍCULA - {gradoSeccion.ToUpper()} | AÑO ESCOLAR {periodo}";
+                ws.Range("A1:F2").Style.Font.Bold = true;
+                ws.Range("A1:F2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Cell("A1").Style.Font.FontSize = 13;
+                ws.Cell("A2").Style.Font.FontSize = 11;
+                ws.Cell("A2").Style.Font.FontColor = XLColor.FromHtml("#1E3A8A");
+
+                int r = 4;
+                string[] headers = { "Nº", "CÉDULA", "APELLIDOS Y NOMBRES", "SEXO", "REPRESENTANTE LEGAL", "TELÉFONO" };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    var c = ws.Cell(r, i + 1);
+                    c.Value = headers[i];
+                    c.Style.Font.Bold = true;
+                    c.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A8A");
+                    c.Style.Font.FontColor = XLColor.White;
+                    c.Style.Alignment.Horizontal = (i == 2 || i == 4) ? XLAlignmentHorizontalValues.Left : XLAlignmentHorizontalValues.Center;
+                }
+                r++;
+
+                foreach (var item in lista)
+                {
+                    ws.Cell(r, 1).Value = item.Numero;
+                    ws.Cell(r, 2).Value = FormatearCedula(item.Cedula, estiloCedula);
+                    ws.Cell(r, 3).Value = item.Estudiante;
+                    ws.Cell(r, 4).Value = item.Sexo;
+                    ws.Cell(r, 5).Value = item.Representante;
+                    ws.Cell(r, 6).Value = item.TelefonoRepresentante;
+
+                    ws.Cell(r, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(r, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(r, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(r, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    r++;
+                }
+
+                var rangoTabla = ws.Range(4, 1, r - 1, 6);
+                rangoTabla.Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+                rangoTabla.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+                // Resumen final
+                ws.Cell(r + 1, 1).Value = $"Total Estudiantes: {lista.Count}   |   Varones (M): {lista.Count(x => x.Sexo == "M")}   |   Hembras (F): {lista.Count(x => x.Sexo == "F")}";
+                ws.Range(r + 1, 1, r + 1, 6).Merge().Style.Font.Bold = true;
+
+                wb.SaveAs(rutaArchivo);
+            }
+        }
+
+        public void ExportarNotasCertificadasAExcel(CertificacionEstudianteCompletaDto est, ConfiguracionPlantel conf, string rutaArchivo, string estiloCedula)
+        {
+            // Asegurar cálculo del promedio real actualizado
+            est.PromedioGeneral = CalcularPromedioGeneralReal(est);
+
+            using (var wb = new XLWorkbook())
+            {
+                var ws = wb.Worksheets.Add("Notas Certificadas");
+                ws.ShowGridLines = true;
+
+                // Anchos de columnas para las 2 tablas paralelas (1° a 5° y Complementarias)
+                ws.Column(1).Width = 25; // Materia Izq
+                ws.Column(2).Width = 5;  // Nº
+                ws.Column(3).Width = 14; // Letras
+                ws.Column(4).Width = 6;  // T-E
+                ws.Column(5).Width = 11; // Fecha
+                ws.Column(6).Width = 5;  // Inst
+                ws.Column(7).Width = 2.5;// Separador central
+                ws.Column(8).Width = 25; // Materia Der
+                ws.Column(9).Width = 5;  // Nº
+                ws.Column(10).Width = 14;// Letras
+                ws.Column(11).Width = 6; // T-E
+                ws.Column(12).Width = 11;// Fecha
+                ws.Column(13).Width = 5; // Inst
+
+                // ================= I. ENCABEZADO OFICIAL =================
+                ws.Range("A1:M1").Merge().Value = "REPÚBLICA BOLIVARIANA DE VENEZUELA - MINISTERIO DEL PODER POPULAR PARA LA EDUCACIÓN";
+                ws.Range("A2:M2").Merge().Value = $"CERTIFICACIÓN DE CALIFICACIONES EMG - {conf.DenominacionPlan} (PLAN {conf.CodigoPlanEstudio})";
+                ws.Range("A1:M2").Style.Font.Bold = true;
+                ws.Range("A1:M2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                // ================= II Y III. DATOS PLANTEL Y ESTUDIANTE =================
+                ws.Range("A4:M4").Merge().Value = $"II. DATOS DEL PLANTEL: {conf.Eponimo} | CÓDIGO: {conf.CodigoPlantel} | {conf.Municipio}, {conf.EntidadFederal} | TELÉFONO: {conf.Telefono}";
+                ws.Range("A4:M4").Style.Font.Bold = true;
+                ws.Range("A4:M4").Style.Fill.BackgroundColor = XLColor.FromHtml("#F1F5F9");
+
+                string cedula = FormatearCedula(est.Cedula, estiloCedula);
+                string fn = est.FechaNacimiento.HasValue ? est.FechaNacimiento.Value.ToString("dd/MM/yyyy") : "S/F";
+                ws.Range("A5:M5").Merge().Value = $"III. ESTUDIANTE: {est.Apellidos}, {est.Nombres} | CÉDULA: {cedula} | F. NAC: {fn} | LUGAR: {est.MunicipioNacimiento}, {est.EstadoNacimiento}";
+                ws.Range("A5:M5").Style.Font.Bold = true;
+                ws.Range("A5:M5").Style.Fill.BackgroundColor = XLColor.FromHtml("#F1F5F9");
+
+                // ================= IV. PLANTELES CURSADOS =================
+                ws.Range("A6:M6").Merge().Value = $"IV. INSTITUCIÓN EDUCATIVA: (1) {conf.Eponimo} - {conf.Municipio} (EDO. {conf.EntidadFederal})";
+                ws.Range("A6:M6").Style.Font.Bold = true;
+                ws.Range("A6:M6").Style.Fill.BackgroundColor = XLColor.FromHtml("#E2E8F0");
+
+                // Función interna para dibujar cada año
+                void DibujarBloqueAno(int rIni, int cIni, string titulo, List<FilaMateriaPensumDto> materias)
+                {
+                    ws.Range(rIni, cIni, rIni, cIni + 5).Merge().Value = titulo;
+                    ws.Range(rIni, cIni, rIni, cIni + 5).Style.Font.Bold = true;
+                    ws.Range(rIni, cIni, rIni, cIni + 5).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A8A");
+                    ws.Range(rIni, cIni, rIni, cIni + 5).Style.Font.FontColor = XLColor.White;
+                    ws.Range(rIni, cIni, rIni, cIni + 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    string[] subH = { "ÁREA DE FORMACIÓN", "Nº", "LETRAS", "T-E", "FECHA", "I" };
+                    for (int i = 0; i < subH.Length; i++)
+                    {
+                        var cel = ws.Cell(rIni + 1, cIni + i);
+                        cel.Value = subH[i];
+                        cel.Style.Font.Bold = true;
+                        cel.Style.Fill.BackgroundColor = XLColor.FromHtml("#E2E8F0");
+                        cel.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        cel.Style.Font.FontSize = 8;
+                    }
+
+                    int f = rIni + 2;
+                    foreach (var m in materias)
+                    {
+                        ws.Cell(f, cIni).Value = m.Materia;
+                        ws.Cell(f, cIni + 1).Value = m.NotaNumero.HasValue ? m.NotaNumero.Value.ToString("D2") : "--";
+                        ws.Cell(f, cIni + 2).Value = m.NotaLetras;
+                        ws.Cell(f, cIni + 3).Value = m.TipoEvaluacion;
+                        ws.Cell(f, cIni + 4).Value = m.MesAno;
+                        ws.Cell(f, cIni + 5).Value = m.InstitucionNro;
+
+                        for (int col = 1; col <= 5; col++)
+                            ws.Cell(f, cIni + col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                        ws.Row(f).Style.Font.FontSize = 8;
+                        f++;
+                    }
+
+                    var rangoBloque = ws.Range(rIni, cIni, f - 1, cIni + 5);
+                    rangoBloque.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    rangoBloque.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                }
+
+                // Fila 1: 1er Año (Izq) | 2do Año (Der)
+                DibujarBloqueAno(8, 1, "PRIMER AÑO", est.PrimerAno);
+                DibujarBloqueAno(8, 8, "SEGUNDO AÑO", est.SegundoAno);
+
+                // Fila 2: 3er Año (Izq) | 4to Año (Der)
+                DibujarBloqueAno(18, 1, "TERCER AÑO", est.TercerAno);
+                DibujarBloqueAno(18, 8, "CUARTO AÑO", est.CuartoAno);
+
+                // Fila 3: 5to Año (Izq)
+                DibujarBloqueAno(29, 1, "QUINTO AÑO", est.QuintoAno);
+
+                // ================= ÁREAS COMPLEMENTARIAS EN EXCEL (Lado Derecho de 5to Año) =================
+                int rComp = 29;
+                int cComp = 8;
+                ws.Range(rComp, cComp, rComp, cComp + 5).Merge().Value = "ÁREAS DE FORMACIÓN COMPLEMENTARIAS";
+                ws.Range(rComp, cComp, rComp, cComp + 5).Style.Font.Bold = true;
+                ws.Range(rComp, cComp, rComp, cComp + 5).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A8A");
+                ws.Range(rComp, cComp, rComp, cComp + 5).Style.Font.FontColor = XLColor.White;
+                ws.Range(rComp, cComp, rComp, cComp + 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                // Subtítulos
+                ws.Range(rComp + 1, cComp, rComp + 1, cComp + 2).Merge().Value = "ÁREA DE FORMACIÓN";
+                ws.Cell(rComp + 1, cComp + 3).Value = "AÑO";
+                ws.Range(rComp + 1, cComp + 4, rComp + 1, cComp + 5).Merge().Value = "LITERAL / GRUPO";
+                ws.Range(rComp + 1, cComp, rComp + 1, cComp + 5).Style.Font.Bold = true;
+                ws.Range(rComp + 1, cComp, rComp + 1, cComp + 5).Style.Fill.BackgroundColor = XLColor.FromHtml("#E2E8F0");
+                ws.Range(rComp + 1, cComp, rComp + 1, cComp + 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Range(rComp + 1, cComp, rComp + 1, cComp + 5).Style.Font.FontSize = 8;
+
+                int fC = rComp + 2;
+                // Orientación y Convivencia (1° a 5°)
+                for (int a = 1; a <= 5; a++)
+                {
+                    ws.Range(fC, cComp, fC, cComp + 2).Merge().Value = "ORIENTACIÓN Y CONVIVENCIA";
+                    ws.Cell(fC, cComp + 3).Value = $"{a}°";
+                    ws.Range(fC, cComp + 4, fC, cComp + 5).Merge().Value = "A";
+
+                    ws.Cell(fC, cComp + 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Range(fC, cComp + 4, fC, cComp + 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Row(fC).Style.Font.FontSize = 7.5;
+                    fC++;
+                }
+
+                // Grupos Estables (1° a 5°)
+                for (int a = 1; a <= 5; a++)
+                {
+                    ws.Range(fC, cComp, fC, cComp + 2).Merge().Value = "PARTICIPACIÓN EN G.C.R.P.";
+                    ws.Cell(fC, cComp + 3).Value = $"{a}°";
+                    ws.Range(fC, cComp + 4, fC, cComp + 5).Merge().Value = "A (PROTOCOLO)";
+
+                    ws.Cell(fC, cComp + 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Range(fC, cComp + 4, fC, cComp + 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Row(fC).Style.Font.FontSize = 7.5;
+                    fC++;
+                }
+
+                var rangoComp = ws.Range(rComp, cComp, fC - 1, cComp + 5);
+                rangoComp.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                rangoComp.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+                // ================= VI. OBSERVACIONES CON PROMEDIO REAL =================
+                ws.Range("A42:M42").Merge().Value = $"VI. OBSERVACIONES:   PROMEDIO GENERAL: {est.PromedioGeneral:N3}";
+                ws.Range("A42:M42").Style.Font.Bold = true;
+                ws.Range("A42:M42").Style.Fill.BackgroundColor = XLColor.FromHtml("#FEF08A"); // Amarillo
+                ws.Range("A42:M42").Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+
+                // ================= VII Y VIII. FIRMAS Y VALOR FISCAL =================
+                ws.Range("A45:F45").Merge().Value = $"_________________________________\nProf(a). {conf.DirectorNombre}\nDirector(a) del Plantel\n(Para efectos de su Validez Nacional)";
+                ws.Range("H45:M45").Merge().Value = "_________________________________\nDirector(a) de la Calidad Educativa\nSello CDCEE\n(Para efectos de su Validez Internacional)";
+                ws.Range("A45:M45").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Range("A45:M45").Style.Font.Bold = true;
+
+                ws.Range("A48:M48").Merge().Value = "VALOR FISCAL: Para su validez legal y de acuerdo a la Ley de Timbre Fiscal al dorso de este documento se le debe colocar tres décimas de la Unidad Tributaria (0,3 U.T.)";
+                ws.Range("A48:M48").Style.Font.FontSize = 8;
+                ws.Range("A48:M48").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                wb.SaveAs(rutaArchivo);
+            }
+        }
+
+        public void ExportarSazeRendimientoAExcel(List<FilaSazeRendimientoDto> lista, string gradoSeccion, string periodo, ConfiguracionPlantel conf, string rutaArchivo)
+        {
+            using (var wb = new XLWorkbook())
+            {
+                var ws = wb.Worksheets.Add("SAZE Rendimiento");
+                ws.ShowGridLines = true;
+
+                ws.Column(1).Width = 28; // Asignatura
+                ws.Column(2).Width = 26; // Docente
+                ws.Column(3).Width = 14; // Matrícula
+                ws.Column(4).Width = 14; // Evaluados
+                ws.Column(5).Width = 14; // Aprobados
+                ws.Column(6).Width = 14; // Aplazados
+                ws.Column(7).Width = 16; // % Aprobación
+
+                // Encabezado
+                ws.Range("A1:G1").Merge().Value = conf.Eponimo;
+                ws.Range("A2:G2").Merge().Value = $"FORMATO OFICIAL SAZE - RESUMEN DE RENDIMIENTO ESCOLAR ({gradoSeccion.ToUpper()}) - AÑO {periodo}";
+                ws.Range("A1:G2").Style.Font.Bold = true;
+                ws.Range("A1:G2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Cell("A1").Style.Font.FontSize = 13;
+                ws.Cell("A2").Style.Font.FontSize = 11;
+                ws.Cell("A2").Style.Font.FontColor = XLColor.FromHtml("#1E3A8A");
+
+                int r = 4;
+                string[] headers = { "ASIGNATURA", "DOCENTE", "MATRÍCULA", "EVALUADOS", "APROBADOS", "APLAZADOS", "% APROBACIÓN" };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    var c = ws.Cell(r, i + 1);
+                    c.Value = headers[i];
+                    c.Style.Font.Bold = true;
+                    c.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A8A");
+                    c.Style.Font.FontColor = XLColor.White;
+                    c.Style.Alignment.Horizontal = (i < 2) ? XLAlignmentHorizontalValues.Left : XLAlignmentHorizontalValues.Center;
+                }
+                r++;
+
+                foreach (var item in lista)
+                {
+                    ws.Cell(r, 1).Value = item.Materia;
+                    ws.Cell(r, 2).Value = item.Docente;
+                    ws.Cell(r, 3).Value = item.Inscritos;
+                    ws.Cell(r, 4).Value = item.Evaluados;
+                    ws.Cell(r, 5).Value = item.Aprobados;
+                    ws.Cell(r, 6).Value = item.Aplazados;
+                    ws.Cell(r, 7).Value = $"{item.PorcentajeAprobados}%";
+
+                    for (int col = 3; col <= 7; col++)
+                        ws.Cell(r, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    ws.Cell(r, 7).Style.Font.Bold = true;
+                    r++;
+                }
+
+                var rangoTabla = ws.Range(4, 1, r - 1, 7);
+                rangoTabla.Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+                rangoTabla.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+                wb.SaveAs(rutaArchivo);
+            }
+        }
+        private string FormatearCedula(string? cedula, string estiloCedula)
+        {
+            if (string.IsNullOrWhiteSpace(cedula))
+                return string.Empty;
+
+            // Extraer prefijo (V/E/J/G) y dígitos limpios
+            string prefijo = "V-";
+            string digitos = new string(cedula.Where(char.IsDigit).ToArray());
+
+            if (cedula.StartsWith("E", StringComparison.OrdinalIgnoreCase))
+                prefijo = "E-";
+            else if (cedula.StartsWith("J", StringComparison.OrdinalIgnoreCase))
+                prefijo = "J-";
+            else if (cedula.StartsWith("G", StringComparison.OrdinalIgnoreCase))
+                prefijo = "G-";
+
+            if (!long.TryParse(digitos, out long numero))
+                return cedula;
+
+            // Aplicar formato según la preferencia
+            switch (estiloCedula?.ToUpper())
+            {
+                case "SIN_PUNTOS":
+                    return $"{prefijo}{digitos}";
+
+                case "SOLO_NUMEROS":
+                    return string.Format(new System.Globalization.CultureInfo("es-VE"), "{0:N0}", numero).Replace(',', '.');
+
+                case "CON_PUNTOS":
+                default:
+                    string numeroConPuntos = string.Format(new System.Globalization.CultureInfo("es-VE"), "{0:N0}", numero).Replace(',', '.');
+                    return $"{prefijo}{numeroConPuntos}";
             }
         }
     }

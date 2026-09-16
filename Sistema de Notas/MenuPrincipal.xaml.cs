@@ -64,6 +64,11 @@ namespace SistemaLiceo.Presentacion
         private void btnMaterias_Click(object sender, RoutedEventArgs e) => ContenedorPrincipal.Content = new MateriasControl();
         private void btnNotas_Click(object sender, RoutedEventArgs e) => ContenedorPrincipal.Content = new NotasControl();
         private void btnReportes_Click(object sender, RoutedEventArgs e) => ContenedorPrincipal.Content = new ReportesControl();
+        private void btnNotasHistoricas_Click(object sender, RoutedEventArgs e)
+        {
+            RegistroNotasHistoricasForm form = new RegistroNotasHistoricasForm();
+            form.ShowDialog();
+        }
         private void btnUsuarios_Click(object sender, RoutedEventArgs e)
         {
             if (!SesionActual.EsAdministrador)

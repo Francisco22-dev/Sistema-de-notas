@@ -1,0 +1,120 @@
+﻿<Window x:Class="SistemaLiceo.Presentacion.RegistroNotasHistoricasForm"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Registro de Notas Certificadas Antiguas / Egresados" Height="700" Width="1000"
+        WindowStartupLocation="CenterScreen" Background="#F8FAFC">
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="📜 Carga de Calificaciones Históricas (Alumnos Egresados / Años Anteriores)" FontSize="20" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,12"/>
+
+        <!-- Datos de Identificación -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+            <UniformGrid Columns="4">
+                <StackPanel Margin="4">
+                    <TextBlock Text="Cédula de Identidad *" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                    <TextBox x:Name="txtCedula" Height="28" VerticalContentAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="Nombres *" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                    <TextBox x:Name="txtNombres" Height="28" VerticalContentAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="Apellidos *" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                    <TextBox x:Name="txtApellidos" Height="28" VerticalContentAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="Fecha de Nacimiento" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                    <DatePicker x:Name="dpFechaNacimiento" Height="28"/>
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="País Nacimiento" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                    <TextBox x:Name="txtPaisNac" Text="VENEZUELA" Height="28" VerticalContentAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="Estado Nacimiento" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                    <TextBox x:Name="txtEstadoNac" Text="CARABOBO" Height="28" VerticalContentAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="Municipio Nacimiento" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                    <TextBox x:Name="txtMunNac" Text="VALENCIA" Height="28" VerticalContentAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="Plantel donde Cursó" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                    <TextBox x:Name="txtPlantel" Text="UNIDAD EDUCATIVA CARABOBO" Height="28" VerticalContentAlignment="Center"/>
+                </StackPanel>
+            </UniformGrid>
+        </Border>
+
+        <!-- Pestañas por Año (1° a 5° Año) con las Materias Oficiales -->
+        <TabControl Grid.Row="2" Background="White" BorderBrush="#CBD5E1" BorderThickness="1">
+            <TabItem Header=" 1er Año " FontWeight="SemiBold">
+                <DataGrid x:Name="gridAno1" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="28" Margin="8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Asignatura" Binding="{Binding Materia}" IsReadOnly="True" Width="*"/>
+                        <DataGridTextColumn Header="Nota (0-20)" Binding="{Binding NotaNumero, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                        <DataGridTextColumn Header="T-E (F/R)" Binding="{Binding TipoEvaluacion}" Width="90"/>
+                        <DataGridTextColumn Header="Fecha (Mes Año)" Binding="{Binding MesAno}" Width="130"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem Header=" 2do Año " FontWeight="SemiBold">
+                <DataGrid x:Name="gridAno2" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="28" Margin="8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Asignatura" Binding="{Binding Materia}" IsReadOnly="True" Width="*"/>
+                        <DataGridTextColumn Header="Nota (0-20)" Binding="{Binding NotaNumero, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                        <DataGridTextColumn Header="T-E (F/R)" Binding="{Binding TipoEvaluacion}" Width="90"/>
+                        <DataGridTextColumn Header="Fecha (Mes Año)" Binding="{Binding MesAno}" Width="130"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem Header=" 3er Año " FontWeight="SemiBold">
+                <DataGrid x:Name="gridAno3" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="28" Margin="8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Asignatura" Binding="{Binding Materia}" IsReadOnly="True" Width="*"/>
+                        <DataGridTextColumn Header="Nota (0-20)" Binding="{Binding NotaNumero, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                        <DataGridTextColumn Header="T-E (F/R)" Binding="{Binding TipoEvaluacion}" Width="90"/>
+                        <DataGridTextColumn Header="Fecha (Mes Año)" Binding="{Binding MesAno}" Width="130"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem Header=" 4to Año " FontWeight="SemiBold">
+                <DataGrid x:Name="gridAno4" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="28" Margin="8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Asignatura" Binding="{Binding Materia}" IsReadOnly="True" Width="*"/>
+                        <DataGridTextColumn Header="Nota (0-20)" Binding="{Binding NotaNumero, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                        <DataGridTextColumn Header="T-E (F/R)" Binding="{Binding TipoEvaluacion}" Width="90"/>
+                        <DataGridTextColumn Header="Fecha (Mes Año)" Binding="{Binding MesAno}" Width="130"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem Header=" 5to Año " FontWeight="SemiBold">
+                <DataGrid x:Name="gridAno5" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="28" Margin="8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Asignatura" Binding="{Binding Materia}" IsReadOnly="True" Width="*"/>
+                        <DataGridTextColumn Header="Nota (0-20)" Binding="{Binding NotaNumero, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                        <DataGridTextColumn Header="T-E (F/R)" Binding="{Binding TipoEvaluacion}" Width="90"/>
+                        <DataGridTextColumn Header="Fecha (Mes Año)" Binding="{Binding MesAno}" Width="130"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Botones de Acción -->
+        <Border Grid.Row="3" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,12,0,0">
+            <Grid>
+                <TextBlock x:Name="lblPromedio" Text="Promedio Calculado: 0.000" VerticalAlignment="Center" FontWeight="Bold" Foreground="#1E3A8A" FontSize="13"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="btnCancelar" Content="Cancelar" Width="100" Height="32" Margin="0,0,10,0" Background="#94A3B8" Foreground="White" FontWeight="Bold" BorderThickness="0" Click="btnCancelar_Click"/>
+                    <Button x:Name="btnGuardar" Content="💾 Guardar Notas Históricas" Width="200" Height="32" Background="#10B981" Foreground="White" FontWeight="Bold" BorderThickness="0" Click="btnGuardar_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

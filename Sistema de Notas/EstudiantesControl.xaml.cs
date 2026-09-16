@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using SistemaLiceo.Datos;
 using SistemaLiceo.Negocio;
 
@@ -27,9 +28,12 @@ namespace SistemaLiceo.Presentacion
             try
             {
                 _cargando = true;
-                cmbPeriodo.ItemsSource = _catalogos.ListarPeriodosActivos();
-                if (cmbPeriodo.Items.Count > 0)
-                    cmbPeriodo.SelectedIndex = 0;
+                if (cmbPeriodo != null)
+                {
+                    cmbPeriodo.ItemsSource = _catalogos.ListarPeriodosActivos();
+                    if (cmbPeriodo.Items.Count > 0)
+                        cmbPeriodo.SelectedIndex = 0;
+                }
             }
             catch (Exception ex)
             {
@@ -45,8 +49,17 @@ namespace SistemaLiceo.Presentacion
         {
             try
             {
+                if (cmbPeriodo == null || gridEstudiantes == null) return;
+
                 int periodoId = cmbPeriodo.SelectedValue is int valor ? valor : 0;
-                _dtEstudiantes = _estudiantes.ObtenerEstudiantesActivos(periodoId);
+                string estado = "Activo";
+
+                if (cmbFiltroEstado?.SelectedItem is ComboBoxItem item && item.Content != null)
+                {
+                    estado = item.Content.ToString() ?? "Activo";
+                }
+
+                _dtEstudiantes = _estudiantes.ObtenerEstudiantesPorEstado(periodoId, estado);
                 gridEstudiantes.ItemsSource = _dtEstudiantes.DefaultView;
                 AplicarFiltroBusqueda();
             }
@@ -56,14 +69,9 @@ namespace SistemaLiceo.Presentacion
             }
         }
 
-        private void txtBuscarEstudiante_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            AplicarFiltroBusqueda();
-        }
-
         private void AplicarFiltroBusqueda()
         {
-            if (_dtEstudiantes == null) return;
+            if (_dtEstudiantes == null || txtBuscarEstudiante == null) return;
 
             string busqueda = txtBuscarEstudiante.Text.Trim().Replace("'", "''");
 
@@ -78,15 +86,21 @@ namespace SistemaLiceo.Presentacion
             }
         }
 
+        private void txtBuscarEstudiante_TextChanged(object sender, TextChangedEventArgs e) => AplicarFiltroBusqueda();
+
         private void cmbPeriodo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!_cargando)
-                CargarDatos();
+            if (!_cargando) CargarDatos();
+        }
+
+        private void cmbFiltroEstado_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_cargando && IsLoaded) CargarDatos();
         }
 
         private void btnActualizar_Click(object sender, RoutedEventArgs e)
         {
-            txtBuscarEstudiante.Clear();
+            if (txtBuscarEstudiante != null) txtBuscarEstudiante.Clear();
             CargarDatos();
         }
 
@@ -99,14 +113,28 @@ namespace SistemaLiceo.Presentacion
 
         private int? ObtenerIdSeleccionado()
         {
-            if (gridEstudiantes.SelectedItem is DataRowView fila)
+            if (gridEstudiantes.SelectedItem is DataRowView fila && fila.Row.Table.Columns.Contains("Codigo"))
             {
-                if (fila.Row.Table.Columns.Contains("Codigo"))
-                    return Convert.ToInt32(fila["Codigo"]);
+                return Convert.ToInt32(fila["Codigo"]);
             }
 
             Alerta.Mostrar("Selección Requerida", "Por favor seleccione un estudiante de la tabla.", true);
             return null;
+        }
+
+        private void btnVerFicha_Click(object sender, RoutedEventArgs e) => AbrirDetalleSeleccionado();
+
+        private void gridEstudiantes_MouseDoubleClick(object sender, MouseButtonEventArgs e) => AbrirDetalleSeleccionado();
+
+        private void AbrirDetalleSeleccionado()
+        {
+            int? estudianteId = ObtenerIdSeleccionado();
+            if (estudianteId.HasValue)
+            {
+                EstudianteDetalleWindow ventana = new EstudianteDetalleWindow(estudianteId.Value);
+                ventana.ShowDialog();
+                CargarDatos();
+            }
         }
 
         private void btnEditarEstudiante_Click(object sender, RoutedEventArgs e)
@@ -136,6 +164,7 @@ namespace SistemaLiceo.Presentacion
                 try
                 {
                     _negocio.RetirarEstudiante(estudianteId.Value);
+                    AuditoriaDatos.Registrar(SesionActual.IdUsuario, "Estudiantes", $"Retiró al estudiante ID {estudianteId.Value}");
                     Alerta.Mostrar("Éxito", "Estudiante retirado correctamente.", false);
                     CargarDatos();
                 }
@@ -145,24 +174,31 @@ namespace SistemaLiceo.Presentacion
                 }
             }
         }
-        private void btnVerFicha_Click(object sender, RoutedEventArgs e)
-        {
-            AbrirDetalleSeleccionado();
-        }
 
-        private void gridEstudiantes_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            AbrirDetalleSeleccionado();
-        }
-
-        private void AbrirDetalleSeleccionado()
+        private void btnReactivar_Click(object sender, RoutedEventArgs e)
         {
             int? estudianteId = ObtenerIdSeleccionado();
-            if (estudianteId.HasValue)
+            if (!estudianteId.HasValue) return;
+
+            MessageBoxResult res = MessageBox.Show(
+                "¿Desea reactivar a este estudiante?\n\nSu estado volverá a 'Activo' y podrá inscribirse o actualizarse en el período escolar actual.",
+                "Confirmar Reactivación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (res == MessageBoxResult.Yes)
             {
-                EstudianteDetalleWindow ventana = new EstudianteDetalleWindow(estudianteId.Value);
-                ventana.ShowDialog();
-                CargarDatos();
+                try
+                {
+                    _estudiantes.ReactivarEstudiante(estudianteId.Value);
+                    AuditoriaDatos.Registrar(SesionActual.IdUsuario, "Estudiantes", $"Reactivó al estudiante ID {estudianteId.Value}");
+                    Alerta.Mostrar("Éxito", "Estudiante reactivado correctamente.", false);
+                    CargarDatos();
+                }
+                catch (Exception ex)
+                {
+                    Alerta.Mostrar("Error", "No se pudo reactivar al estudiante: " + ex.Message, true);
+                }
             }
         }
     }

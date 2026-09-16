@@ -7,7 +7,6 @@ namespace Entidades
         public int NumeroHijo { get; set; } = 1;
         public string Lateralidad { get; set; } = "Derecha";
 
-        // Contacto propio del estudiante
         public string? TelefonoEstudiante { get; set; }
         public string? CorreoEstudiante { get; set; }
 
@@ -19,31 +18,33 @@ namespace Entidades
         public int SaludId { get; set; }
         public int ExtraCurricularId { get; set; }
 
-        // Representante y situación legal / CPNNA
         public int RepresentantePrincipalId { get; set; }
         public int? RepresentanteSecundarioId { get; set; }
 
+        // Datos Familiares y CPNNA
         public string SituacionPadres { get; set; } = "Viven Juntos";
         public string ConviveCon { get; set; } = "Ambos Padres";
-
         public string? PadreCedula { get; set; }
         public string? PadreNombresApellidos { get; set; }
         public string? PadreTelefono { get; set; }
-        public string PadreVive { get; set; } = "Si";
-
+        public string PadreVive { get; set; } = "Vivo (En el país)";
         public string? MadreCedula { get; set; }
         public string? MadreNombresApellidos { get; set; }
         public string? MadreTelefono { get; set; }
-        public string MadreVive { get; set; } = "Si";
-
+        public string MadreVive { get; set; } = "Viva (En el país)";
         public string RepresentanteLegalTipo { get; set; } = "Madre";
         public string? OficioCpnnaTribunal { get; set; }
         public string? ObservacionesCustodia { get; set; }
 
-        public string Estado { get; set; } = "Activo";
+        // Indicadores y Discapacidad Detallada
         public string PoblacionIndigena { get; set; } = "No";
         public string Embarazada { get; set; } = "No";
         public string PoseeDiscapacidad { get; set; } = "No";
+        public string? TipoDiscapacidad { get; set; }
+        public string? DescripcionDiscapacidad { get; set; }
+        public string? CarnetConapdis { get; set; }
+
+        public string Estado { get; set; } = "Activo";
 
         public Persona Persona { get; set; } = new Persona();
         public Antropometricos Antropometricos { get; set; } = new Antropometricos();

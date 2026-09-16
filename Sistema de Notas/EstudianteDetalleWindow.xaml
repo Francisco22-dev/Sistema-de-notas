@@ -58,7 +58,7 @@
         </Border>
 
         <!-- ================= PESTAÑAS DE INFORMACIÓN DETALLADA ================= -->
-        <TabControl Grid.Row="1" Background="White" BorderBrush="#CBD5E1" BorderThickness="1">
+        <TabControl Grid.Row="1" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" Height="503" VerticalAlignment="Bottom">
 
             <!-- TAB 1: DATOS PERSONALES Y CONTACTO -->
             <TabItem Header=" 🎓 Alumno y Contacto " Padding="12,6" FontWeight="SemiBold">
@@ -304,6 +304,26 @@
                                 <StackPanel>
                                     <TextBlock Text="Condición Atendida" Style="{StaticResource LblCampo}"/>
                                     <TextBlock x:Name="txtCondicionAtendida" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </GroupBox>
+                        <GroupBox Header="Diversidad Funcional, Discapacidad y CONAPDIS" Padding="12" Margin="0,0,0,12">
+                            <UniformGrid Columns="3">
+                                <StackPanel>
+                                    <TextBlock Text="¿Posee Discapacidad?" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtPoseeDiscDetalle" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Tipo / Clasificación" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtTipoDiscDetalle" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Nº Carnet CONAPDIS" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtConapdisDetalle" Style="{StaticResource TxtValor}"/>
+                                </StackPanel>
+                                <StackPanel Grid.ColumnSpan="3">
+                                    <TextBlock Text="Diagnóstico / Recomendaciones para Adaptación Curricular:" Style="{StaticResource LblCampo}"/>
+                                    <TextBlock x:Name="txtDescDiscDetalle" Style="{StaticResource TxtValor}"/>
                                 </StackPanel>
                             </UniformGrid>
                         </GroupBox>

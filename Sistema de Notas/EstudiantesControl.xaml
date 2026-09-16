@@ -12,20 +12,9 @@
 
         <!-- Encabezado y Acciones Principales -->
         <Grid Grid.Row="0" Margin="0,0,0,15">
-            <!-- 1. Agregamos las definiciones de columnas -->
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <!-- Ocupa todo el espacio sobrante -->
-                <ColumnDefinition Width="Auto" />
-                <!-- Ocupa solo el espacio de los botones -->
-            </Grid.ColumnDefinitions>
+            <TextBlock Text="Gestión de Estudiantes" FontSize="24" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Left"/>
 
-            <!-- 2. Asignamos el TextBlock a la Columna 0 y lo centramos verticalmente -->
-            <TextBlock Grid.Column="0" Text="Gestión de Estudiantes" FontSize="24" FontWeight="Bold" 
-                       Foreground="#1F2937" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,15,0"/>
-
-            <!-- 3. Asignamos el StackPanel a la Columna 1 -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button x:Name="btnVerFicha" Content="👁️ Ver Ficha Completa" Width="160" Height="35"
                         Background="#4F46E5" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
                         BorderThickness="0" Cursor="Hand" Click="btnVerFicha_Click"/>
@@ -38,40 +27,53 @@
                         Background="#EF4444" Foreground="White" FontWeight="Bold" Margin="0,0,8,0"
                         BorderThickness="0" Cursor="Hand" Click="btnRetirarEstudiante_Click"/>
 
-                <Button x:Name="btnNuevoEstudiante" Content="+ Nuevo Estudiante" Width="150" Height="35" 
-                        Background="#3B82F6" Foreground="White" FontWeight="Bold"
+                <Button x:Name="btnNuevoEstudiante" Content="+ Nuevo Estudiante"
+                        Width="150" Height="35" Background="#3B82F6" Foreground="White" FontWeight="Bold"
                         BorderThickness="0" Cursor="Hand" Click="btnNuevoEstudiante_Click"/>
             </StackPanel>
         </Grid>
 
-        <!-- Filtros y Barra de Búsqueda Rápida por Cédula / Nombre -->
+        <!-- Filtros de Período, Estado (Activos/Retirados) y Búsqueda -->
         <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="130"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="Período:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0"/>
-                <ComboBox x:Name="cmbPeriodo" Grid.Column="1" Height="30" DisplayMemberPath="Nombre" SelectedValuePath="Id"
-                          SelectionChanged="cmbPeriodo_SelectionChanged"/>
+                <TextBlock Grid.Column="0" Text="Período:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,6,0"/>
+                <ComboBox x:Name="cmbPeriodo" Grid.Column="1" Height="30" DisplayMemberPath="Nombre" SelectedValuePath="Id" SelectionChanged="cmbPeriodo_SelectionChanged"/>
 
-                <TextBlock Grid.Column="2" Text="🔍 Buscar Cédula / Nombre:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="20,0,8,0"/>
-                <TextBox x:Name="txtBuscarEstudiante" Grid.Column="3" Height="30" Padding="6,0" VerticalContentAlignment="Center"
-                         TextChanged="txtBuscarEstudiante_TextChanged"/>
+                <TextBlock Grid.Column="2" Text="Estado:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="12,0,6,0"/>
+                <ComboBox x:Name="cmbFiltroEstado" Grid.Column="3" Height="30" SelectedIndex="0" SelectionChanged="cmbFiltroEstado_SelectionChanged">
+                    <ComboBoxItem Content="Activo"/>
+                    <ComboBoxItem Content="Retirado"/>
+                    <ComboBoxItem Content="Egresado"/>
+                    <ComboBoxItem Content="Todos"/>
+                </ComboBox>
 
-                <Button x:Name="btnActualizar" Grid.Column="4" Content="🔄 Actualizar" Height="30" Width="100" Margin="10,0,0,0"
-                        Background="#6B7280" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="btnActualizar_Click"/>
+                <TextBlock Grid.Column="4" Text="🔍 Buscar:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="12,0,6,0"/>
+                <TextBox x:Name="txtBuscarEstudiante" Grid.Column="5" Height="30" Padding="5,0" VerticalContentAlignment="Center" TextChanged="txtBuscarEstudiante_TextChanged"/>
+
+                <Button x:Name="btnReactivar" Grid.Column="6" Content="🔄 Reactivar" Height="30" Width="105" Margin="8,0,0,0"
+                        Background="#059669" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnReactivar_Click"/>
+
+                <Button x:Name="btnActualizar" Grid.Column="7" Content="Actualizar" Height="30" Width="90" Margin="6,0,0,0"
+                        Background="#64748B" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="btnActualizar_Click"/>
             </Grid>
         </Border>
 
+        <!-- Tabla de Estudiantes con Doble Clic -->
         <DataGrid x:Name="gridEstudiantes" Grid.Row="2" AutoGenerateColumns="True"
-          IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
-          Background="White" BorderBrush="#D1D5DB" BorderThickness="1"
-          RowHeight="35" FontSize="14" AlternatingRowBackground="#F9FAFB"
-          MouseDoubleClick="gridEstudiantes_MouseDoubleClick"/>
+                  IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
+                  Background="White" BorderBrush="#D1D5DB" BorderThickness="1"
+                  RowHeight="35" FontSize="14" AlternatingRowBackground="#F9FAFB"
+                  MouseDoubleClick="gridEstudiantes_MouseDoubleClick"/>
     </Grid>
 </UserControl>

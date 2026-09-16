@@ -54,6 +54,10 @@ namespace SistemaLiceo.Presentacion
                 txtLugarNac.Text = $"{_estudiante.Persona.Nacionalidad} (ID País: {_estudiante.PaisNacimientoId})";
                 txtTelAlumno.Text = string.IsNullOrWhiteSpace(_estudiante.TelefonoEstudiante) ? "No posee / No registrado" : _estudiante.TelefonoEstudiante;
                 txtCorreoAlumno.Text = string.IsNullOrWhiteSpace(_estudiante.CorreoEstudiante) ? "No posee / No registrado" : _estudiante.CorreoEstudiante;
+                txtPoseeDiscDetalle.Text = _estudiante.PoseeDiscapacidad;
+                txtTipoDiscDetalle.Text = _estudiante.PoseeDiscapacidad == "Si" ? _estudiante.TipoDiscapacidad : "No aplica";
+                txtConapdisDetalle.Text = !string.IsNullOrWhiteSpace(_estudiante.CarnetConapdis) ? _estudiante.CarnetConapdis : "No registrado";
+                txtDescDiscDetalle.Text = !string.IsNullOrWhiteSpace(_estudiante.DescripcionDiscapacidad) ? _estudiante.DescripcionDiscapacidad : "Sin observaciones específicas";
 
                 if (_estudiante.Persona.Direccion != null)
                 {

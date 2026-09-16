@@ -179,30 +179,33 @@ namespace SistemaLiceo.Presentacion
 
         private void btnGenerar_Click(object sender, RoutedEventArgs e)
         {
-            if (cmbPeriodo.SelectedValue == null || cmbGradoSeccion.SelectedValue == null)
-            {
-                Alerta.Mostrar("Advertencia", "Seleccione el período académico y la sección.", true);
-                return;
-            }
-
-            int periodoId = Convert.ToInt32(cmbPeriodo.SelectedValue);
-            int gradoSeccionId = Convert.ToInt32(cmbGradoSeccion.SelectedValue);
             int tipo = cmbTipoReporte.SelectedIndex;
             string estiloCedula = ObtenerEstiloCedulaSeleccionado();
+            string cedulaEscrita = txtBuscarCedula.Text.Trim();
 
-            if (tipo < 4 && cmbEstudiantes.SelectedValue == null)
+            int periodoId = cmbPeriodo.SelectedValue is int pId ? pId : 0;
+            int gradoSeccionId = cmbGradoSeccion.SelectedValue is int gsId ? gsId : 0;
+            int estudianteId = cmbEstudiantes.SelectedValue is int estId ? estId : 0;
+
+            // CASO ESPECIAL: NOTAS CERTIFICADAS (Permite buscar alumnos históricos por cédula sin exigir combo)
+            if (tipo == 2)
             {
-                Alerta.Mostrar("Advertencia", "Seleccione un estudiante para emitir este documento.", true);
+                FlowDocument docNotas = GenerarDocumentoNotasCertificadas(estudianteId, periodoId, estiloCedula);
+                docViewer.Document = docNotas;
                 return;
             }
 
-            int estudianteId = tipo < 4 ? Convert.ToInt32(cmbEstudiantes.SelectedValue) : 0;
+            // Para constancias individuales ordinarias (0 y 1)
+            if (tipo < 2 && estudianteId == 0)
+            {
+                Alerta.Mostrar("Advertencia", "Seleccione un estudiante activo de la lista para emitir este documento.", true);
+                return;
+            }
 
             FlowDocument doc = tipo switch
             {
                 0 => GenerarDocumentoConstancia(estudianteId, periodoId, "CONSTANCIA DE ESTUDIO", false, estiloCedula),
                 1 => GenerarDocumentoConstancia(estudianteId, periodoId, "CONSTANCIA DE BUENA CONDUCTA", true, estiloCedula),
-                2 => GenerarDocumentoNotasCertificadas(estudianteId, periodoId, estiloCedula),
                 3 => GenerarDocumentoBoleta(estudianteId, periodoId, estiloCedula),
                 4 => GenerarDocumentoNomina(gradoSeccionId, periodoId, estiloCedula),
                 5 => GenerarDocumentoSazeMatricula(gradoSeccionId, periodoId, estiloCedula),
@@ -262,7 +265,33 @@ namespace SistemaLiceo.Presentacion
         {
             ConfiguracionPlantelDatos confDatos = new ConfiguracionPlantelDatos();
             ConfiguracionPlantel conf = confDatos.Obtener();
-            CertificacionEstudianteCompletaDto? est = _reportes.ObtenerCertificacionOficialCompleta(estudianteId);
+            CertificacionEstudianteCompletaDto? est = null;
+            string cedulaBuscada = txtBuscarCedula.Text.Trim();
+
+            // 1. Buscar en histórico
+            if (!string.IsNullOrWhiteSpace(cedulaBuscada))
+            {
+                NotasCertificadasHistoricasDatos histDatos = new();
+                var hist = histDatos.BuscarPorCedula(cedulaBuscada);
+                if (hist != null)
+                {
+                    est = hist.DatosPensum;
+                    est.Cedula = hist.Cedula;
+                    est.Nombres = hist.Nombres;
+                    est.Apellidos = hist.Apellidos;
+                    est.FechaNacimiento = hist.FechaNacimiento;
+                    est.PaisNacimiento = hist.PaisNacimiento;
+                    est.EstadoNacimiento = hist.EstadoNacimiento;
+                    est.MunicipioNacimiento = hist.MunicipioNacimiento;
+                    est.PromedioGeneral = ReportesDatos.CalcularPromedioGeneralReal(est);
+                }
+            }
+
+            // 2. Si no, buscar en matrícula activa
+            if (est == null && estudianteId > 0)
+            {
+                est = _reportes.ObtenerCertificacionOficialCompleta(estudianteId);
+            }
 
             FlowDocument doc = new FlowDocument
             {
@@ -273,6 +302,9 @@ namespace SistemaLiceo.Presentacion
             };
 
             if (est == null) return DocumentoVacio(doc);
+
+            // Calcular siempre el promedio aritmético de las notas reales ingresadas
+            est.PromedioGeneral = ReportesDatos.CalcularPromedioGeneralReal(est);
 
             string cedulaEst = FormatearCedula(est.Cedula, estiloCedula);
 
@@ -290,7 +322,7 @@ namespace SistemaLiceo.Presentacion
 
             Paragraph pTitOficial = new Paragraph { TextAlignment = TextAlignment.Right, LineHeight = 13 };
             pTitOficial.Inlines.Add(new Bold(new Run("CERTIFICACIÓN DE CALIFICACIONES EMG\n")) { FontSize = 11 });
-            pTitOficial.Inlines.Add(new Run($"I. Plan de Estudio: {conf.DenominacionPlan}     Código: {conf.CodigoPlanEstudio}\n") { FontSize = 8.5 });
+            pTitOficial.Inlines.Add(new Run($"I. Plan de Estudio: {conf.DenominacionPlan}   Código: {conf.CodigoPlanEstudio}\n") { FontSize = 8.5 });
             pTitOficial.Inlines.Add(new Run($"Lugar y Fecha de Expedición: {conf.EntidadFederal}, {DateTime.Now.ToString("dd 'DE' MMMM 'DE' yyyy", new CultureInfo("es-ES")).ToUpper()}\n") { FontSize = 8.5 });
             rHead.Cells.Add(new TableCell(pTitOficial));
 
@@ -333,6 +365,7 @@ namespace SistemaLiceo.Presentacion
 
             TableRowGroup grpEst = new TableRowGroup();
             TableRow rEstTitle = new TableRow { Background = Brushes.WhiteSmoke };
+            // CORRECCIÓN AQUÍ: Se añadió el ')' al final
             rEstTitle.Cells.Add(new TableCell(new Paragraph(new Bold(new Run("III. Datos de Identificación del Estudiante:"))) { Margin = new Thickness(2) }) { ColumnSpan = 3 });
             grpEst.Rows.Add(rEstTitle);
 
@@ -361,6 +394,7 @@ namespace SistemaLiceo.Presentacion
 
             TableRowGroup grpPl = new TableRowGroup();
             TableRow rPlTitle = new TableRow { Background = Brushes.WhiteSmoke };
+            // CORRECCIÓN AQUÍ: Se añadió el ')' al final
             rPlTitle.Cells.Add(new TableCell(new Paragraph(new Bold(new Run("IV. Instituciones Educativas donde Cursó Estudios:"))) { Margin = new Thickness(2) }) { ColumnSpan = 4 });
             grpPl.Rows.Add(rPlTitle);
 
@@ -381,7 +415,7 @@ namespace SistemaLiceo.Presentacion
             tPlanteles.RowGroups.Add(grpPl);
             doc.Blocks.Add(tPlanteles);
 
-            // ================= V. PLAN DE ESTUDIO (1° A 5° AÑO EN COLUMNAS) =================
+            // ================= V. PLAN DE ESTUDIO (1° A 5° AÑO) =================
             Paragraph pV = new Paragraph(new Bold(new Run("V. Plan de Estudio:")) { FontSize = 9 }) { Margin = new Thickness(0, 3, 0, 2) };
             doc.Blocks.Add(pV);
 
@@ -391,19 +425,16 @@ namespace SistemaLiceo.Presentacion
 
             TableRowGroup grpPensum = new TableRowGroup();
 
-            // FILA 1: Primer Año (Izq) | Segundo Año (Der)
             TableRow rP1 = new TableRow();
             rP1.Cells.Add(new TableCell(GenerarTablaAnoEscolar("PRIMER AÑO", est.PrimerAno)));
             rP1.Cells.Add(new TableCell(GenerarTablaAnoEscolar("SEGUNDO AÑO", est.SegundoAno)));
             grpPensum.Rows.Add(rP1);
 
-            // FILA 2: Tercer Año (Izq) | Cuarto Año (Der)
             TableRow rP2 = new TableRow();
             rP2.Cells.Add(new TableCell(GenerarTablaAnoEscolar("TERCER AÑO", est.TercerAno)));
             rP2.Cells.Add(new TableCell(GenerarTablaAnoEscolar("CUARTO AÑO", est.CuartoAno)));
             grpPensum.Rows.Add(rP2);
 
-            // FILA 3: Quinto Año (Izq) | Grupos Estables y Orientación (Der)
             TableRow rP3 = new TableRow();
             rP3.Cells.Add(new TableCell(GenerarTablaAnoEscolar("QUINTO AÑO", est.QuintoAno)));
             rP3.Cells.Add(new TableCell(GenerarTablaGruposYOrientacion()));
@@ -412,7 +443,7 @@ namespace SistemaLiceo.Presentacion
             tPensumGrid.RowGroups.Add(grpPensum);
             doc.Blocks.Add(tPensumGrid);
 
-            // ================= VI. OBSERVACIONES (PROMEDIO GENERAL) =================
+            // ================= VI. OBSERVACIONES =================
             Table tObs = CrearTablaMarco();
             tObs.Columns.Add(new TableColumn { Width = new GridLength(790) });
             TableRowGroup grpObs = new TableRowGroup();
@@ -422,7 +453,7 @@ namespace SistemaLiceo.Presentacion
             tObs.RowGroups.Add(grpObs);
             doc.Blocks.Add(tObs);
 
-            // ================= VII Y VIII. FIRMAS, SELLOS Y TIMBRE FISCAL =================
+            // ================= VII Y VIII. FIRMAS =================
             Table tFirmas = CrearTablaMarco();
             tFirmas.Columns.Add(new TableColumn { Width = new GridLength(395) });
             tFirmas.Columns.Add(new TableColumn { Width = new GridLength(395) });
@@ -696,20 +727,31 @@ namespace SistemaLiceo.Presentacion
         }
         private void btnExportarExcel_Click(object sender, RoutedEventArgs e)
         {
-            if (cmbPeriodo.SelectedValue == null)
+            int tipo = cmbTipoReporte.SelectedIndex;
+            string estiloCedula = ObtenerEstiloCedulaSeleccionado();
+            string cedulaEscrita = txtBuscarCedula.Text.Trim();
+
+            int periodoId = cmbPeriodo.SelectedValue is int pId ? pId : 0;
+            string periodoNombre = cmbPeriodo.Text;
+            int gradoSeccionId = cmbGradoSeccion.SelectedValue is int gsId ? gsId : 0;
+            string gradoSeccionNombre = cmbGradoSeccion.Text;
+            int estudianteId = cmbEstudiantes.SelectedValue is int estId ? estId : 0;
+
+            ConfiguracionPlantelDatos confDatos = new();
+            ConfiguracionPlantel conf = confDatos.Obtener();
+
+            // Validaciones básicas según el tipo de reporte
+            if (tipo < 2 && estudianteId == 0)
             {
-                Alerta.Mostrar("Advertencia", "Seleccione el período académico a exportar.", true);
+                Alerta.Mostrar("Advertencia", "Seleccione un estudiante para exportar la constancia.", true);
                 return;
             }
 
-            int periodoId = Convert.ToInt32(cmbPeriodo.SelectedValue);
-            string periodoNombre = cmbPeriodo.Text;
-
-            string nombreSugerido = $"SAZE_Matricula_Inicial_{periodoNombre.Replace("-", "_")}_{DateTime.Now:yyyyMMdd}.xlsx";
+            string nombreSugerido = GenerarNombreArchivoSugerido().Replace(".pdf", ".xlsx");
 
             SaveFileDialog sfd = new SaveFileDialog
             {
-                Title = "Guardar Reporte SAZE en Formato Excel",
+                Title = "Guardar Reporte en Formato Excel (.xlsx)",
                 Filter = "Libro de Excel (*.xlsx)|*.xlsx",
                 FileName = nombreSugerido,
                 DefaultExt = ".xlsx"
@@ -719,12 +761,66 @@ namespace SistemaLiceo.Presentacion
             {
                 try
                 {
-                    _reportes.ExportarSazeMatriculaAExcel(periodoId, periodoNombre, sfd.FileName);
-                    Alerta.Mostrar("Éxito", $"¡Reporte SAZE generado exitosamente en Excel!\n{Path.GetFileName(sfd.FileName)}", false);
+                    switch (tipo)
+                    {
+                        case 0: // Constancia de Estudio
+                            var datosEst = _reportes.ObtenerDatosConstancia(estudianteId, periodoId);
+                            if (datosEst != null)
+                                _reportes.ExportarConstanciaAExcel(datosEst, conf, "CONSTANCIA DE ESTUDIO", false, sfd.FileName, estiloCedula);
+                            break;
 
-                    // Pregunta opcional para abrir el archivo inmediatamente
+                        case 1: // Constancia de Buena Conducta
+                            var datosCond = _reportes.ObtenerDatosConstancia(estudianteId, periodoId);
+                            if (datosCond != null)
+                                _reportes.ExportarConstanciaAExcel(datosCond, conf, "CONSTANCIA DE BUENA CONDUCTA", true, sfd.FileName, estiloCedula);
+                            break;
+
+                        case 2: // Notas Certificadas (Activos o Históricos)
+                            CertificacionEstudianteCompletaDto? cert = null;
+                            if (!string.IsNullOrWhiteSpace(cedulaEscrita))
+                            {
+                                NotasCertificadasHistoricasDatos histDatos = new();
+                                var hist = histDatos.BuscarPorCedula(cedulaEscrita);
+                                if (hist != null) cert = hist.DatosPensum;
+                            }
+                            if (cert == null && estudianteId > 0)
+                            {
+                                cert = _reportes.ObtenerCertificacionOficialCompleta(estudianteId);
+                            }
+
+                            if (cert != null)
+                                _reportes.ExportarNotasCertificadasAExcel(cert, conf, sfd.FileName, estiloCedula);
+                            else
+                                throw new Exception("No se encontraron calificaciones para el estudiante especificado.");
+                            break;
+
+                        case 3: // Boleta de Calificaciones
+                            var datosBol = _reportes.ObtenerDatosConstancia(estudianteId, periodoId);
+                            var notasBol = _reportes.ObtenerBoletaNotas(estudianteId, periodoId);
+                            if (datosBol != null)
+                                _reportes.ExportarBoletaAExcel(datosBol, notasBol, conf, sfd.FileName, estiloCedula);
+                            break;
+
+                        case 4: // Nómina de Sección
+                            var listaNomina = _reportes.ObtenerNominaSeccion(gradoSeccionId, periodoId);
+                            _reportes.ExportarNominaAExcel(listaNomina, gradoSeccionNombre, periodoNombre, conf, sfd.FileName, estiloCedula);
+                            break;
+
+                        case 5: // SAZE Matrícula Inicial
+                            _reportes.ExportarSazeMatriculaAExcel(periodoId, periodoNombre, sfd.FileName);
+                            break;
+
+                        case 6: // SAZE Rendimiento Escolar
+                            var listaRend = _reportes.ObtenerSazeRendimiento(gradoSeccionId, periodoId);
+                            _reportes.ExportarSazeRendimientoAExcel(listaRend, gradoSeccionNombre, periodoNombre, conf, sfd.FileName);
+                            break;
+                    }
+
+                    Alerta.Mostrar("Éxito", $"¡Reporte exportado exitosamente a Excel!\n{Path.GetFileName(sfd.FileName)}", false);
+
+                    // Preguntar si desea abrir el archivo generado
                     MessageBoxResult res = MessageBox.Show(
-                        "¿Desea abrir el archivo Excel generado ahora mismo?",
+                        "¿Desea abrir el archivo Excel generado para editarlo?",
                         "Abrir Reporte",
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Question);
@@ -740,7 +836,7 @@ namespace SistemaLiceo.Presentacion
                 }
                 catch (Exception ex)
                 {
-                    Alerta.Mostrar("Error", "Error al exportar archivo Excel: " + ex.Message, true);
+                    Alerta.Mostrar("Error de Exportación", "No se pudo guardar el archivo Excel: " + ex.Message, true);
                 }
             }
         }

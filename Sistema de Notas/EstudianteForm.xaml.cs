@@ -87,6 +87,21 @@ namespace SistemaLiceo.Presentacion
                 cmbLateralidad.Text = _estudianteActual.Lateralidad;
                 txtNumeroHijo.Text = _estudianteActual.NumeroHijo.ToString();
                 cmbPaisNacimiento.SelectedValue = _estudianteActual.PaisNacimientoId;
+                cmbPoblacionIndigena.Text = _estudianteActual.PoblacionIndigena;
+                cmbEmbarazada.Text = _estudianteActual.Embarazada;
+                cmbPoseeDiscapacidad.Text = _estudianteActual.PoseeDiscapacidad;
+
+                if (_estudianteActual.PoseeDiscapacidad == "Si")
+                {
+                    panelDetalleDiscapacidad.Visibility = Visibility.Visible;
+                    cmbTipoDiscapacidad.Text = _estudianteActual.TipoDiscapacidad;
+                    txtDescripcionDiscapacidad.Text = _estudianteActual.DescripcionDiscapacidad ?? string.Empty;
+                    txtCarnetConapdis.Text = _estudianteActual.CarnetConapdis ?? string.Empty;
+                }
+                else
+                {
+                    panelDetalleDiscapacidad.Visibility = Visibility.Collapsed;
+                }
 
                 // Carga en cascada del lugar de nacimiento
                 if (_estudianteActual.PaisNacimientoId == Pais.VenezuelaId && _estudiantesDatos.EstadoNacimientoIdTemp > 0)
@@ -503,6 +518,9 @@ namespace SistemaLiceo.Presentacion
             est.PoblacionIndigena = TextoCombo(cmbPoblacionIndigena, "No");
             est.Embarazada = TextoCombo(cmbEmbarazada, "No");
             est.PoseeDiscapacidad = TextoCombo(cmbPoseeDiscapacidad, "No");
+            est.TipoDiscapacidad = est.PoseeDiscapacidad == "Si" ? TextoCombo(cmbTipoDiscapacidad, "Visual (Ceguera / Baja Visión)") : null;
+            est.DescripcionDiscapacidad = est.PoseeDiscapacidad == "Si" ? txtDescripcionDiscapacidad.Text.Trim() : null;
+            est.CarnetConapdis = est.PoseeDiscapacidad == "Si" ? txtCarnetConapdis.Text.Trim() : null;
             return est;
         }
 
@@ -622,6 +640,13 @@ namespace SistemaLiceo.Presentacion
             texto = texto.Trim();
             if (texto.Length == 0) return null;
             return int.TryParse(texto, out int valor) ? valor : null;
+        }
+
+        private void cmbPoseeDiscapacidad_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (panelDetalleDiscapacidad == null) return;
+            bool posee = ((ComboBoxItem)cmbPoseeDiscapacidad.SelectedItem)?.Content?.ToString() == "Si";
+            panelDetalleDiscapacidad.Visibility = posee ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

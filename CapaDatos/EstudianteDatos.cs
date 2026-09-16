@@ -113,64 +113,79 @@ namespace SistemaLiceo.Datos
         public Estudiante? ObtenerPorId(int estudianteId)
         {
             const string consulta = @"
-                SELECT e.id AS e_id, e.cedula_escolar, e.numero_hijo, e.lateralidad, e.telefono_estudiante, e.correo_estudiante,
-                       e.persona_id, e.pais_nacimiento_id, e.parroquia_nacimiento_id, e.antropometrico_id, e.salud_id,
-                       e.extra_curricular_id, e.representante_principal_id, e.representante_secundario_id,
-                       e.situacion_padres, e.convive_con, e.padre_cedula, e.padre_nombres_apellidos, e.padre_telefono, e.padre_vive,
-                       e.madre_cedula, e.madre_nombres_apellidos, e.madre_telefono, e.madre_vive,
-                       e.representante_legal_tipo, e.oficio_cpnna_tribunal, e.observaciones_custodia, e.ESTADO,
-                       -- PERSONA ESTUDIANTE
-                       p.id AS p_id, p.nacionalidad, p.cedula_identidad, p.nombre_1, p.nombre_2,
-                       p.apellido_1, p.apellido_2, p.fecha_nacimiento, p.sexo, p.direccion_id,
-                       -- DIRECCION ESTUDIANTE
-                       d.id AS d_id, d.ciudad_id, d.sector, d.avenida, d.calle, d.manzana, d.vereda,
-                       d.numero_vivienda, d.tipo_vivienda, d.condicion_vivienda, d.infraestructura_vivienda,
-                       c.estado_id AS dir_estado_id,
-                       -- LUGAR DE NACIMIENTO
-                       m.id AS nac_municipio_id, es.id AS nac_estado_id,
-                       -- ANTROPOMETRICOS
-                       ant.estatura, ant.peso, ant.talla_camisa, ant.talla_pantalon, ant.talla_zapato,
-                       -- SALUD
-                       s.reacciones_alergicas, s.cuales_alergias, s.enfermedades_padecidas, s.atencion_especial,
-                       s.horario_tratamiento, s.atendido_por_especialista, s.nombre_especialista,
-                       s.fecha_inicio_especialista, s.condicion_atencion,
-                       -- EXTRA CURRICULAR
-                       ex.realiza_deportes, ex.cuales_deportes, ex.posee_canaima, ex.fecha_asignacion_canaima,
-                       ex.serial_canaima, ex.estado_canaima, ex.falla_canaima, ex.posee_cargador,
-                       ex.estado_cargador, ex.falla_cargador,
-                       -- REPRESENTANTE PRINCIPAL
-                       r.id AS r_id, r.parentesco, r.estado_civil, r.ingreso_mensual, r.telefono_movil,
-                       r.telefono_habitacion, r.correo_electronico, r.profesion, r.empresa_trabajo,
-                       r.telefono_empresa, r.direccion_empresa, r.persona_id AS r_persona_id, r.ESTADO AS r_estado,
-                       prep.id AS prep_id, prep.nacionalidad AS prep_nac, prep.cedula_identidad AS prep_cedula,
-                       prep.nombre_1 AS prep_nom1, prep.nombre_2 AS prep_nom2,
-                       prep.apellido_1 AS prep_ape1, prep.apellido_2 AS prep_ape2,
-                       prep.fecha_nacimiento AS prep_fnac, prep.sexo AS prep_sexo, prep.direccion_id AS prep_dir_id,
-                       drep.id AS drep_id, drep.ciudad_id AS drep_ciudad_id, drep.sector AS drep_sector,
-                       drep.avenida AS drep_avenida, drep.calle AS drep_calle, drep.manzana AS drep_manzana,
-                       drep.vereda AS drep_vereda, drep.numero_vivienda AS drep_numero, drep.tipo_vivienda AS drep_tipo,
-                       drep.condicion_vivienda AS drep_condicion, drep.infraestructura_vivienda AS drep_infra,
-                       crep.estado_id AS rep_dir_estado_id,
-                       -- ULTIMA INSCRIPCION
-                       i.id AS inscripcion_id, i.periodo_id, i.tipo_ingreso, i.colegio_procedencia, i.nivel_academico,
-                       gs.grado_id, gs.seccion_id
-                FROM PERSONA_ESTUDIANTE e
-                INNER JOIN PERSONA p ON p.id = e.persona_id
-                LEFT JOIN DIRECCION d ON d.id = p.direccion_id
-                LEFT JOIN CIUDAD c ON c.id = d.ciudad_id
-                LEFT JOIN PARROQUIA par ON par.id = e.parroquia_nacimiento_id
-                LEFT JOIN MUNICIPIO m ON m.id = par.municipio_id
-                LEFT JOIN ESTADO es ON es.id = m.estado_id
-                LEFT JOIN ANTROPOMETRICOS ant ON ant.id = e.antropometrico_id
-                LEFT JOIN SALUD s ON s.id = e.salud_id
-                LEFT JOIN EXTRA_CURRICULAR ex ON ex.id = e.extra_curricular_id
-                LEFT JOIN PERSONA_REPRESENTANTE r ON r.id = e.representante_principal_id
-                LEFT JOIN PERSONA prep ON prep.id = r.persona_id
-                LEFT JOIN DIRECCION drep ON drep.id = prep.direccion_id
-                LEFT JOIN CIUDAD crep ON crep.id = drep.ciudad_id
-                LEFT JOIN INSCRIPCION i ON i.id = (SELECT MAX(id) FROM INSCRIPCION WHERE estudiante_id = e.id)
-                LEFT JOIN GRADO_SECCION gs ON gs.id = i.grado_seccion_id
-                WHERE e.id = @id LIMIT 1;";
+        SELECT 
+            e.id AS e_id, e.cedula_escolar, e.numero_hijo, e.lateralidad, e.telefono_estudiante, e.correo_estudiante,
+            e.persona_id, e.pais_nacimiento_id, e.parroquia_nacimiento_id, e.antropometrico_id, e.salud_id,
+            e.extra_curricular_id, e.representante_principal_id, e.representante_secundario_id,
+            e.situacion_padres, e.convive_con, e.padre_cedula, e.padre_nombres_apellidos, e.padre_telefono, e.padre_vive,
+            e.madre_cedula, e.madre_nombres_apellidos, e.madre_telefono, e.madre_vive,
+            e.representante_legal_tipo, e.oficio_cpnna_tribunal, e.observaciones_custodia,
+            e.poblacion_indigena, e.embarazada, e.posee_discapacidad, e.tipo_discapacidad,
+            e.descripcion_discapacidad, e.carnet_conapdis, e.ESTADO,
+
+            p.id AS p_id, p.nacionalidad, p.cedula_identidad, p.nombre_1, p.nombre_2,
+            p.apellido_1, p.apellido_2, p.fecha_nacimiento, p.sexo, p.direccion_id,
+
+            d.id AS d_id, d.ciudad_id, d.sector, d.avenida, d.calle, d.manzana, d.vereda,
+            d.numero_vivienda, d.tipo_vivienda, d.condicion_vivienda, d.infraestructura_vivienda,
+            c.estado_id AS dir_estado_id, c.nombre AS ciudad_estudiante, est_dir.nombre AS estado_estudiante,
+
+            pais.nombre AS pais_nac, par.nombre AS parroquia_nac,
+            m.id AS nac_municipio_id, m.nombre AS municipio_nac,
+            es.id AS nac_estado_id, es.nombre AS estado_nac,
+
+            ant.estatura, ant.peso, ant.talla_camisa, ant.talla_pantalon, ant.talla_zapato,
+
+            s.reacciones_alergicas, s.cuales_alergias, s.enfermedades_padecidas, s.atencion_especial,
+            s.horario_tratamiento, s.atendido_por_especialista, s.nombre_especialista,
+            s.fecha_inicio_especialista, s.condicion_atencion,
+
+            ex.realiza_deportes, ex.cuales_deportes, ex.posee_canaima, ex.fecha_asignacion_canaima,
+            ex.serial_canaima, ex.estado_canaima, ex.falla_canaima, ex.posee_cargador,
+            ex.estado_cargador, ex.falla_cargador,
+
+            r.id AS r_id, r.parentesco, r.estado_civil, r.ingreso_mensual, r.telefono_movil,
+            r.telefono_habitacion, r.correo_electronico, r.profesion, r.empresa_trabajo,
+            r.telefono_empresa, r.direccion_empresa, r.persona_id AS r_persona_id, r.ESTADO AS r_estado,
+
+            prep.id AS prep_id, prep.nacionalidad AS prep_nac, prep.cedula_identidad AS prep_cedula,
+            prep.nombre_1 AS prep_nom1, prep.nombre_2 AS prep_nom2,
+            prep.apellido_1 AS prep_ape1, prep.apellido_2 AS prep_ape2,
+            prep.fecha_nacimiento AS prep_fnac, prep.sexo AS prep_sexo, prep.direccion_id AS prep_dir_id,
+
+            drep.id AS drep_id, drep.ciudad_id AS drep_ciudad_id, drep.sector AS drep_sector,
+            drep.avenida AS drep_avenida, drep.calle AS drep_calle, drep.manzana AS drep_manzana,
+            drep.vereda AS drep_vereda, drep.numero_vivienda AS drep_numero, drep.tipo_vivienda AS drep_tipo,
+            drep.condicion_vivienda AS drep_condicion, drep.infraestructura_vivienda AS drep_infra,
+            crep.estado_id AS rep_dir_estado_id, crep.nombre AS ciudad_representante, est_rep.nombre AS estado_representante,
+
+            i.id AS inscripcion_id, i.periodo_id, i.tipo_ingreso, i.colegio_procedencia, i.nivel_academico,
+            gs.grado_id, gs.seccion_id, g.nombre AS grado_nombre, s_sec.nombre AS seccion_nombre, pa.nombre AS periodo_nombre
+
+        FROM PERSONA_ESTUDIANTE e
+        INNER JOIN PERSONA p ON p.id = e.persona_id
+        LEFT JOIN DIRECCION d ON d.id = p.direccion_id
+        LEFT JOIN CIUDAD c ON c.id = d.ciudad_id
+        LEFT JOIN ESTADO est_dir ON est_dir.id = c.estado_id
+        LEFT JOIN PAIS pais ON pais.id = e.pais_nacimiento_id
+        LEFT JOIN PARROQUIA par ON par.id = e.parroquia_nacimiento_id
+        LEFT JOIN MUNICIPIO m ON m.id = par.municipio_id
+        LEFT JOIN ESTADO es ON es.id = m.estado_id
+        LEFT JOIN ANTROPOMETRICOS ant ON ant.id = e.antropometrico_id
+        LEFT JOIN SALUD s ON s.id = e.salud_id
+        LEFT JOIN EXTRA_CURRICULAR ex ON ex.id = e.extra_curricular_id
+        LEFT JOIN PERSONA_REPRESENTANTE r ON r.id = e.representante_principal_id
+        LEFT JOIN PERSONA prep ON prep.id = r.persona_id
+        LEFT JOIN DIRECCION drep ON drep.id = prep.direccion_id
+        LEFT JOIN CIUDAD crep ON crep.id = drep.ciudad_id
+        LEFT JOIN ESTADO est_rep ON est_rep.id = crep.estado_id
+        LEFT JOIN INSCRIPCION i ON i.id = (SELECT MAX(id) FROM INSCRIPCION WHERE estudiante_id = e.id)
+        LEFT JOIN GRADO_SECCION gs ON gs.id = i.grado_seccion_id
+        LEFT JOIN GRADO g ON g.id = gs.grado_id
+        LEFT JOIN SECCION s_sec ON s_sec.id = gs.seccion_id
+        LEFT JOIN PERIODO_ACADEMICO pa ON pa.id = i.periodo_id
+        WHERE e.id = @id 
+        LIMIT 1;";
 
             using (MySqlConnection conexion = _conexion.AbrirConexion())
             using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
@@ -197,21 +212,31 @@ namespace SistemaLiceo.Datos
                         RepresentantePrincipalId = lector.GetInt32("representante_principal_id"),
                         RepresentanteSecundarioId = lector.IsDBNull(lector.GetOrdinal("representante_secundario_id")) ? null : lector.GetInt32("representante_secundario_id"),
 
+                        // Familia y Medida CPNNA
                         SituacionPadres = lector.IsDBNull(lector.GetOrdinal("situacion_padres")) ? "Viven Juntos" : lector.GetString("situacion_padres"),
                         ConviveCon = lector.IsDBNull(lector.GetOrdinal("convive_con")) ? "Ambos Padres" : lector.GetString("convive_con"),
                         PadreCedula = lector.IsDBNull(lector.GetOrdinal("padre_cedula")) ? null : lector.GetString("padre_cedula"),
                         PadreNombresApellidos = lector.IsDBNull(lector.GetOrdinal("padre_nombres_apellidos")) ? null : lector.GetString("padre_nombres_apellidos"),
                         PadreTelefono = lector.IsDBNull(lector.GetOrdinal("padre_telefono")) ? null : lector.GetString("padre_telefono"),
-                        PadreVive = lector.IsDBNull(lector.GetOrdinal("padre_vive")) ? "Si" : lector.GetString("padre_vive"),
+                        PadreVive = lector.IsDBNull(lector.GetOrdinal("padre_vive")) ? "Vivo (En el país)" : lector.GetString("padre_vive"),
                         MadreCedula = lector.IsDBNull(lector.GetOrdinal("madre_cedula")) ? null : lector.GetString("madre_cedula"),
                         MadreNombresApellidos = lector.IsDBNull(lector.GetOrdinal("madre_nombres_apellidos")) ? null : lector.GetString("madre_nombres_apellidos"),
                         MadreTelefono = lector.IsDBNull(lector.GetOrdinal("madre_telefono")) ? null : lector.GetString("madre_telefono"),
-                        MadreVive = lector.IsDBNull(lector.GetOrdinal("madre_vive")) ? "Si" : lector.GetString("madre_vive"),
+                        MadreVive = lector.IsDBNull(lector.GetOrdinal("madre_vive")) ? "Viva (En el país)" : lector.GetString("madre_vive"),
                         RepresentanteLegalTipo = lector.IsDBNull(lector.GetOrdinal("representante_legal_tipo")) ? "Madre" : lector.GetString("representante_legal_tipo"),
                         OficioCpnnaTribunal = lector.IsDBNull(lector.GetOrdinal("oficio_cpnna_tribunal")) ? null : lector.GetString("oficio_cpnna_tribunal"),
                         ObservacionesCustodia = lector.IsDBNull(lector.GetOrdinal("observaciones_custodia")) ? null : lector.GetString("observaciones_custodia"),
+
+                        // Diversidad Funcional y Poblaciones Especiales
+                        PoblacionIndigena = lector.IsDBNull(lector.GetOrdinal("poblacion_indigena")) ? "No" : lector.GetString("poblacion_indigena"),
+                        Embarazada = lector.IsDBNull(lector.GetOrdinal("embarazada")) ? "No" : lector.GetString("embarazada"),
+                        PoseeDiscapacidad = lector.IsDBNull(lector.GetOrdinal("posee_discapacidad")) ? "No" : lector.GetString("posee_discapacidad"),
+                        TipoDiscapacidad = lector.IsDBNull(lector.GetOrdinal("tipo_discapacidad")) ? null : lector.GetString("tipo_discapacidad"),
+                        DescripcionDiscapacidad = lector.IsDBNull(lector.GetOrdinal("descripcion_discapacidad")) ? null : lector.GetString("descripcion_discapacidad"),
+                        CarnetConapdis = lector.IsDBNull(lector.GetOrdinal("carnet_conapdis")) ? null : lector.GetString("carnet_conapdis"),
                         Estado = lector.GetString("ESTADO"),
 
+                        // Datos Personales
                         Persona = new Persona
                         {
                             Id = lector.GetInt32("p_id"),
@@ -246,12 +271,12 @@ namespace SistemaLiceo.Datos
                         };
                     }
 
-                    // Guardar temporales para cargar desplegables en cascada
+                    // Variables temporales para inicializar los combos en cascada al editar
                     EstadoNacimientoIdTemp = lector.IsDBNull(lector.GetOrdinal("nac_estado_id")) ? 0 : lector.GetInt32("nac_estado_id");
                     MunicipioNacimientoIdTemp = lector.IsDBNull(lector.GetOrdinal("nac_municipio_id")) ? 0 : lector.GetInt32("nac_municipio_id");
                     EstadoDireccionIdTemp = lector.IsDBNull(lector.GetOrdinal("dir_estado_id")) ? 0 : lector.GetInt32("dir_estado_id");
 
-                    // Antropométricos, Salud, Extracurricular
+                    // Antropométricos, Salud y Extracurricular
                     est.Antropometricos = new Antropometricos
                     {
                         Id = est.AntropometricoId,
@@ -579,19 +604,23 @@ namespace SistemaLiceo.Datos
         private static int InsertarEstudiante(Estudiante estudiante, MySqlConnection conexion, MySqlTransaction transaccion)
         {
             const string consulta = @"
-                INSERT INTO PERSONA_ESTUDIANTE (cedula_escolar, numero_hijo, lateralidad, telefono_estudiante, correo_estudiante,
-                                                persona_id, pais_nacimiento_id, parroquia_nacimiento_id, antropometrico_id,
-                                                salud_id, extra_curricular_id, representante_principal_id, representante_secundario_id,
-                                                situacion_padres, convive_con, padre_cedula, padre_nombres_apellidos, padre_telefono, padre_vive,
-                                                madre_cedula, madre_nombres_apellidos, madre_telefono, madre_vive,
-                                                representante_legal_tipo, oficio_cpnna_tribunal, observaciones_custodia, ESTADO)
-                VALUES (@cedulaEscolar, @numeroHijo, @lateralidad, @telEst, @corrEst,
-                        @persona, @pais, @parroquia, @antropometrico,
-                        @salud, @extra, @representante, @representanteSecundario,
-                        @sitPadres, @conviveCon, @padreCed, @padreNom, @padreTel, @padreVive,
-                        @madreCed, @madreNom, @madreTel, @madreVive,
-                        @repTipo, @oficioCpnna, @obsCustodia, @estado);
-                SELECT LAST_INSERT_ID();";
+        INSERT INTO PERSONA_ESTUDIANTE (cedula_escolar, numero_hijo, lateralidad, telefono_estudiante, correo_estudiante,
+                                        persona_id, pais_nacimiento_id, parroquia_nacimiento_id, antropometrico_id,
+                                        salud_id, extra_curricular_id, representante_principal_id, representante_secundario_id,
+                                        situacion_padres, convive_con, padre_cedula, padre_nombres_apellidos, padre_telefono, padre_vive,
+                                        madre_cedula, madre_nombres_apellidos, madre_telefono, madre_vive,
+                                        representante_legal_tipo, oficio_cpnna_tribunal, observaciones_custodia,
+                                        poblacion_indigena, embarazada, posee_discapacidad, tipo_discapacidad,
+                                        descripcion_discapacidad, carnet_conapdis, ESTADO)
+        VALUES (@cedulaEscolar, @numeroHijo, @lateralidad, @telEst, @corrEst,
+                @persona, @pais, @parroquia, @antropometrico,
+                @salud, @extra, @representante, @representanteSecundario,
+                @sitPadres, @conviveCon, @padreCed, @padreNom, @padreTel, @padreVive,
+                @madreCed, @madreNom, @madreTel, @madreVive,
+                @repTipo, @oficioCpnna, @obsCustodia,
+                @indigena, @embarazada, @discapacidad, @tipoDisc,
+                @descDisc, @conapdis, @estado);
+        SELECT LAST_INSERT_ID();";
 
             using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
             {
@@ -624,6 +653,13 @@ namespace SistemaLiceo.Datos
                 comando.Parameters.AddWithValue("@repTipo", estudiante.RepresentanteLegalTipo);
                 comando.Parameters.AddWithValue("@oficioCpnna", PersonaDatos.Nulo(estudiante.OficioCpnnaTribunal));
                 comando.Parameters.AddWithValue("@obsCustodia", PersonaDatos.Nulo(estudiante.ObservacionesCustodia));
+
+                comando.Parameters.AddWithValue("@indigena", estudiante.PoblacionIndigena);
+                comando.Parameters.AddWithValue("@embarazada", estudiante.Embarazada);
+                comando.Parameters.AddWithValue("@discapacidad", estudiante.PoseeDiscapacidad);
+                comando.Parameters.AddWithValue("@tipoDisc", PersonaDatos.Nulo(estudiante.TipoDiscapacidad));
+                comando.Parameters.AddWithValue("@descDisc", PersonaDatos.Nulo(estudiante.DescripcionDiscapacidad));
+                comando.Parameters.AddWithValue("@conapdis", PersonaDatos.Nulo(estudiante.CarnetConapdis));
                 comando.Parameters.AddWithValue("@estado", estudiante.Estado);
 
                 return Convert.ToInt32(comando.ExecuteScalar());
@@ -633,31 +669,37 @@ namespace SistemaLiceo.Datos
         private static void ActualizarEstudiante(Estudiante estudiante, MySqlConnection conexion, MySqlTransaction transaccion)
         {
             const string consulta = @"
-                UPDATE PERSONA_ESTUDIANTE 
-                SET cedula_escolar = @cedulaEscolar, 
-                    numero_hijo = @numeroHijo, 
-                    lateralidad = @lateralidad,
-                    telefono_estudiante = @telEst,
-                    correo_estudiante = @corrEst,
-                    pais_nacimiento_id = @pais, 
-                    parroquia_nacimiento_id = @parroquia, 
-                    representante_principal_id = @representante,
-                    representante_secundario_id = @representanteSecundario,
-                    situacion_padres = @sitPadres,
-                    convive_con = @conviveCon,
-                    padre_cedula = @padreCed,
-                    padre_nombres_apellidos = @padreNom,
-                    padre_telefono = @padreTel,
-                    padre_vive = @padreVive,
-                    madre_cedula = @madreCed,
-                    madre_nombres_apellidos = @madreNom,
-                    madre_telefono = @madreTel,
-                    madre_vive = @madreVive,
-                    representante_legal_tipo = @repTipo,
-                    oficio_cpnna_tribunal = @oficioCpnna,
-                    observaciones_custodia = @obsCustodia,
-                    ESTADO = @estado
-                WHERE id = @id;";
+        UPDATE PERSONA_ESTUDIANTE 
+        SET cedula_escolar = @cedulaEscolar, 
+            numero_hijo = @numeroHijo, 
+            lateralidad = @lateralidad,
+            telefono_estudiante = @telEst,
+            correo_estudiante = @corrEst,
+            pais_nacimiento_id = @pais, 
+            parroquia_nacimiento_id = @parroquia, 
+            representante_principal_id = @representante,
+            representante_secundario_id = @representanteSecundario,
+            situacion_padres = @sitPadres,
+            convive_con = @conviveCon,
+            padre_cedula = @padreCed,
+            padre_nombres_apellidos = @padreNom,
+            padre_telefono = @padreTel,
+            padre_vive = @padreVive,
+            madre_cedula = @madreCed,
+            madre_nombres_apellidos = @madreNom,
+            madre_telefono = @madreTel,
+            madre_vive = @madreVive,
+            representante_legal_tipo = @repTipo,
+            oficio_cpnna_tribunal = @oficioCpnna,
+            observaciones_custodia = @obsCustodia,
+            poblacion_indigena = @indigena,
+            embarazada = @embarazada,
+            posee_discapacidad = @discapacidad,
+            tipo_discapacidad = @tipoDisc,
+            descripcion_discapacidad = @descDisc,
+            carnet_conapdis = @conapdis,
+            ESTADO = @estado
+        WHERE id = @id;";
 
             using (MySqlCommand comando = new MySqlCommand(consulta, conexion, transaccion))
             {
@@ -687,6 +729,13 @@ namespace SistemaLiceo.Datos
                 comando.Parameters.AddWithValue("@repTipo", estudiante.RepresentanteLegalTipo);
                 comando.Parameters.AddWithValue("@oficioCpnna", PersonaDatos.Nulo(estudiante.OficioCpnnaTribunal));
                 comando.Parameters.AddWithValue("@obsCustodia", PersonaDatos.Nulo(estudiante.ObservacionesCustodia));
+
+                comando.Parameters.AddWithValue("@indigena", estudiante.PoblacionIndigena);
+                comando.Parameters.AddWithValue("@embarazada", estudiante.Embarazada);
+                comando.Parameters.AddWithValue("@discapacidad", estudiante.PoseeDiscapacidad);
+                comando.Parameters.AddWithValue("@tipoDisc", PersonaDatos.Nulo(estudiante.TipoDiscapacidad));
+                comando.Parameters.AddWithValue("@descDisc", PersonaDatos.Nulo(estudiante.DescripcionDiscapacidad));
+                comando.Parameters.AddWithValue("@conapdis", PersonaDatos.Nulo(estudiante.CarnetConapdis));
                 comando.Parameters.AddWithValue("@estado", estudiante.Estado);
 
                 comando.ExecuteNonQuery();
@@ -733,6 +782,52 @@ namespace SistemaLiceo.Datos
                 comando.Parameters.AddWithValue("@nivel", inscripcion.NivelAcademico);
                 comando.ExecuteNonQuery();
             }
+        }
+        /// <summary>Lista estudiantes filtrando por estado (Activo, Retirado, Egresado o Todos).</summary>
+        public DataTable ObtenerEstudiantesPorEstado(int periodoId = 0, string estado = "Activo")
+        {
+            string consulta = @"
+        SELECT e.id AS Codigo,
+               e.cedula_escolar AS 'Cedula Escolar',
+               CONCAT(p.nacionalidad, '-', IFNULL(p.cedula_identidad, 'S/C')) AS Cedula,
+               CONCAT_WS(' ', p.nombre_1, p.nombre_2, p.apellido_1, p.apellido_2) AS Estudiante,
+               p.sexo AS Sexo,
+               p.fecha_nacimiento AS 'Fecha de Nacimiento',
+               e.ESTADO AS Estado,
+               IFNULL(g.nombre, 'Sin Asignar') AS Grado,
+               IFNULL(s.nombre, 'S/S') AS Seccion,
+               IFNULL(pa.nombre, 'N/A') AS Periodo,
+               CONCAT_WS(' ', pr.nombre_1, pr.apellido_1) AS Representante,
+               r.telefono_movil AS 'Telefono Representante'
+        FROM PERSONA_ESTUDIANTE e
+        INNER JOIN PERSONA p ON p.id = e.persona_id
+        LEFT JOIN PERSONA_REPRESENTANTE r ON r.id = e.representante_principal_id
+        LEFT JOIN PERSONA pr ON pr.id = r.persona_id
+        LEFT JOIN INSCRIPCION i ON i.estudiante_id = e.id AND (@periodo = 0 OR i.periodo_id = @periodo)
+        LEFT JOIN PERIODO_ACADEMICO pa ON pa.id = i.periodo_id
+        LEFT JOIN GRADO_SECCION gs ON gs.id = i.grado_seccion_id
+        LEFT JOIN GRADO g ON g.id = gs.grado_id
+        LEFT JOIN SECCION s ON s.id = gs.seccion_id
+        WHERE (@estado = 'Todos' OR e.ESTADO = @estado)
+        ORDER BY p.apellido_1, p.nombre_1;";
+
+            DataTable tabla = new DataTable();
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+            {
+                comando.Parameters.AddWithValue("@periodo", periodoId);
+                comando.Parameters.AddWithValue("@estado", estado);
+                using (MySqlDataAdapter adaptador = new MySqlDataAdapter(comando))
+                {
+                    adaptador.Fill(tabla);
+                }
+            }
+            return tabla;
+        }
+
+        public void ReactivarEstudiante(int estudianteId)
+        {
+            CambiarEstado(estudianteId, "Activo");
         }
     }
 }
