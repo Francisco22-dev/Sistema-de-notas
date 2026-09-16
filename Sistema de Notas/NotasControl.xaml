@@ -185,10 +185,14 @@
             <Grid>
                 <TextBlock x:Name="lblTotalPorcentaje" Text="Total Ponderación: 100%" VerticalAlignment="Center" FontWeight="Bold" Foreground="#059669" FontSize="13"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="btnImprimirPlanilla" Content="🖨️ Imprimir / PDF" Width="150" Height="34" Margin="0,0,10,0"
-                            Background="#64748B" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnImprimirPlanilla_Click"/>
+                    <Button x:Name="btnExportarNominaDocente" Content="📋 Nómina Docente (Excel)" Width="195" Height="34" Margin="0,0,10,0"
+            Background="#4F46E5" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnExportarNominaDocente_Click"/>
+
+                    <Button x:Name="btnImprimirPlanilla" Content="🖨️ Imprimir / PDF" Width="140" Height="34" Margin="0,0,10,0"
+            Background="#64748B" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnImprimirPlanilla_Click"/>
+
                     <Button x:Name="btnGuardarPlanilla" Content="💾 Guardar Calificaciones" Width="190" Height="34"
-                            Background="#16A34A" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnGuardarPlanilla_Click"/>
+            Background="#16A34A" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnGuardarPlanilla_Click"/>
                 </StackPanel>
             </Grid>
         </Border>

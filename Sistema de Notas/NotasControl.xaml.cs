@@ -1,13 +1,17 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Entidades;
+using SistemaLiceo.Datos;
+using SistemaLiceo.Negocio;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using Entidades;
-using SistemaLiceo.Datos;
-using SistemaLiceo.Negocio;
+using System.IO;
+using System.Windows.Xps;
+using System.Windows.Xps.Packaging;
 
 namespace SistemaLiceo.Presentacion
 {
@@ -214,6 +218,78 @@ namespace SistemaLiceo.Presentacion
                 // Usa el generador FlowDocument del reporte anterior
                 IDocumentPaginatorSource dps = GenerarDocumentoImpresion();
                 printDialog.PrintDocument(dps.DocumentPaginator, "Planilla de Calificaciones");
+            }
+        }
+
+        private void btnExportarNominaDocente_Click(object sender, RoutedEventArgs e)
+        {
+            if (_filasPlanilla == null || _filasPlanilla.Count == 0)
+            {
+                Alerta.Mostrar("Advertencia", "Cargue primero la planilla de la sección para poder exportar la nómina docente.", true);
+                return;
+            }
+
+            try
+            {
+                int mppId = Convert.ToInt32(cmbDocenteMateria.SelectedValue);
+                MateriaProfesorPeriodo? carga = _todasLasCargas.FirstOrDefault(c => c.Id == mppId);
+
+                string grado = cmbGrado.Text;
+                string seccion = cmbSeccion.Text;
+                string materia = carga?.Materia ?? "Asignatura";
+                string docente = carga?.Docente ?? "Docente";
+                string periodo = cmbPeriodo.Text;
+                string lapso = ((ComboBoxItem)cmbLapso.SelectedItem).Content.ToString() ?? "I Momento";
+
+                string[] nombresActividades = new string[]
+                {
+            txtEval1.Text.Trim(), txtEval2.Text.Trim(), txtEval3.Text.Trim(),
+            txtEval4.Text.Trim(), txtEval5.Text.Trim(), txtEval6.Text.Trim()
+                };
+
+                string nombreSugerido = $"Nomina_Evaluacion_Continua_{grado.Replace(" ", "_")}_{seccion}_{materia.Replace(" ", "_")}_{lapso.Replace(" ", "_")}.xlsx";
+
+                Microsoft.Win32.SaveFileDialog sfd = new()
+                {
+                    Title = "Guardar Nómina de Evaluación Continua para Docente",
+                    Filter = "Libro de Excel (*.xlsx)|*.xlsx",
+                    FileName = nombreSugerido,
+                    DefaultExt = ".xlsx"
+                };
+
+                if (sfd.ShowDialog() == true)
+                {
+                    // Instanciación de la capa de reportes (ajusta ReportesDatos según tu nombre de clase)
+                    var _reportes = new ReportesDatos();
+
+                    _reportes.ExportarNominaEvaluacionContinuaDocenteAExcel(
+                        mppId, grado, seccion, materia, docente, periodo, lapso,
+                        nombresActividades, _filasPlanilla, sfd.FileName);
+
+                    AuditoriaDatos.Registrar(SesionActual.IdUsuario, "Calificaciones", $"Exportó nómina docente de evaluación continua: {materia} ({grado} {seccion})");
+
+                    // Uso calificado de System.IO.Path por si prefieres no agregar el 'using System.IO;'
+                    Alerta.Mostrar("Éxito", $"¡Nómina de evaluación continua generada exitosamente!\n{System.IO.Path.GetFileName(sfd.FileName)}", false);
+
+                    MessageBoxResult res = MessageBox.Show(
+                        "¿Desea abrir el archivo Excel de la nómina docente generado?",
+                        "Abrir Archivo",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (res == MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = sfd.FileName,
+                            UseShellExecute = true
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Alerta.Mostrar("Error", "No se pudo exportar la nómina docente: " + ex.Message, true);
             }
         }
 

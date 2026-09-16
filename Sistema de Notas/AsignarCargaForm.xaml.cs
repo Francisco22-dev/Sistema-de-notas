@@ -67,8 +67,7 @@ namespace SistemaLiceo.Presentacion
                 _profesores.AsignarMateriaSeccionPeriodo(gradoSeccionId, gradoMateriaId, materiaProfesorId, periodoId);
 
                 Alerta.Mostrar("Éxito", "Carga académica asignada correctamente.", false);
-                DialogResult = true;
-                Close();
+                return;
             }
             catch (Exception ex)
             {

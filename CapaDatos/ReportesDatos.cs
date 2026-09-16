@@ -1354,5 +1354,193 @@ namespace SistemaLiceo.Datos
                     return $"{prefijo}{numeroConPuntos}";
             }
         }
+        public void ExportarNominaEvaluacionContinuaDocenteAExcel(
+    int materiaProfePeriodoId,
+    string gradoNombre,
+    string seccionNombre,
+    string materiaNombre,
+    string docenteNombre,
+    string periodoNombre,
+    string lapsoNombre,
+    string[] nombresEvaluaciones,
+    List<FilaPlanillaNotasDto> estudiantes,
+    string rutaArchivo)
+        {
+            ConfiguracionPlantelDatos confDatos = new();
+            ConfiguracionPlantel conf = confDatos.Obtener();
+
+            using (var wb = new XLWorkbook())
+            {
+                var ws = wb.Worksheets.Add("Evaluación Continua");
+                ws.ShowGridLines = true;
+
+                // Configuración de anchos de columna
+                ws.Column(1).Width = 5.0;   // Nº
+                ws.Column(2).Width = 14.0;  // Cédula
+                ws.Column(3).Width = 36.0;  // Apellidos y Nombres
+                ws.Column(4).Width = 7.5;   // Eval 1
+                ws.Column(5).Width = 7.5;   // Eval 2
+                ws.Column(6).Width = 7.5;   // Eval 3
+                ws.Column(7).Width = 7.5;   // Eval 4
+                ws.Column(8).Width = 7.5;   // Eval 5
+                ws.Column(9).Width = 7.5;   // Eval 6
+                ws.Column(10).Width = 8.0;  // RASGO
+                ws.Column(11).Width = 12.0; // Definitiva del Lapso (100%)
+                ws.Column(12).Width = 9.0;  // Ajuste Consejo
+                ws.Column(13).Width = 9.0;  // Definitiva Final
+                ws.Column(14).Width = 24.0; // Firma del Estudiante
+
+                // ================= 1. ENCABEZADO INSTITUCIONAL (Igual a la imagen) =================
+                ws.Range("A1:D1").Merge().Value = conf.Eponimo;
+                ws.Range("A2:D2").Merge().Value = "Departamento de Control de Estudios y Evaluación";
+                ws.Range("A3:D3").Merge().Value = $"Código Plantel: {conf.CodigoPlantel} - {conf.EntidadFederal}.";
+
+                ws.Range("A1:D3").Style.Font.Bold = true;
+                ws.Cell("A1").Style.Font.FontSize = 11;
+                ws.Cell("A2").Style.Font.FontSize = 9.5;
+                ws.Cell("A3").Style.Font.FontSize = 9;
+
+                // Lado derecho de la cabecera
+                ws.Range("J1:N1").Merge().Value = $"{gradoNombre.ToUpper()} \"{seccionNombre.ToUpper()}\"    {lapsoNombre.ToUpper()}";
+                ws.Range("J2:N2").Merge().Value = $"Evaluación Continua - {lapsoNombre.ToUpper()}";
+                ws.Range("J3:N3").Merge().Value = $"Año Escolar {periodoNombre}";
+
+                for (int i = 1; i <= 3; i++)
+                {
+                    ws.Range(i, 10, i, 14).Style.Font.Bold = true;
+                    ws.Range(i, 10, i, 14).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                }
+
+                // Datos del Docente y Materia
+                ws.Cell("A5").Value = "PROFESOR:";
+                ws.Cell("A5").Style.Font.Bold = true;
+                ws.Range("B5:E5").Merge().Value = docenteNombre.ToUpper();
+                ws.Range("B5:E5").Style.Font.Bold = true;
+
+                ws.Cell("A6").Value = "ASIGNATURA:";
+                ws.Cell("A6").Style.Font.Bold = true;
+                ws.Range("B6:E6").Merge().Value = materiaNombre.ToUpper();
+                ws.Range("B6:E6").Style.Font.Bold = true;
+
+                // ================= 2. ENCABEZADOS DE LA TABLA =================
+                int filaH = 8;
+                ws.Range("A8:A9").Merge().Value = "Nº";
+                ws.Range("B8:B9").Merge().Value = "Cédula";
+                ws.Range("C8:C9").Merge().Value = "Apellidos y Nombres";
+
+                // 6 Columnas de Evaluaciones (Nombres de actividades)
+                for (int i = 0; i < 6; i++)
+                {
+                    string actNom = (i < nombresEvaluaciones.Length && !string.IsNullOrWhiteSpace(nombresEvaluaciones[i]))
+                        ? nombresEvaluaciones[i]
+                        : $"Actividad {i + 1}";
+
+                    int col = 4 + i;
+                    var c = ws.Range(filaH, col, filaH + 1, col);
+                    c.Merge().Value = actNom;
+                    c.Style.Alignment.WrapText = true;
+                }
+
+                ws.Range("J8:J9").Merge().Value = "RASGO";
+                ws.Range("K8:K9").Merge().Value = "Definitiva del\nLapso (100%)";
+                ws.Range("L8:L9").Merge().Value = "AJUSTE DEL\nCONSEJO";
+                ws.Range("M8:M9").Merge().Value = "DEFINITIVA\nDEL LAPSO";
+                ws.Range("N8:N9").Merge().Value = "FIRMA DEL ESTUDIANTE";
+
+                var rangoEncabezados = ws.Range(8, 1, 9, 14);
+                rangoEncabezados.Style.Font.Bold = true;
+                rangoEncabezados.Style.Font.FontSize = 8.5;
+                rangoEncabezados.Style.Fill.BackgroundColor = XLColor.FromHtml("#F1F5F9");
+                rangoEncabezados.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                rangoEncabezados.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                rangoEncabezados.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                rangoEncabezados.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+                // ================= 3. FILAS DE ESTUDIANTES PRECARGADOS =================
+                int r = 10;
+                foreach (var est in estudiantes)
+                {
+                    ws.Cell(r, 1).Value = est.NroLista;
+                    ws.Cell(r, 2).Value = est.Cedula;
+                    ws.Cell(r, 3).Value = est.ApellidosYNombres;
+
+                    // Notas si ya fueron ingresadas en el sistema
+                    if (est.Eval1.HasValue) ws.Cell(r, 4).Value = est.Eval1.Value;
+                    if (est.Eval2.HasValue) ws.Cell(r, 5).Value = est.Eval2.Value;
+                    if (est.Eval3.HasValue) ws.Cell(r, 6).Value = est.Eval3.Value;
+                    if (est.Eval4.HasValue) ws.Cell(r, 7).Value = est.Eval4.Value;
+                    if (est.Eval5.HasValue) ws.Cell(r, 8).Value = est.Eval5.Value;
+                    if (est.Eval6.HasValue) ws.Cell(r, 9).Value = est.Eval6.Value;
+
+                    ws.Cell(r, 10).Value = ""; // Rasgo
+                    ws.Cell(r, 11).Value = est.Definitiva > 0 ? est.Definitiva.ToString("D2") : "";
+                    ws.Cell(r, 11).Style.Fill.BackgroundColor = XLColor.FromHtml("#FEF08A"); // Amarillo
+
+                    ws.Cell(r, 12).Value = ""; // Ajuste consejo
+                    ws.Cell(r, 13).Value = est.Definitiva > 0 ? est.Definitiva.ToString("D2") : ""; // Definitiva
+                    ws.Cell(r, 14).Value = ""; // Espacio para la firma manual
+
+                    ws.Cell(r, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(r, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(r, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                    ws.Cell(r, 3).Style.Font.Bold = true;
+
+                    for (int col = 4; col <= 13; col++)
+                    {
+                        ws.Cell(r, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    }
+
+                    ws.Row(r).Height = 20;
+                    r++;
+                }
+
+                var rangoAlumnos = ws.Range(10, 1, r - 1, 14);
+                rangoAlumnos.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                rangoAlumnos.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                rangoAlumnos.Style.Font.FontSize = 9;
+
+                // ================= 4. CUADRO DE RESUMEN ESTADÍSTICO DEL LAPSO (Inferior) =================
+                int rRes = r + 1;
+                ws.Range(rRes, 4, rRes, 9).Merge().Value = "RESUMEN DEL LAPSO";
+                ws.Range(rRes, 4, rRes, 9).Style.Font.Bold = true;
+                ws.Range(rRes, 4, rRes, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Range(rRes, 4, rRes, 9).Style.Fill.BackgroundColor = XLColor.FromHtml("#E2E8F0");
+                rRes++;
+
+                string[] etiquetasResumen = {
+            "N° APROBADOS EN CADA EVALUACIÓN",
+            "N° APLAZADOS EN CADA EVALUACIÓN",
+            "ASISTENTES",
+            "INASISTENTES",
+            "% DE APLAZADOS"
+        };
+
+                for (int i = 0; i < etiquetasResumen.Length; i++)
+                {
+                    ws.Range(rRes, 2, rRes, 3).Merge().Value = etiquetasResumen[i];
+                    ws.Range(rRes, 2, rRes, 3).Style.Font.Bold = true;
+                    ws.Range(rRes, 2, rRes, 3).Style.Font.FontSize = 8;
+                    ws.Range(rRes, 2, rRes, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                    var rCuadros = ws.Range(rRes, 4, rRes, 9);
+                    rCuadros.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    rCuadros.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                    rRes++;
+                }
+
+                // ================= 5. FIRMAS =================
+                rRes += 2;
+                ws.Range(rRes, 2, rRes, 4).Merge().Value = "____________________________________";
+                ws.Range(rRes, 10, rRes, 13).Merge().Value = "____________________________________";
+                ws.Range(rRes + 1, 2, rRes + 1, 4).Merge().Value = $"PROFESOR: {docenteNombre.ToUpper()}";
+                ws.Range(rRes + 1, 10, rRes + 1, 13).Merge().Value = "CONTROL DE ESTUDIOS Y EVALUACIÓN\nSELLO DEL PLANTEL";
+
+                ws.Range(rRes, 1, rRes + 2, 14).Style.Font.Bold = true;
+                ws.Range(rRes, 1, rRes + 2, 14).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Range(rRes + 1, 1, rRes + 2, 14).Style.Font.FontSize = 8.5;
+
+                wb.SaveAs(rutaArchivo);
+            }
+        }
     }
 }
