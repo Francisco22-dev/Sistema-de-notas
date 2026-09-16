@@ -1,22 +1,94 @@
 ﻿<UserControl x:Class="SistemaLiceo.Presentacion.AuditoriaControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="White">
-    <Grid Margin="20">
+             Background="#F8FAFC">
+    <Grid Margin="18">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,15">
-            <TextBlock Text="🛡️ Registro de Auditoría y Trazabilidad del Sistema (Modo Master)" FontSize="22" FontWeight="Bold" Foreground="#1E3A8A"/>
-            <Button x:Name="btnLimpiarLogs" Content="🗑️ Vaciar Historial" HorizontalAlignment="Right" Width="140" Height="32"
+        <!-- Título -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="🛡️ Panel Master: Auditoría y Mantenimiento Programado" FontSize="20" FontWeight="Bold" Foreground="#1E3A8A"/>
+            <Button x:Name="btnLimpiarLogs" Content="🗑️ Vaciar Logs" HorizontalAlignment="Right" Width="130" Height="30"
                     Background="#DC2626" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnLimpiarLogs_Click"/>
         </Grid>
 
+        <!-- ================= PANEL DE CIERRE Y MANTENIMIENTO DISFRAZADO ================= -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#CBD5E1" BorderThickness="1.5" CornerRadius="8" Padding="14" Margin="0,0,0,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Estado Actual -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Estado del Sistema para Usuarios:" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                        <Border x:Name="badgeEstadoSistema" Background="#DCFCE7" BorderBrush="#16A34A" BorderThickness="1" CornerRadius="12" Padding="10,3" Margin="10,0,0,0">
+                            <TextBlock x:Name="txtEstadoSistema" Text="🟢 OPERATIVO / ABIERTO" FontWeight="Bold" Foreground="#15803D" FontSize="12"/>
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock x:Name="txtProximoCorte" Text="Próximo Cierre: --/--/---- --:--" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#64748B"/>
+                </Grid>
+
+                <!-- Configuración de Fecha, Hora y Frecuencia -->
+                <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,10">
+                    <StackPanel Margin="0,0,8,0">
+                        <TextBlock Text="Frecuencia de Cierre:" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,2"/>
+                        <ComboBox x:Name="cmbFrecuenciaMeses" Height="28" SelectedIndex="1" SelectionChanged="cmbFrecuenciaMeses_SelectionChanged">
+                            <ComboBoxItem Content="Cierre en 3 Meses" Tag="3"/>
+                            <ComboBoxItem Content="Cierre en 6 Meses" Tag="6"/>
+                            <ComboBoxItem Content="Cierre en 12 Meses" Tag="12"/>
+                            <ComboBoxItem Content="Fecha y Hora Exacta" Tag="0"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,8,0">
+                        <TextBlock Text="Fecha de Cierre:" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,2"/>
+                        <DatePicker x:Name="dpFechaCierre" Height="28"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,8,0">
+                        <TextBlock Text="Hora Exacta de Cierre:" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,2"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="cmbHora" Height="28" Grid.Column="0"/>
+                            <TextBlock Text=":" Grid.Column="1" VerticalAlignment="Center" FontWeight="Bold" Margin="4,0"/>
+                            <ComboBox x:Name="cmbMinutos" Height="28" Grid.Column="2"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="Mensaje visible al bloquearse:" FontWeight="SemiBold" FontSize="11.5" Margin="0,0,0,2"/>
+                        <TextBox x:Name="txtMensajeBloqueo" Height="28" VerticalContentAlignment="Center" Text="Sistema en mantenimiento preventivo programado. Contacte a soporte técnico."/>
+                    </StackPanel>
+                </UniformGrid>
+
+                <!-- Botones de Acción (El botón disfrazado) -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+                    <Button x:Name="btnBloqueoInmediato" Content="🔒 Bloquear Acceso Ahora" Width="185" Height="32" Margin="0,0,10,0"
+                            Background="#DC2626" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnBloqueoInmediato_Click"/>
+
+                    <!-- BOTÓN DISFRAZADO: Aplica el mantenimiento y desbloquea el sistema hasta la fecha elegida -->
+                    <Button x:Name="btnLiberarMantenimiento" Content="🛠️ Ejecutar Mantenimiento y Abrir Sistema" Width="300" Height="32"
+                            Background="#16A34A" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnLiberarMantenimiento_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <!-- Filtros de Auditoría -->
-        <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12">
+        <Border Grid.Row="2" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -24,18 +96,17 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="🔍 Filtrar registros:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0"/>
-                <TextBox x:Name="txtBuscarLog" Grid.Column="1" Height="30" Padding="5,0" VerticalContentAlignment="Center"
-                         TextChanged="txtBuscarLog_TextChanged"/>
-                <Button x:Name="btnRefrescar" Grid.Column="2" Content="🔄 Actualizar" Height="30" Width="100" Margin="10,0,0,0"
+                <TextBlock Text="🔍 Filtrar registros de auditoría:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0"/>
+                <TextBox x:Name="txtBuscarLog" Grid.Column="1" Height="28" Padding="5,0" VerticalContentAlignment="Center" TextChanged="txtBuscarLog_TextChanged"/>
+                <Button x:Name="btnRefrescar" Grid.Column="2" Content="🔄 Actualizar Logs" Height="28" Width="130" Margin="10,0,0,0"
                         Background="#3B82F6" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="btnRefrescar_Click"/>
             </Grid>
         </Border>
 
         <!-- Grilla de Auditoría -->
-        <DataGrid x:Name="gridAuditoria" Grid.Row="2" AutoGenerateColumns="True"
+        <DataGrid x:Name="gridAuditoria" Grid.Row="3" AutoGenerateColumns="True"
                   IsReadOnly="True" HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow"
                   Background="White" BorderBrush="#CBD5E1" BorderThickness="1"
-                  RowHeight="32" FontSize="13" AlternatingRowBackground="#F9FAFB"/>
+                  RowHeight="30" FontSize="12.5" AlternatingRowBackground="#F9FAFB"/>
     </Grid>
 </UserControl>

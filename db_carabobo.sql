@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-08-2026 a las 19:48:11
+-- Tiempo de generación: 16-09-2026 a las 19:38:26
 -- Versión del servidor: 12.2.2-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -41,7 +41,9 @@ CREATE TABLE `antropometricos` (
 --
 
 INSERT INTO `antropometricos` (`id`, `estatura`, `peso`, `talla_camisa`, `talla_pantalon`, `talla_zapato`) VALUES
-(1, 1.73, 65.00, 'M', '30', 44);
+(1, 1.73, 65.00, 'M', '30', 44),
+(2, 1.73, 65.00, 'M', '30', 44),
+(3, 1.68, 65.00, 'S', '30', 38);
 
 -- --------------------------------------------------------
 
@@ -57,6 +59,25 @@ CREATE TABLE `auditoria` (
   `equipo` varchar(100) DEFAULT NULL,
   `fecha` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+--
+-- Volcado de datos para la tabla `auditoria`
+--
+
+INSERT INTO `auditoria` (`id`, `usuario_id`, `modulo`, `accion`, `equipo`, `fecha`) VALUES
+(1, 1, 'Calificaciones', 'Guardó calificaciones de 1er lapso en asignación ID 3', 'DESKTOP-LLBMAGR', '2026-09-08 13:26:34'),
+(2, 1, 'Estudiantes', 'Actualizó ficha del estudiante Francisco Jesús Serrano Torres (31581404)', 'DESKTOP-LLBMAGR', '2026-09-09 16:50:45'),
+(3, 1, 'Calificaciones', 'Guardó calificaciones de 1er lapso en asignación ID 3', 'DESKTOP-LLBMAGR', '2026-09-09 16:53:54'),
+(4, 1, 'Calificaciones', 'Guardó calificaciones de 1er lapso en asignación ID 3', 'DESKTOP-LLBMAGR', '2026-09-09 16:54:14'),
+(5, 1, 'Estudiantes', 'Actualizó ficha del estudiante Francisco Jesús Serrano Torres (31581404)', 'DESKTOP-LLBMAGR', '2026-09-12 16:38:04'),
+(6, 1, 'Estudiantes', 'Actualizó ficha del estudiante Francisco Jesús Serrano Torres (31581404)', 'DESKTOP-LLBMAGR', '2026-09-12 17:20:18'),
+(7, 1, 'Notas Certificadas', 'Registró notas históricas de Ángel Jesús Serrano Torres (32620044)', 'DESKTOP-LLBMAGR', '2026-09-16 14:30:20'),
+(8, 1, 'Estudiantes', 'Reactivó al estudiante ID 1', 'DESKTOP-LLBMAGR', '2026-09-16 14:52:57'),
+(9, 4, 'Calificaciones', 'Exportó nómina docente de evaluación continua: Ciencias Naturales (4to Año A)', 'DESKTOP-LLBMAGR', '2026-09-16 16:40:26'),
+(10, 4, 'Inscripciones', 'Inscribió al estudiante g j bh b (35656869)', 'DESKTOP-LLBMAGR', '2026-09-16 16:48:40'),
+(11, 4, 'Calificaciones', 'Exportó nómina docente de evaluación continua: Ciencias Naturales (1er Año A)', 'DESKTOP-LLBMAGR', '2026-09-16 16:50:32'),
+(12, 4, 'Calificaciones', 'Exportó nómina docente de evaluación continua: Castellano (1er Año B)', 'DESKTOP-LLBMAGR', '2026-09-16 16:51:34'),
+(13, 1, 'Carga Académica', 'Guardó la distribución de docentes para 1er Año \"A\" (2 materias asignadas)', 'DESKTOP-LLBMAGR', '2026-09-16 17:18:24');
 
 -- --------------------------------------------------------
 
@@ -577,6 +598,34 @@ INSERT INTO `ciudad` (`id`, `estado_id`, `nombre`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `configuracion_plantel`
+--
+
+CREATE TABLE `configuracion_plantel` (
+  `id` int(11) NOT NULL,
+  `eponimo` varchar(200) NOT NULL,
+  `codigo_plantel` varchar(50) NOT NULL,
+  `codigo_plan_estudio` varchar(50) NOT NULL DEFAULT '31059',
+  `denominacion_plan` varchar(100) NOT NULL DEFAULT 'EDUCACIÓN MEDIA GENERAL',
+  `direccion` text NOT NULL,
+  `telefono` varchar(50) NOT NULL,
+  `municipio` varchar(100) NOT NULL DEFAULT 'VALENCIA',
+  `entidad_federal` varchar(100) NOT NULL DEFAULT 'CARABOBO',
+  `cdcee` varchar(100) NOT NULL DEFAULT 'CARABOBO',
+  `director_nombre` varchar(150) NOT NULL,
+  `director_cedula` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+--
+-- Volcado de datos para la tabla `configuracion_plantel`
+--
+
+INSERT INTO `configuracion_plantel` (`id`, `eponimo`, `codigo_plantel`, `codigo_plan_estudio`, `denominacion_plan`, `direccion`, `telefono`, `municipio`, `entidad_federal`, `cdcee`, `director_nombre`, `director_cedula`) VALUES
+(1, 'UNIDAD EDUCATIVA CARABOBO', 'T0311D0814', '31059', 'EDUCACIÓN MEDIA GENERAL', 'PARROQUIA SAN JOSÉ, VALENCIA - ESTADO CARABOBO', '0241-8217287', 'VALENCIA', 'CARABOBO', 'CARABOBO', 'FELIPE FERNÁNDEZ.', 'V-18061830');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `direccion`
 --
 
@@ -599,7 +648,11 @@ CREATE TABLE `direccion` (
 --
 
 INSERT INTO `direccion` (`id`, `ciudad_id`, `sector`, `avenida`, `calle`, `manzana`, `vereda`, `numero_vivienda`, `tipo_vivienda`, `condicion_vivienda`, `infraestructura_vivienda`) VALUES
-(1, 127, 'Las Quintas de Flor Amarillo', 'Los Cedros', NULL, 'P', NULL, '9', 'Casa', 'Propia', 'Buena');
+(1, 127, 'Las Quintas de Flor Amarillo', 'Los Cedros', NULL, 'P', NULL, '9', 'Casa', 'Propia', 'Buena'),
+(4, 127, 'Quintas de Flor Amarillo', 'Los Cedros', NULL, 'P', NULL, '9', 'Casa', 'Propia', 'Buena'),
+(9, 127, 'Quintas de Flor Amarillo', 'Los Cedros', NULL, 'P', NULL, '9', 'Casa', 'Propia', 'Buena'),
+(10, 122, 'aasdfasdfdas', 'dsggsdfg', '3dfsd', 'd', NULL, NULL, 'Apartamento', 'Alquilada', 'Buena'),
+(11, 122, 'aasdfasdfdas', 'dsggsdfg', '3dfsd', 'd', NULL, NULL, 'Apartamento', 'Alquilada', 'Buena');
 
 -- --------------------------------------------------------
 
@@ -656,6 +709,20 @@ CREATE TABLE `evaluacion` (
   `nota` int(2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+--
+-- Volcado de datos para la tabla `evaluacion`
+--
+
+INSERT INTO `evaluacion` (`id`, `descripcion`, `nota`) VALUES
+(1, 'Evaluación 1', 20),
+(2, 'Actividad 1', 20),
+(3, 'Actividad 2', 20),
+(4, 'Prueba 1', 20),
+(5, 'Actividad 3', 20),
+(6, 'Actividad 4', 20),
+(7, 'Actividad 5', 20),
+(8, 'Actividad 6', 20);
+
 -- --------------------------------------------------------
 
 --
@@ -681,7 +748,9 @@ CREATE TABLE `extra_curricular` (
 --
 
 INSERT INTO `extra_curricular` (`id`, `realiza_deportes`, `cuales_deportes`, `posee_canaima`, `fecha_asignacion_canaima`, `serial_canaima`, `estado_canaima`, `falla_canaima`, `posee_cargador`, `estado_cargador`, `falla_cargador`) VALUES
-(1, 'No', NULL, 'No', NULL, NULL, 'Operativa', NULL, 'No', 'Operativo', NULL);
+(1, 'No', NULL, 'No', NULL, NULL, 'Operativa', NULL, 'No', 'Operativo', NULL),
+(2, 'No', NULL, 'No', NULL, NULL, 'Operativa', NULL, 'No', 'Operativo', NULL),
+(3, 'No', NULL, 'No', NULL, NULL, 'Operativa', NULL, 'No', 'Operativo', NULL);
 
 -- --------------------------------------------------------
 
@@ -723,8 +792,9 @@ CREATE TABLE `grado_materia` (
 --
 
 INSERT INTO `grado_materia` (`id`, `grado_id`, `materia_id`) VALUES
-(1, 4, 1),
-(2, 1, 1);
+(2, 1, 1),
+(3, 1, 2),
+(1, 4, 1);
 
 -- --------------------------------------------------------
 
@@ -744,8 +814,9 @@ CREATE TABLE `grado_seccion` (
 
 INSERT INTO `grado_seccion` (`id`, `grado_id`, `seccion_id`) VALUES
 (1, 1, 1),
+(3, 1, 2),
 (2, 4, 1),
-(3, 1, 2);
+(4, 4, 2);
 
 -- --------------------------------------------------------
 
@@ -769,7 +840,9 @@ CREATE TABLE `inscripcion` (
 --
 
 INSERT INTO `inscripcion` (`id`, `periodo_id`, `estudiante_id`, `grado_seccion_id`, `tipo_ingreso`, `colegio_procedencia`, `nivel_academico`, `fecha_inscripcion`) VALUES
-(1, 1, 1, 1, 'Nuevo Ingreso', NULL, 'Media General', '2026-08-16 23:45:10');
+(1, 1, 1, 1, 'Nuevo Ingreso', NULL, 'Media General', '2026-08-16 23:45:10'),
+(2, 1, 2, 4, 'Regular', NULL, 'Media General', '2026-08-28 15:00:34'),
+(3, 1, 3, 1, 'Nuevo Ingreso', NULL, 'Media General', '2026-09-16 16:48:40');
 
 -- --------------------------------------------------------
 
@@ -787,7 +860,8 @@ CREATE TABLE `materia` (
 --
 
 INSERT INTO `materia` (`id`, `nombre`) VALUES
-(1, 'Biología');
+(1, 'Ciencias Naturales'),
+(2, 'Castellano');
 
 -- --------------------------------------------------------
 
@@ -806,7 +880,8 @@ CREATE TABLE `materia_profesor` (
 --
 
 INSERT INTO `materia_profesor` (`id`, `materia_id`, `profesor_id`) VALUES
-(1, 1, 1);
+(1, 1, 1),
+(2, 2, 2);
 
 -- --------------------------------------------------------
 
@@ -828,7 +903,10 @@ CREATE TABLE `materia_profesor_periodo` (
 
 INSERT INTO `materia_profesor_periodo` (`id`, `grado_seccion_id`, `grado_materia_id`, `materia_profesor_id`, `periodo_id`) VALUES
 (1, 2, 1, 1, 1),
-(2, 3, 2, 1, 1);
+(2, 3, 2, 1, 1),
+(3, 4, 1, 1, 1),
+(4, 1, 3, 2, 1),
+(6, 1, 2, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -1186,6 +1264,35 @@ INSERT INTO `municipio` (`id`, `estado_id`, `nombre`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `notas_certificadas_historicas`
+--
+
+CREATE TABLE `notas_certificadas_historicas` (
+  `id` int(11) NOT NULL,
+  `cedula` varchar(20) NOT NULL,
+  `nombres` varchar(150) NOT NULL,
+  `apellidos` varchar(150) NOT NULL,
+  `fecha_nacimiento` date DEFAULT NULL,
+  `pais_nacimiento` varchar(100) DEFAULT 'VENEZUELA',
+  `estado_nacimiento` varchar(100) DEFAULT 'CARABOBO',
+  `municipio_nacimiento` varchar(100) DEFAULT 'VALENCIA',
+  `plantel_egreso` varchar(200) DEFAULT 'UNIDAD EDUCATIVA CARABOBO',
+  `promedio_general` decimal(5,3) NOT NULL DEFAULT 0.000,
+  `observaciones` text DEFAULT NULL,
+  `materias_json` longtext NOT NULL,
+  `fecha_registro` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+--
+-- Volcado de datos para la tabla `notas_certificadas_historicas`
+--
+
+INSERT INTO `notas_certificadas_historicas` (`id`, `cedula`, `nombres`, `apellidos`, `fecha_nacimiento`, `pais_nacimiento`, `estado_nacimiento`, `municipio_nacimiento`, `plantel_egreso`, `promedio_general`, `observaciones`, `materias_json`, `fecha_registro`) VALUES
+(1, '32620044', 'ÁNGEL JESÚS', 'SERRANO TORRES', '2008-07-09', 'VENEZUELA', 'CARABOBO', 'VALENCIA', 'UNIDAD EDUCATIVA CARABOBO', 20.000, NULL, '{\"Apellidos\":\"Serrano Torres\",\"Nombres\":\"\\u00C1ngel Jes\\u00FAs\",\"Cedula\":\"32620044\",\"FechaNacimiento\":\"2008-07-09T00:00:00\",\"PaisNacimiento\":\"VENEZUELA\",\"EstadoNacimiento\":\"CARABOBO\",\"MunicipioNacimiento\":\"VALENCIA\",\"PromedioGeneral\":20,\"PrimerAno\":[{\"Materia\":\"CASTELLANO\",\"NotaNumero\":20,\"NotaLetras\":\"VEINTE\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"INGL\\u00C9S Y OTRAS LENGUAS EXTRANJERAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"MATEM\\u00C1TICAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"EDUCACI\\u00D3N F\\u00CDSICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"ARTE Y PATRIMONIO\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"CIENCIAS NATURALES\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"GEOGRAF\\u00CDA, HISTORIA Y CIUDADAN\\u00CDA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1}],\"SegundoAno\":[{\"Materia\":\"CASTELLANO\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"INGL\\u00C9S Y OTRAS LENGUAS EXTRANJERAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"MATEM\\u00C1TICAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"EDUCACI\\u00D3N F\\u00CDSICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"ARTE Y PATRIMONIO\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"CIENCIAS NATURALES\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"GEOGRAF\\u00CDA, HISTORIA Y CIUDADAN\\u00CDA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1}],\"TercerAno\":[{\"Materia\":\"CASTELLANO\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"INGL\\u00C9S Y OTRAS LENGUAS EXTRANJERAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"MATEM\\u00C1TICAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"EDUCACI\\u00D3N F\\u00CDSICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"F\\u00CDSICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"QU\\u00CDMICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"BIOLOG\\u00CDA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"GEOGRAF\\u00CDA, HISTORIA Y CIUDADAN\\u00CDA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1}],\"CuartoAno\":[{\"Materia\":\"CASTELLANO\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"INGL\\u00C9S Y OTRAS LENGUAS EXTRANJERAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"MATEM\\u00C1TICAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"EDUCACI\\u00D3N F\\u00CDSICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"F\\u00CDSICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"QU\\u00CDMICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"BIOLOG\\u00CDA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"GEOGRAF\\u00CDA, HISTORIA Y CIUDADAN\\u00CDA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"FORMACI\\u00D3N PARA LA SOBERAN\\u00CDA NACIONAL\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1}],\"QuintoAno\":[{\"Materia\":\"CASTELLANO\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"INGL\\u00C9S Y OTRAS LENGUAS EXTRANJERAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"MATEM\\u00C1TICAS\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"EDUCACI\\u00D3N F\\u00CDSICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"F\\u00CDSICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"QU\\u00CDMICA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"BIOLOG\\u00CDA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"CIENCIAS DE LA TIERRA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"GEOGRAF\\u00CDA, HISTORIA Y CIUDADAN\\u00CDA\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1},{\"Materia\":\"FORMACI\\u00D3N PARA LA SOBERAN\\u00CDA NACIONAL\",\"NotaNumero\":null,\"NotaLetras\":\"--\",\"TipoEvaluacion\":\"F\",\"MesAno\":\"07 2026\",\"InstitucionNro\":1}]}', '2026-09-16 14:30:20');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `nota_evaluacion_lapso`
 --
 
@@ -1195,6 +1302,26 @@ CREATE TABLE `nota_evaluacion_lapso` (
   `evaluacion_id` int(11) NOT NULL,
   `porcentaje` int(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+--
+-- Volcado de datos para la tabla `nota_evaluacion_lapso`
+--
+
+INSERT INTO `nota_evaluacion_lapso` (`id`, `nota_lapso_id`, `evaluacion_id`, `porcentaje`) VALUES
+(1, 1, 1, 20),
+(2, 1, 1, 20),
+(3, 1, 2, 20),
+(4, 1, 3, 20),
+(5, 1, 4, 20),
+(6, 1, 3, 20),
+(7, 1, 5, 20),
+(8, 1, 6, 20),
+(9, 1, 4, 30),
+(10, 1, 3, 20),
+(11, 1, 5, 20),
+(12, 1, 6, 10),
+(13, 1, 7, 10),
+(14, 1, 8, 10);
 
 -- --------------------------------------------------------
 
@@ -1208,6 +1335,13 @@ CREATE TABLE `nota_lapso_periodo` (
   `nota_periodo_id` int(11) NOT NULL,
   `nota` int(2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+--
+-- Volcado de datos para la tabla `nota_lapso_periodo`
+--
+
+INSERT INTO `nota_lapso_periodo` (`id`, `nombre`, `nota_periodo_id`, `nota`) VALUES
+(1, '1er lapso', 1, 20);
 
 -- --------------------------------------------------------
 
@@ -1223,6 +1357,13 @@ CREATE TABLE `nota_periodo_inscripcion` (
   `create_at` timestamp NULL DEFAULT current_timestamp(),
   `update_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+--
+-- Volcado de datos para la tabla `nota_periodo_inscripcion`
+--
+
+INSERT INTO `nota_periodo_inscripcion` (`id`, `inscripcion_id`, `materia_profe_periodo_id`, `nota`, `create_at`, `update_at`) VALUES
+(1, 2, 3, 20, '2026-08-28 15:01:58', '2026-09-09 16:54:14');
 
 -- --------------------------------------------------------
 
@@ -2687,7 +2828,11 @@ CREATE TABLE `persona` (
 INSERT INTO `persona` (`id`, `nacionalidad`, `cedula_identidad`, `nombre_1`, `nombre_2`, `apellido_1`, `apellido_2`, `fecha_nacimiento`, `sexo`, `direccion_id`, `create_at`, `update_at`) VALUES
 (1, 'V', '9657670', 'Lorenzo', 'Segundo', 'Serrano', 'Zabala', '1970-03-15', 'M', NULL, '2026-08-16 23:45:10', '2026-08-16 23:45:10'),
 (2, 'V', '31581403', 'Francisco', 'Jesús', 'Serrano', 'Torres', '2005-11-22', 'M', 1, '2026-08-16 23:45:10', '2026-08-16 23:45:10'),
-(4, 'V', '9657671', 'Lorenzo', 'Segundo', 'Serrano', 'Zabala', '1970-03-15', 'M', NULL, '2026-08-24 13:53:44', '2026-08-24 13:53:44');
+(4, 'V', '9657671', 'Lorenzo', 'Segundo', 'Serrano', 'Zabala', '1970-03-15', 'M', NULL, '2026-08-24 13:53:44', '2026-08-24 13:53:44'),
+(7, 'V', '31581404', 'Francisco', 'Jesús', 'Serrano', 'Torres', '2005-11-22', 'M', 4, '2026-08-28 15:00:34', '2026-08-28 15:00:34'),
+(8, 'V', '14555696', 'm', 'j', 'h', 'll', '1986-07-02', 'F', NULL, '2026-09-16 16:41:32', '2026-09-16 16:41:32'),
+(9, 'V', '12345678', 'sdfgsdfgsdf', 'sdgdsfgsdfg', 'sdfgsdfgsd', 'sdfgsdfgsdfg', '1977-02-15', 'F', 10, '2026-09-16 16:48:40', '2026-09-16 16:48:40'),
+(10, 'V', '35656869', 'g', 'j', 'bh', 'b', '2010-07-01', 'F', 11, '2026-09-16 16:48:40', '2026-09-16 16:48:40');
 
 -- --------------------------------------------------------
 
@@ -2700,6 +2845,8 @@ CREATE TABLE `persona_estudiante` (
   `cedula_escolar` varchar(15) NOT NULL,
   `numero_hijo` int(11) NOT NULL DEFAULT 1,
   `lateralidad` enum('Derecha','Izquierda','Ambidextro') NOT NULL,
+  `telefono_estudiante` varchar(20) DEFAULT NULL,
+  `correo_estudiante` varchar(100) DEFAULT NULL,
   `persona_id` int(11) NOT NULL,
   `pais_nacimiento_id` int(11) NOT NULL,
   `parroquia_nacimiento_id` int(11) NOT NULL,
@@ -2708,15 +2855,36 @@ CREATE TABLE `persona_estudiante` (
   `extra_curricular_id` int(11) NOT NULL,
   `representante_principal_id` int(11) NOT NULL,
   `representante_secundario_id` int(11) DEFAULT NULL,
-  `ESTADO` enum('Activo','Retirado','Egresado') DEFAULT 'Activo'
+  `ESTADO` enum('Activo','Retirado','Egresado') DEFAULT 'Activo',
+  `situacion_padres` varchar(100) DEFAULT 'Viven Juntos (Casados/Concubinato)',
+  `convive_con` varchar(100) DEFAULT 'Ambos Padres',
+  `padre_cedula` varchar(15) DEFAULT NULL,
+  `padre_nombres_apellidos` varchar(150) DEFAULT NULL,
+  `padre_telefono` varchar(20) DEFAULT NULL,
+  `padre_vive` varchar(100) DEFAULT 'Vivo (En el país)',
+  `madre_cedula` varchar(15) DEFAULT NULL,
+  `madre_nombres_apellidos` varchar(150) DEFAULT NULL,
+  `madre_telefono` varchar(20) DEFAULT NULL,
+  `madre_vive` varchar(100) DEFAULT 'Viva (En el país)',
+  `representante_legal_tipo` varchar(100) DEFAULT 'Madre',
+  `oficio_cpnna_tribunal` varchar(150) DEFAULT NULL,
+  `observaciones_custodia` text DEFAULT NULL,
+  `poblacion_indigena` enum('Si','No') NOT NULL DEFAULT 'No',
+  `embarazada` enum('Si','No') NOT NULL DEFAULT 'No',
+  `posee_discapacidad` enum('Si','No') NOT NULL DEFAULT 'No',
+  `tipo_discapacidad` varchar(100) DEFAULT NULL,
+  `descripcion_discapacidad` text DEFAULT NULL,
+  `carnet_conapdis` varchar(50) DEFAULT NULL
 ) ;
 
 --
 -- Volcado de datos para la tabla `persona_estudiante`
 --
 
-INSERT INTO `persona_estudiante` (`id`, `cedula_escolar`, `numero_hijo`, `lateralidad`, `persona_id`, `pais_nacimiento_id`, `parroquia_nacimiento_id`, `antropometrico_id`, `salud_id`, `extra_curricular_id`, `representante_principal_id`, `representante_secundario_id`, `ESTADO`) VALUES
-(1, '1', 1, 'Derecha', 2, 232, 291, 1, 1, 1, 1, NULL, 'Retirado');
+INSERT INTO `persona_estudiante` (`id`, `cedula_escolar`, `numero_hijo`, `lateralidad`, `telefono_estudiante`, `correo_estudiante`, `persona_id`, `pais_nacimiento_id`, `parroquia_nacimiento_id`, `antropometrico_id`, `salud_id`, `extra_curricular_id`, `representante_principal_id`, `representante_secundario_id`, `ESTADO`, `situacion_padres`, `convive_con`, `padre_cedula`, `padre_nombres_apellidos`, `padre_telefono`, `padre_vive`, `madre_cedula`, `madre_nombres_apellidos`, `madre_telefono`, `madre_vive`, `representante_legal_tipo`, `oficio_cpnna_tribunal`, `observaciones_custodia`, `poblacion_indigena`, `embarazada`, `posee_discapacidad`, `tipo_discapacidad`, `descripcion_discapacidad`, `carnet_conapdis`) VALUES
+(1, '1', 1, 'Derecha', NULL, NULL, 2, 232, 291, 1, 1, 1, 1, NULL, 'Activo', 'Viven Juntos', 'Ambos Padres', NULL, NULL, NULL, 'Si', NULL, NULL, NULL, 'Si', 'Madre', NULL, NULL, 'No', 'No', 'No', NULL, NULL, NULL),
+(2, '31581404', 2, 'Derecha', '0424-4152265', 'serranotorresfj@gmail.com', 7, 232, 291, 2, 2, 2, 1, NULL, 'Activo', 'Viven Juntos (Casados/Concubinato)', 'Ambos Padres', '9657670', 'Lorenzo Segundo Serrano Zabala', '0414-4720410', 'Vivo (En el país)', '6965704', 'María Virginia Torres Rodríguez', '0414-4959495', 'Viva (En el país)', 'Padre', '1', '2', 'No', 'No', 'No', NULL, NULL, NULL),
+(3, '35656869', 1, 'Ambidextro', '123412341234', 'aasdgasgadg', 10, 232, 274, 3, 3, 3, 2, NULL, 'Activo', 'Ambos Padres en el Extranjero', 'Abuelos', '12333444', 'sdgdfgsdfgsd', '43563453', 'Vivo (En el extranjero)', '13555666', 'sdfgsdfgsdfgsdg', '456345345634', 'Viva (En el extranjero)', 'Abuelo / Abuela', '12312312', 'sdgdfgsdfgsdf', 'Si', 'Si', 'Si', 'Visual (Ceguera / Baja Visión)', 'asdasdasdasd', '12312312313');
 
 -- --------------------------------------------------------
 
@@ -2745,7 +2913,35 @@ CREATE TABLE `persona_representante` (
 --
 
 INSERT INTO `persona_representante` (`id`, `parentesco`, `estado_civil`, `ingreso_mensual`, `telefono_movil`, `telefono_habitacion`, `correo_electronico`, `profesion`, `empresa_trabajo`, `telefono_empresa`, `direccion_empresa`, `persona_id`, `ESTADO`) VALUES
-(1, 'Padre', 'Casada/o', NULL, '04144720410', '04144720410', 'lorenzosevalourdes@gmail.com', 'Profesor', 'U.E. Colegio Nuestra Señora de Lourdes', NULL, NULL, 1, 'Activo');
+(1, 'Padre', 'Casada/o', NULL, '04144720410', '04144720410', 'lorenzosevalourdes@gmail.com', 'Profesor', 'U.E. Colegio Nuestra Señora de Lourdes', NULL, NULL, 1, 'Activo'),
+(2, 'Abuelo', 'Casada/o', 1213123.00, '1234456235', '123412341235', 'asdfasdfa', 'asfasdfs', 'asdfasdfsdfasd', '456646486', 'asdasdasdasd', 9, 'Activo');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `plan_evaluacion_mpp`
+--
+
+CREATE TABLE `plan_evaluacion_mpp` (
+  `id` int(11) NOT NULL,
+  `materia_profesor_periodo_id` int(11) NOT NULL,
+  `lapso` enum('1er lapso','2do lapso','3er lapso','Reparacion') NOT NULL,
+  `nro_evaluacion` int(2) NOT NULL,
+  `nombre_actividad` varchar(150) NOT NULL,
+  `porcentaje` decimal(5,2) NOT NULL DEFAULT 20.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+--
+-- Volcado de datos para la tabla `plan_evaluacion_mpp`
+--
+
+INSERT INTO `plan_evaluacion_mpp` (`id`, `materia_profesor_periodo_id`, `lapso`, `nro_evaluacion`, `nombre_actividad`, `porcentaje`) VALUES
+(1, 3, '1er lapso', 1, 'Prueba 1', 30.00),
+(2, 3, '1er lapso', 2, 'Actividad 2', 20.00),
+(3, 3, '1er lapso', 3, 'Actividad 3', 20.00),
+(4, 3, '1er lapso', 4, 'Actividad 4', 10.00),
+(5, 3, '1er lapso', 5, 'Actividad 5', 10.00),
+(6, 3, '1er lapso', 6, 'Actividad 6', 10.00);
 
 -- --------------------------------------------------------
 
@@ -2765,7 +2961,8 @@ CREATE TABLE `profesor` (
 --
 
 INSERT INTO `profesor` (`id`, `tipo_nivel`, `persona_id`, `ESTADO`) VALUES
-(1, 'Secundaria', 4, 'Activo');
+(1, 'Secundaria', 4, 'Activo'),
+(2, 'Secundaria', 8, 'Activo');
 
 -- --------------------------------------------------------
 
@@ -2791,7 +2988,9 @@ CREATE TABLE `salud` (
 --
 
 INSERT INTO `salud` (`id`, `reacciones_alergicas`, `cuales_alergias`, `enfermedades_padecidas`, `atencion_especial`, `horario_tratamiento`, `atendido_por_especialista`, `nombre_especialista`, `fecha_inicio_especialista`, `condicion_atencion`) VALUES
-(1, 'No', NULL, NULL, 'No', NULL, 'No', NULL, NULL, NULL);
+(1, 'No', NULL, NULL, 'No', NULL, 'No', NULL, NULL, NULL),
+(2, 'No', NULL, NULL, 'No', NULL, 'No', NULL, NULL, NULL),
+(3, 'No', NULL, NULL, 'No', NULL, 'No', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2836,7 +3035,10 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id`, `nombre`, `rol`, `pass`, `ESTADO`, `create_at`, `update_at`) VALUES
-(1, 'admin', 'Administrador', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'Activo', '2026-08-11 15:58:23', '2026-08-11 15:58:23');
+(1, 'admin', 'Administrador', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'Activo', '2026-08-11 15:58:23', '2026-08-11 15:58:23'),
+(2, 'Lorenzo Serrano', 'Docente', 'f40a7b6895698fe935ac7d1c994ccae96c9bd6e082d8ddceb3046ee5b361a6a7', 'Activo', '2026-09-05 21:16:35', '2026-09-05 21:16:35'),
+(3, 'dev_root', 'Administrador', 'e2669e46a7cead9e89b4b0e5133682de95c2e3914a27072a39ee9f1479836371', 'Activo', '2026-09-05 22:34:19', '2026-09-05 22:34:19'),
+(4, 'dev_root', 'Administrador', '73e13743df899f77991926c4d10b8cc1e24b3abe518e3645c70a37df72f08b39', 'Activo', '2026-09-16 16:23:30', '2026-09-16 16:23:30');
 
 --
 -- Índices para tablas volcadas
@@ -2861,6 +3063,12 @@ ALTER TABLE `auditoria`
 ALTER TABLE `ciudad`
   ADD PRIMARY KEY (`id`),
   ADD KEY `estado_id` (`estado_id`);
+
+--
+-- Indices de la tabla `configuracion_plantel`
+--
+ALTER TABLE `configuracion_plantel`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `direccion`
@@ -2900,7 +3108,7 @@ ALTER TABLE `grado`
 --
 ALTER TABLE `grado_materia`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `grado_id` (`grado_id`),
+  ADD UNIQUE KEY `unica_grado_materia` (`grado_id`,`materia_id`),
   ADD KEY `materia_id` (`materia_id`);
 
 --
@@ -2908,7 +3116,7 @@ ALTER TABLE `grado_materia`
 --
 ALTER TABLE `grado_seccion`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `grado_id` (`grado_id`),
+  ADD UNIQUE KEY `unica_grado_seccion` (`grado_id`,`seccion_id`),
   ADD KEY `seccion_id` (`seccion_id`);
 
 --
@@ -2931,7 +3139,7 @@ ALTER TABLE `materia`
 --
 ALTER TABLE `materia_profesor`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `profesor_id` (`profesor_id`),
+  ADD UNIQUE KEY `unica_materia_profesor` (`profesor_id`,`materia_id`),
   ADD KEY `materia_id` (`materia_id`);
 
 --
@@ -2939,7 +3147,8 @@ ALTER TABLE `materia_profesor`
 --
 ALTER TABLE `materia_profesor_periodo`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `grado_seccion_id` (`grado_seccion_id`),
+  ADD UNIQUE KEY `unica_seccion_materia_periodo` (`grado_seccion_id`,`grado_materia_id`,`periodo_id`),
+  ADD UNIQUE KEY `unica_carga_seccion_materia_periodo` (`grado_seccion_id`,`grado_materia_id`,`periodo_id`),
   ADD KEY `grado_materia_id` (`grado_materia_id`),
   ADD KEY `materia_profesor_id` (`materia_profesor_id`),
   ADD KEY `periodo_id` (`periodo_id`);
@@ -2950,6 +3159,13 @@ ALTER TABLE `materia_profesor_periodo`
 ALTER TABLE `municipio`
   ADD PRIMARY KEY (`id`),
   ADD KEY `estado_id` (`estado_id`);
+
+--
+-- Indices de la tabla `notas_certificadas_historicas`
+--
+ALTER TABLE `notas_certificadas_historicas`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unica_cedula_historica` (`cedula`);
 
 --
 -- Indices de la tabla `nota_evaluacion_lapso`
@@ -3026,6 +3242,13 @@ ALTER TABLE `persona_representante`
   ADD KEY `persona_id` (`persona_id`);
 
 --
+-- Indices de la tabla `plan_evaluacion_mpp`
+--
+ALTER TABLE `plan_evaluacion_mpp`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unica_eval_mpp_lapso` (`materia_profesor_periodo_id`,`lapso`,`nro_evaluacion`);
+
+--
 -- Indices de la tabla `profesor`
 --
 ALTER TABLE `profesor`
@@ -3058,13 +3281,13 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `antropometricos`
 --
 ALTER TABLE `antropometricos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `ciudad`
@@ -3076,7 +3299,7 @@ ALTER TABLE `ciudad`
 -- AUTO_INCREMENT de la tabla `direccion`
 --
 ALTER TABLE `direccion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `estado`
@@ -3088,13 +3311,13 @@ ALTER TABLE `estado`
 -- AUTO_INCREMENT de la tabla `evaluacion`
 --
 ALTER TABLE `evaluacion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `extra_curricular`
 --
 ALTER TABLE `extra_curricular`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `grado`
@@ -3106,37 +3329,37 @@ ALTER TABLE `grado`
 -- AUTO_INCREMENT de la tabla `grado_materia`
 --
 ALTER TABLE `grado_materia`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `grado_seccion`
 --
 ALTER TABLE `grado_seccion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `inscripcion`
 --
 ALTER TABLE `inscripcion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `materia`
 --
 ALTER TABLE `materia`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `materia_profesor`
 --
 ALTER TABLE `materia_profesor`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `materia_profesor_periodo`
 --
 ALTER TABLE `materia_profesor_periodo`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `municipio`
@@ -3145,22 +3368,28 @@ ALTER TABLE `municipio`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=463;
 
 --
+-- AUTO_INCREMENT de la tabla `notas_certificadas_historicas`
+--
+ALTER TABLE `notas_certificadas_historicas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT de la tabla `nota_evaluacion_lapso`
 --
 ALTER TABLE `nota_evaluacion_lapso`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT de la tabla `nota_lapso_periodo`
 --
 ALTER TABLE `nota_lapso_periodo`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `nota_periodo_inscripcion`
 --
 ALTER TABLE `nota_periodo_inscripcion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `pais`
@@ -3184,7 +3413,7 @@ ALTER TABLE `periodo_academico`
 -- AUTO_INCREMENT de la tabla `persona`
 --
 ALTER TABLE `persona`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `persona_estudiante`
@@ -3196,19 +3425,25 @@ ALTER TABLE `persona_estudiante`
 -- AUTO_INCREMENT de la tabla `persona_representante`
 --
 ALTER TABLE `persona_representante`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `plan_evaluacion_mpp`
+--
+ALTER TABLE `plan_evaluacion_mpp`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `profesor`
 --
 ALTER TABLE `profesor`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `salud`
 --
 ALTER TABLE `salud`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `seccion`
@@ -3220,7 +3455,7 @@ ALTER TABLE `seccion`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Restricciones para tablas volcadas
@@ -3344,6 +3579,12 @@ ALTER TABLE `persona_estudiante`
 --
 ALTER TABLE `persona_representante`
   ADD CONSTRAINT `1` FOREIGN KEY (`persona_id`) REFERENCES `persona` (`id`);
+
+--
+-- Filtros para la tabla `plan_evaluacion_mpp`
+--
+ALTER TABLE `plan_evaluacion_mpp`
+  ADD CONSTRAINT `fk_plan_eval_mpp` FOREIGN KEY (`materia_profesor_periodo_id`) REFERENCES `materia_profesor_periodo` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `profesor`

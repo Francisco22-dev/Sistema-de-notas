@@ -1,105 +1,126 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
+using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using Entidades;
-using MySqlConnector;
 using SistemaLiceo.Datos;
+using SistemaLiceo.Negocio;
 
 namespace SistemaLiceo.Presentacion
 {
     public partial class AsignarCargaForm : Window
     {
-        private readonly CatalogoDatos _catalogos = new CatalogoDatos();
-        private readonly ProfesorDatos _profesores = new ProfesorDatos();
-        private readonly ConexionBD _conexion = new ConexionBD();
+        private readonly CatalogoDatos _catalogos = new();
+        private readonly ProfesorDatos _profesores = new();
+
+        public ObservableCollection<ProfesorComboDto> ListaProfesoresCombo { get; set; } = new();
+        private List<AsignacionMateriaDocenteDto> _materiasPensum = new();
 
         public AsignarCargaForm()
         {
             InitializeComponent();
-            CargarDatos();
+            DataContext = this;
+            CargarFiltrosIniciales();
+            CargarListaProfesores();
         }
 
-        private void CargarDatos()
+        private void CargarFiltrosIniciales()
         {
             try
             {
                 cmbPeriodo.ItemsSource = _catalogos.ListarPeriodosActivos();
-                cmbMateria.ItemsSource = _catalogos.ListarMaterias();
                 cmbGrado.ItemsSource = _catalogos.ListarGrados();
                 cmbSeccion.ItemsSource = _catalogos.ListarSecciones();
 
-                DataTable dtProf = _profesores.ListarActivos();
-                cmbProfesor.ItemsSource = dtProf.DefaultView;
-
                 if (cmbPeriodo.Items.Count > 0) cmbPeriodo.SelectedIndex = 0;
-                if (cmbMateria.Items.Count > 0) cmbMateria.SelectedIndex = 0;
                 if (cmbGrado.Items.Count > 0) cmbGrado.SelectedIndex = 0;
                 if (cmbSeccion.Items.Count > 0) cmbSeccion.SelectedIndex = 0;
-                if (dtProf.Rows.Count > 0) cmbProfesor.SelectedIndex = 0;
             }
             catch (Exception ex)
             {
-                Alerta.Mostrar("Error", "Error al cargar listas: " + ex.Message, true);
+                Alerta.Mostrar("Error", "Error al cargar catálogos: " + ex.Message, true);
+            }
+        }
+
+        private void CargarListaProfesores()
+        {
+            try
+            {
+                ListaProfesoresCombo.Clear();
+                // Opción para desasignar o dejar vacante
+                ListaProfesoresCombo.Add(new ProfesorComboDto { Id = 0, NombreCompleto = "-- Sin Asignar --" });
+
+                DataTable dt = _profesores.ListarActivos();
+                foreach (DataRow r in dt.Rows)
+                {
+                    ListaProfesoresCombo.Add(new ProfesorComboDto
+                    {
+                        Id = Convert.ToInt32(r["Codigo"]),
+                        NombreCompleto = $"{r["Profesor"]} ({r["Cedula"]})"
+                    });
+                }
+            }
+            catch { }
+        }
+
+        private void Filtro_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (IsLoaded)
+                CargarPensumSeccion();
+        }
+
+        private void btnCargar_Click(object sender, RoutedEventArgs e) => CargarPensumSeccion();
+
+        private void CargarPensumSeccion()
+        {
+            if (cmbPeriodo.SelectedValue == null || cmbGrado.SelectedValue == null || cmbSeccion.SelectedValue == null)
+                return;
+
+            int periodoId = Convert.ToInt32(cmbPeriodo.SelectedValue);
+            int gradoId = Convert.ToInt32(cmbGrado.SelectedValue);
+            int seccionId = Convert.ToInt32(cmbSeccion.SelectedValue);
+
+            try
+            {
+                _materiasPensum = _profesores.ObtenerMateriasPensumSeccion(gradoId, seccionId, periodoId);
+                gridMateriasSeccion.ItemsSource = null;
+                gridMateriasSeccion.ItemsSource = _materiasPensum;
+            }
+            catch (Exception ex)
+            {
+                Alerta.Mostrar("Error", "Error al consultar las materias: " + ex.Message, true);
             }
         }
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
-            if (cmbPeriodo.SelectedValue == null || cmbProfesor.SelectedValue == null ||
-                cmbMateria.SelectedValue == null || cmbGrado.SelectedValue == null || cmbSeccion.SelectedValue == null)
+            if (_materiasPensum == null || _materiasPensum.Count == 0)
             {
-                Alerta.Mostrar("Advertencia", "Seleccione todos los campos requeridos.", true);
+                Alerta.Mostrar("Advertencia", "No hay materias en pantalla para asignar.", true);
                 return;
             }
+
+            int periodoId = Convert.ToInt32(cmbPeriodo.SelectedValue);
+            int gradoId = Convert.ToInt32(cmbGrado.SelectedValue);
+            int seccionId = Convert.ToInt32(cmbSeccion.SelectedValue);
 
             try
             {
-                int periodoId = Convert.ToInt32(cmbPeriodo.SelectedValue);
-                int profesorId = Convert.ToInt32(cmbProfesor.SelectedValue);
-                int materiaId = Convert.ToInt32(cmbMateria.SelectedValue);
-                int gradoId = Convert.ToInt32(cmbGrado.SelectedValue);
-                int seccionId = Convert.ToInt32(cmbSeccion.SelectedValue);
+                _profesores.GuardarAsignacionCompletaSeccion(gradoId, seccionId, periodoId, _materiasPensum);
+                AuditoriaDatos.Registrar(SesionActual.IdUsuario, "Carga Académica", $"Guardó la distribución de docentes para {cmbGrado.Text} \"{cmbSeccion.Text}\" ({_materiasPensum.Count(x => x.ProfesorId > 0)} materias asignadas)");
 
-                int gradoSeccionId = _catalogos.ObtenerOCrearGradoSeccion(gradoId, seccionId);
-                int materiaProfesorId = _profesores.AsignarMateriaAProfesor(profesorId, materiaId);
-                int gradoMateriaId = ObtenerOCrearGradoMateria(gradoId, materiaId);
-
-                _profesores.AsignarMateriaSeccionPeriodo(gradoSeccionId, gradoMateriaId, materiaProfesorId, periodoId);
-
-                Alerta.Mostrar("Éxito", "Carga académica asignada correctamente.", false);
-                return;
+                Alerta.Mostrar("Éxito", $"¡Carga académica de {cmbGrado.Text} \"{cmbSeccion.Text}\" guardada con éxito!", false);
+                CargarPensumSeccion();
             }
             catch (Exception ex)
             {
-                Alerta.Mostrar("Error", ex.Message, true);
+                Alerta.Mostrar("Error", "Error al guardar la asignación: " + ex.Message, true);
             }
         }
 
-        private int ObtenerOCrearGradoMateria(int gradoId, int materiaId)
-        {
-            using (MySqlConnection conexion = _conexion.AbrirConexion())
-            {
-                const string busqueda = "SELECT id FROM GRADO_MATERIA WHERE grado_id = @g AND materia_id = @m LIMIT 1;";
-                using (MySqlCommand cmd = new MySqlCommand(busqueda, conexion))
-                {
-                    cmd.Parameters.AddWithValue("@g", gradoId);
-                    cmd.Parameters.AddWithValue("@m", materiaId);
-                    object? res = cmd.ExecuteScalar();
-                    if (res != null && res != DBNull.Value)
-                        return Convert.ToInt32(res);
-                }
-
-                const string insercion = @"INSERT INTO GRADO_MATERIA (grado_id, materia_id) VALUES (@g, @m);
-                                           SELECT LAST_INSERT_ID();";
-                using (MySqlCommand cmd = new MySqlCommand(insercion, conexion))
-                {
-                    cmd.Parameters.AddWithValue("@g", gradoId);
-                    cmd.Parameters.AddWithValue("@m", materiaId);
-                    return Convert.ToInt32(cmd.ExecuteScalar());
-                }
-            }
-        }
-
-        private void btnCancelar_Click(object sender, RoutedEventArgs e) => Close();
+        private void btnCerrar_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

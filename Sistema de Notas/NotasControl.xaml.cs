@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using Entidades;
+﻿using Entidades;
 using SistemaLiceo.Datos;
 using SistemaLiceo.Negocio;
 using System;
@@ -9,9 +8,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using System.IO;
-using System.Windows.Xps;
-using System.Windows.Xps.Packaging;
 
 namespace SistemaLiceo.Presentacion
 {
@@ -23,6 +19,7 @@ namespace SistemaLiceo.Presentacion
 
         private List<FilaPlanillaNotasDto> _filasPlanilla = new List<FilaPlanillaNotasDto>();
         private List<MateriaProfesorPeriodo> _todasLasCargas = new List<MateriaProfesorPeriodo>();
+        private bool _cargandoFiltros;
 
         public NotasControl()
         {
@@ -34,6 +31,8 @@ namespace SistemaLiceo.Presentacion
         {
             try
             {
+                _cargandoFiltros = true;
+
                 cmbPeriodo.ItemsSource = _catalogos.ListarPeriodosActivos();
                 cmbGrado.ItemsSource = _catalogos.ListarGrados();
                 cmbSeccion.ItemsSource = _catalogos.ListarSecciones();
@@ -41,14 +40,35 @@ namespace SistemaLiceo.Presentacion
                 if (cmbPeriodo.Items.Count > 0) cmbPeriodo.SelectedIndex = 0;
                 if (cmbGrado.Items.Count > 0) cmbGrado.SelectedIndex = 0;
                 if (cmbSeccion.Items.Count > 0) cmbSeccion.SelectedIndex = 0;
+
+                _cargandoFiltros = false;
+
+                // Cargar inmediatamente la carga académica de 1er Año A al iniciar
+                CargarCargasYActualizarCombo();
             }
             catch (Exception ex)
             {
                 Alerta.Mostrar("Error", "No se pudieron cargar los catálogos: " + ex.Message, true);
             }
+            finally
+            {
+                _cargandoFiltros = false;
+            }
         }
 
         private void cmbPeriodo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_cargandoFiltros && IsLoaded)
+                CargarCargasYActualizarCombo();
+        }
+
+        private void FiltroCascada_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_cargandoFiltros && IsLoaded)
+                ActualizarComboDocenteMateria();
+        }
+
+        private void CargarCargasYActualizarCombo()
         {
             if (cmbPeriodo.SelectedValue is int periodoId)
             {
@@ -64,21 +84,20 @@ namespace SistemaLiceo.Presentacion
             }
         }
 
-        private void FiltroCascada_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ActualizarComboDocenteMateria();
-        }
-
         private void ActualizarComboDocenteMateria()
         {
-            if (cmbGrado.SelectedValue == null || cmbSeccion.SelectedValue == null || _todasLasCargas == null) return;
+            if (cmbGrado?.SelectedValue == null || cmbSeccion?.SelectedValue == null || _todasLasCargas == null)
+            {
+                if (cmbDocenteMateria != null) cmbDocenteMateria.ItemsSource = null;
+                return;
+            }
 
-            string gradoNombre = cmbGrado.Text;
-            string seccionNombre = cmbSeccion.Text;
+            int gradoId = Convert.ToInt32(cmbGrado.SelectedValue);
+            int seccionId = Convert.ToInt32(cmbSeccion.SelectedValue);
 
-            // Filtra por Año y Sección seleccionados
+            // FILTRADO DETERMINISTA POR IDs NUMÉRICOS (Elimina el error de texto)
             var filtradas = _todasLasCargas
-                .Where(c => c.Grado == gradoNombre && c.Seccion == seccionNombre)
+                .Where(c => c.GradoId == gradoId && c.SeccionId == seccionId)
                 .Select(c => new
                 {
                     c.Id,
@@ -86,7 +105,17 @@ namespace SistemaLiceo.Presentacion
                 }).ToList();
 
             cmbDocenteMateria.ItemsSource = filtradas;
-            if (filtradas.Count > 0) cmbDocenteMateria.SelectedIndex = 0;
+
+            if (filtradas.Count > 0)
+            {
+                cmbDocenteMateria.SelectedIndex = 0;
+            }
+            else
+            {
+                // Limpiar la grilla si el aula no tiene profesores asignados
+                gridPlanilla.ItemsSource = null;
+                _filasPlanilla.Clear();
+            }
         }
 
         private void Configuracion_TextChanged(object sender, TextChangedEventArgs e)
@@ -96,19 +125,17 @@ namespace SistemaLiceo.Presentacion
             decimal[] ponderaciones = ObtenerPonderacionesActuales();
             FilaPlanillaNotasDto.Ponderaciones = ponderaciones;
 
-            // Actualizar encabezados
-            colEval1.Header = $"{txtEval1.Text}\n({ponderaciones[0]}%)";
-            colEval2.Header = $"{txtEval2.Text}\n({ponderaciones[1]}%)";
-            colEval3.Header = $"{txtEval3.Text}\n({ponderaciones[2]}%)";
-            colEval4.Header = $"{txtEval4.Text}\n({ponderaciones[3]}%)";
-            colEval5.Header = $"{txtEval5.Text}\n({ponderaciones[4]}%)";
-            colEval6.Header = $"{txtEval6.Text}\n({ponderaciones[5]}%)";
+            if (colEval1 != null) colEval1.Header = $"{txtEval1.Text}\n({ponderaciones[0]}%)";
+            if (colEval2 != null) colEval2.Header = $"{txtEval2.Text}\n({ponderaciones[1]}%)";
+            if (colEval3 != null) colEval3.Header = $"{txtEval3.Text}\n({ponderaciones[2]}%)";
+            if (colEval4 != null) colEval4.Header = $"{txtEval4.Text}\n({ponderaciones[3]}%)";
+            if (colEval5 != null) colEval5.Header = $"{txtEval5.Text}\n({ponderaciones[4]}%)";
+            if (colEval6 != null) colEval6.Header = $"{txtEval6.Text}\n({ponderaciones[5]}%)";
 
             decimal total = ponderaciones.Sum();
             lblTotalPorcentaje.Text = $"Total Ponderación: {total}%";
             lblTotalPorcentaje.Foreground = total == 100 ? Brushes.Green : Brushes.Red;
 
-            // Recalcular la grilla en vivo
             foreach (var fila in _filasPlanilla)
             {
                 fila.Recalcular();
@@ -147,16 +174,17 @@ namespace SistemaLiceo.Presentacion
 
         private void btnCargarPlanilla_Click(object sender, RoutedEventArgs e)
         {
-            
             if (cmbDocenteMateria.SelectedValue == null)
             {
-                Alerta.Mostrar("Advertencia", "Seleccione el año, sección y la materia asignada.", true);
+                Alerta.Mostrar("Advertencia", "No hay materias asignadas para este año y sección.\n\nVaya a 'Profesores -> Asignar Carga Académica' para asignar los docentes de esta aula.", true);
                 return;
             }
 
             int mppId = Convert.ToInt32(cmbDocenteMateria.SelectedValue);
             string lapsoBD = ObtenerLapsoBD();
+
             CargarActividadesPlanificadas(mppId, lapsoBD);
+
             try
             {
                 Configuracion_TextChanged(sender, null!);
@@ -165,7 +193,7 @@ namespace SistemaLiceo.Presentacion
                 gridPlanilla.ItemsSource = _filasPlanilla;
 
                 if (_filasPlanilla.Count == 0)
-                    Alerta.Mostrar("Información", "No hay estudiantes inscritos en esta sección.", false);
+                    Alerta.Mostrar("Información", "No hay estudiantes inscritos en este año y sección.", false);
             }
             catch (Exception ex)
             {
@@ -215,7 +243,6 @@ namespace SistemaLiceo.Presentacion
             PrintDialog printDialog = new PrintDialog();
             if (printDialog.ShowDialog() == true)
             {
-                // Usa el generador FlowDocument del reporte anterior
                 IDocumentPaginatorSource dps = GenerarDocumentoImpresion();
                 printDialog.PrintDocument(dps.DocumentPaginator, "Planilla de Calificaciones");
             }
@@ -243,8 +270,8 @@ namespace SistemaLiceo.Presentacion
 
                 string[] nombresActividades = new string[]
                 {
-            txtEval1.Text.Trim(), txtEval2.Text.Trim(), txtEval3.Text.Trim(),
-            txtEval4.Text.Trim(), txtEval5.Text.Trim(), txtEval6.Text.Trim()
+                    txtEval1.Text.Trim(), txtEval2.Text.Trim(), txtEval3.Text.Trim(),
+                    txtEval4.Text.Trim(), txtEval5.Text.Trim(), txtEval6.Text.Trim()
                 };
 
                 string nombreSugerido = $"Nomina_Evaluacion_Continua_{grado.Replace(" ", "_")}_{seccion}_{materia.Replace(" ", "_")}_{lapso.Replace(" ", "_")}.xlsx";
@@ -259,16 +286,14 @@ namespace SistemaLiceo.Presentacion
 
                 if (sfd.ShowDialog() == true)
                 {
-                    // Instanciación de la capa de reportes (ajusta ReportesDatos según tu nombre de clase)
                     var _reportes = new ReportesDatos();
 
                     _reportes.ExportarNominaEvaluacionContinuaDocenteAExcel(
                         mppId, grado, seccion, materia, docente, periodo, lapso,
                         nombresActividades, _filasPlanilla, sfd.FileName);
 
-                    AuditoriaDatos.Registrar(SesionActual.IdUsuario, "Calificaciones", $"Exportó nómina docente de evaluación continua: {materia} ({grado} {seccion})");
+                    AuditoriaDatos.Registrar(SesionActual.IdUsuario, "Calificaciones", $"Exportó nómina docente: {materia} ({grado} {seccion})");
 
-                    // Uso calificado de System.IO.Path por si prefieres no agregar el 'using System.IO;'
                     Alerta.Mostrar("Éxito", $"¡Nómina de evaluación continua generada exitosamente!\n{System.IO.Path.GetFileName(sfd.FileName)}", false);
 
                     MessageBoxResult res = MessageBox.Show(
@@ -295,6 +320,9 @@ namespace SistemaLiceo.Presentacion
 
         private FlowDocument GenerarDocumentoImpresion()
         {
+            ConfiguracionPlantelDatos confDatos = new();
+            ConfiguracionPlantel conf = confDatos.Obtener();
+
             FlowDocument doc = new FlowDocument
             {
                 PagePadding = new Thickness(30),
@@ -304,7 +332,7 @@ namespace SistemaLiceo.Presentacion
             };
 
             Paragraph pHead = new Paragraph { TextAlignment = TextAlignment.Center, Margin = new Thickness(0, 0, 0, 8) };
-            pHead.Inlines.Add(new Bold(new Run("UNIDAD EDUCATIVA COLEGIO NUESTRA SEÑORA DE LOURDES\n")) { FontSize = 14 });
+            pHead.Inlines.Add(new Bold(new Run($"{conf.Eponimo}\n")) { FontSize = 14 });
             pHead.Inlines.Add(new Run("Departamento de Control de Estudios y Evaluación\n") { FontSize = 11 });
             pHead.Inlines.Add(new Run($"Año Escolar: {cmbPeriodo.Text}   |   {cmbGrado.Text} \"{cmbSeccion.Text}\"   |   {cmbLapso.Text}\n") { FontSize = 10 });
             pHead.Inlines.Add(new Bold(new Run($"Área de Formación: {cmbDocenteMateria.Text}\n")) { FontSize = 11 });
@@ -368,6 +396,7 @@ namespace SistemaLiceo.Presentacion
             if (fondo != null) cell.Background = fondo;
             return cell;
         }
+
         private void CargarActividadesPlanificadas(int mppId, string lapsoBD)
         {
             try
@@ -390,7 +419,6 @@ namespace SistemaLiceo.Presentacion
                 }
                 else
                 {
-                    // Valores por defecto si es una planificación nueva
                     txtEval1.Text = "Actividad 1"; txtPorc1.Text = "20";
                     txtEval2.Text = "Actividad 2"; txtPorc2.Text = "20";
                     txtEval3.Text = "Actividad 3"; txtPorc3.Text = "20";

@@ -12,7 +12,14 @@ namespace SistemaLiceo.Datos
         {
             try
             {
+                // Captura el nombre de la PC física en la red
                 string equipo = Environment.MachineName;
+                if (string.IsNullOrWhiteSpace(equipo))
+                    equipo = Environment.GetEnvironmentVariable("COMPUTERNAME") ?? "PC-LOCAL";
+
+                // Si por alguna razón no hay sesión activa, asociar al ID 1 (Admin)
+                int idValido = usuarioId > 0 ? usuarioId : 1;
+
                 using (MySqlConnection conexion = _conexion.AbrirConexion())
                 {
                     const string consulta = @"
@@ -21,7 +28,7 @@ namespace SistemaLiceo.Datos
 
                     using (MySqlCommand cmd = new MySqlCommand(consulta, conexion))
                     {
-                        cmd.Parameters.AddWithValue("@u", usuarioId);
+                        cmd.Parameters.AddWithValue("@u", idValido);
                         cmd.Parameters.AddWithValue("@m", modulo);
                         cmd.Parameters.AddWithValue("@a", accion);
                         cmd.Parameters.AddWithValue("@e", equipo);
@@ -29,7 +36,10 @@ namespace SistemaLiceo.Datos
                     }
                 }
             }
-            catch { }
+            catch
+            {
+                // La auditoría no interrumpe el flujo si ocurre un error menor
+            }
         }
 
         public static DataTable ListarLogs(string? busqueda = null)
@@ -40,7 +50,7 @@ namespace SistemaLiceo.Datos
                        u.rol AS 'Rol',
                        a.modulo AS 'Módulo',
                        a.accion AS 'Acción Realizada',
-                       a.equipo AS 'Equipo / PC',
+                       IFNULL(a.equipo, 'PC-DESCONOCIDA') AS 'Equipo / PC',
                        a.fecha AS 'Fecha y Hora'
                 FROM auditoria a
                 INNER JOIN USUARIO u ON u.id = a.usuario_id

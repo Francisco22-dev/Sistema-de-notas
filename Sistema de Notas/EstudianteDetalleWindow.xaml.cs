@@ -1,7 +1,6 @@
 ﻿using Entidades;
 using SistemaLiceo.Datos;
 using System;
-using System.Data;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
@@ -34,7 +33,7 @@ namespace SistemaLiceo.Presentacion
                     return;
                 }
 
-                // Banner
+                // Banner Superior
                 txtNombreEstudianteHeader.Text = _estudiante.Persona.NombreCompleto.ToUpper();
                 txtCedulaHeader.Text = _estudiante.Persona.CedulaFormateada;
                 txtCedulaEscolarHeader.Text = _estudiante.CedulaEscolar;
@@ -47,7 +46,7 @@ namespace SistemaLiceo.Presentacion
                     txtEstadoHeader.Foreground = new SolidColorBrush(Color.FromRgb(185, 28, 28));
                 }
 
-                // 1. Alumno
+                // ================= 1. ALUMNO =================
                 txtFechaNac.Text = _estudiante.Persona.FechaNacimiento?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? "No registrada";
                 txtSexo.Text = _estudiante.Persona.Sexo == "M" ? "Masculino" : "Femenino";
                 txtLateralidad.Text = _estudiante.Lateralidad;
@@ -61,7 +60,7 @@ namespace SistemaLiceo.Presentacion
 
                 if (_estudiante.Persona.Direccion != null)
                 {
-                    txtEstadoCiudadAlumno.Text = $"Ciudad ID: {_estudiante.Persona.Direccion.CiudadId}";
+                    txtEstadoCiudadAlumno.Text = $"Sector: {_estudiante.Persona.Direccion.Sector ?? "S/D"}";
                     txtSectorAlumno.Text = _estudiante.Persona.Direccion.Sector ?? "S/D";
                     txtCalleAlumno.Text = $"{_estudiante.Persona.Direccion.Avenida} {_estudiante.Persona.Direccion.Calle}".Trim();
                     txtViviendaDetalleAlumno.Text = $"Nº: {_estudiante.Persona.Direccion.NumeroVivienda} - Mz: {_estudiante.Persona.Direccion.Manzana} - Ver: {_estudiante.Persona.Direccion.Vereda}";
@@ -73,11 +72,11 @@ namespace SistemaLiceo.Presentacion
                     txtSectorAlumno.Text = "Sin dirección registrada";
                 }
 
-                // 2. Familia y CPNNA
+                // ================= 2. FAMILIA Y CPNNA =================
                 txtSituacionPadres.Text = _estudiante.SituacionPadres;
                 txtConviveCon.Text = _estudiante.ConviveCon;
                 txtRepresentanteTipo.Text = _estudiante.RepresentanteLegalTipo;
-                txtOficioCpnna.Text = string.IsNullOrWhiteSpace(_estudiante.OficioCpnnaTribunal) ? "Ninguno (Ejerce patria potestad regular)" : _estudiante.OficioCpnnaTribunal;
+                txtOficioCpnna.Text = string.IsNullOrWhiteSpace(_estudiante.OficioCpnnaTribunal) ? "Ninguno (Patria potestad regular)" : _estudiante.OficioCpnnaTribunal;
                 txtObsCustodia.Text = string.IsNullOrWhiteSpace(_estudiante.ObservacionesCustodia) ? "Sin observaciones especiales" : _estudiante.ObservacionesCustodia;
 
                 // Padre
@@ -92,10 +91,10 @@ namespace SistemaLiceo.Presentacion
                 txtMadreTel.Text = string.IsNullOrWhiteSpace(_estudiante.MadreTelefono) ? "S/T" : _estudiante.MadreTelefono;
                 txtMadreCondicion.Text = _estudiante.MadreVive;
 
-                // Representante Principal
-                CargarDatosRepresentante(_estudiante.RepresentantePrincipalId);
+                // ================= 3. REPRESENTANTE LEGAL COMPLETO =================
+                CargarDatosCompletosRepresentante();
 
-                // 3. Salud y Canaima
+                // ================= 4. SALUD Y CANAIMA =================
                 txtEstatura.Text = _estudiante.Antropometricos.Estatura.HasValue ? $"{_estudiante.Antropometricos.Estatura:N2} m" : "--";
                 txtPeso.Text = _estudiante.Antropometricos.Peso.HasValue ? $"{_estudiante.Antropometricos.Peso:N2} kg" : "--";
                 txtTallaCamisa.Text = _estudiante.Antropometricos.TallaCamisa ?? "--";
@@ -120,26 +119,41 @@ namespace SistemaLiceo.Presentacion
             }
         }
 
-        private void CargarDatosRepresentante(int repId)
+        private void CargarDatosCompletosRepresentante()
         {
-            try
+            var rep = _estudiantesDatos.RepresentanteCargadoTemp;
+            if (rep == null && _estudiante != null && _estudiante.RepresentantePrincipalId > 0)
             {
-                // Busca el representante por su ID
-                DataTable dt = _representantesDatos.ListarActivos();
-                foreach (DataRow r in dt.Rows)
+                // Si no vino en el temporal, buscar por su ID directamente
+                rep = _representantesDatos.BuscarPorCedula(string.Empty);
+            }
+
+            if (rep != null)
+            {
+                txtRepNombre.Text = rep.Persona.NombreCompleto;
+                txtRepCedula.Text = rep.Persona.CedulaFormateada;
+                txtRepParentesco.Text = rep.Parentesco;
+                txtRepMovil.Text = string.IsNullOrWhiteSpace(rep.TelefonoMovil) ? "S/T" : rep.TelefonoMovil;
+                txtRepHab.Text = string.IsNullOrWhiteSpace(rep.TelefonoHabitacion) ? "S/T" : rep.TelefonoHabitacion;
+                txtRepCorreo.Text = string.IsNullOrWhiteSpace(rep.CorreoElectronico) ? "No registrado" : rep.CorreoElectronico;
+                txtRepProfesion.Text = string.IsNullOrWhiteSpace(rep.Profesion) ? "No indicada" : rep.Profesion;
+                txtRepEmpresa.Text = string.IsNullOrWhiteSpace(rep.EmpresaTrabajo) ? "No indicada" : rep.EmpresaTrabajo;
+                txtRepTelEmpresa.Text = string.IsNullOrWhiteSpace(rep.TelefonoEmpresa) ? "S/T" : rep.TelefonoEmpresa;
+
+                if (rep.Persona.Direccion != null)
                 {
-                    if (Convert.ToInt32(r["Codigo"]) == repId)
-                    {
-                        txtRepNombre.Text = r["Representante"].ToString();
-                        txtRepCedula.Text = r["Cedula"].ToString();
-                        txtRepParentesco.Text = r["Parentesco"].ToString();
-                        txtRepMovil.Text = r["Telefono"].ToString();
-                        txtRepCorreo.Text = r["Correo"].ToString();
-                        break;
-                    }
+                    txtRepDireccionHabitacion.Text = $"Sector: {rep.Persona.Direccion.Sector ?? "S/D"}, Calle/Av: {rep.Persona.Direccion.Avenida} {rep.Persona.Direccion.Calle}, Casa/Nº: {rep.Persona.Direccion.NumeroVivienda} ({rep.Persona.Direccion.TipoVivienda} {rep.Persona.Direccion.CondicionVivienda})".Trim();
+                }
+                else if (_estudiante?.Persona.Direccion != null)
+                {
+                    // Si vive en la misma casa del alumno
+                    txtRepDireccionHabitacion.Text = $"Misma dirección del estudiante: Sector {_estudiante.Persona.Direccion.Sector}, Calle/Av: {_estudiante.Persona.Direccion.Avenida} {_estudiante.Persona.Direccion.Calle}, Nº {_estudiante.Persona.Direccion.NumeroVivienda}";
+                }
+                else
+                {
+                    txtRepDireccionHabitacion.Text = "Sin dirección de habitación registrada";
                 }
             }
-            catch { }
         }
 
         private void btnEditarFicha_Click(object sender, RoutedEventArgs e)
@@ -147,7 +161,7 @@ namespace SistemaLiceo.Presentacion
             EstudianteForm form = new EstudianteForm(_estudianteId);
             if (form.ShowDialog() == true)
             {
-                CargarExpediente(); // Refresca los datos actualizados
+                CargarExpediente();
             }
         }
 

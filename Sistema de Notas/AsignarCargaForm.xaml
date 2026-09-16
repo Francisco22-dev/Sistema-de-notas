@@ -1,46 +1,121 @@
 ﻿<Window x:Class="SistemaLiceo.Presentacion.AsignarCargaForm"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Asignación de Carga Académica" Height="430" Width="520"
-        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="#F3F4F6">
-    <Border Background="White" CornerRadius="12" Margin="15" Padding="20">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        Title="Distribución de Carga Académica por Sección" Height="650" Width="920"
+        WindowStartupLocation="CenterScreen" Background="#F8FAFC">
 
-            <TextBlock Text="Asignar Materia y Sección a Docente" FontSize="18" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,15"/>
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="1">
-                <TextBlock Text="Período Académico *" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <ComboBox x:Name="cmbPeriodo" Height="30" Margin="0,0,0,10" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
+        <!-- Título -->
+        <TextBlock Grid.Row="0" Text="📚 Asignación de Profesores por Año y Sección" FontSize="20" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,12"/>
 
-                <TextBlock Text="Profesor Docente *" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <ComboBox x:Name="cmbProfesor" Height="30" Margin="0,0,0,10" DisplayMemberPath="Profesor" SelectedValuePath="Codigo"/>
+        <!-- Barra de Selección de Aula (Filtros en Cascada) -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Materia *" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <ComboBox x:Name="cmbMateria" Height="30" Margin="0,0,0,10" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
+                <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                    <TextBlock Text="Período Académico:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                    <ComboBox x:Name="cmbPeriodo" Height="30" DisplayMemberPath="Nombre" SelectedValuePath="Id" SelectionChanged="Filtro_SelectionChanged"/>
+                </StackPanel>
 
-                <UniformGrid Columns="2">
-                    <StackPanel Margin="0,0,8,0">
-                        <TextBlock Text="Año / Grado *" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                        <ComboBox x:Name="cmbGrado" Height="30" Margin="0,0,0,10" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
-                    </StackPanel>
-                    <StackPanel>
-                        <TextBlock Text="Sección *" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                        <ComboBox x:Name="cmbSeccion" Height="30" Margin="0,0,0,10" DisplayMemberPath="Nombre" SelectedValuePath="Id"/>
-                    </StackPanel>
-                </UniformGrid>
-            </StackPanel>
+                <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                    <TextBlock Text="Año / Grado:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                    <ComboBox x:Name="cmbGrado" Height="30" DisplayMemberPath="Nombre" SelectedValuePath="Id" SelectionChanged="Filtro_SelectionChanged"/>
+                </StackPanel>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-                <Button x:Name="btnCancelar" Content="Cancelar" Width="100" Height="32" Margin="0,0,10,0"
-                        Background="#9CA3AF" Foreground="White" FontWeight="Bold" BorderThickness="0" Click="btnCancelar_Click"/>
-                <Button x:Name="btnGuardar" Content="Asignar Carga" Width="140" Height="32"
-                        Background="#10B981" Foreground="White" FontWeight="Bold" BorderThickness="0" Click="btnGuardar_Click"/>
-            </StackPanel>
-        </Grid>
-    </Border>
+                <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                    <TextBlock Text="Sección:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                    <ComboBox x:Name="cmbSeccion" Height="30" DisplayMemberPath="Nombre" SelectedValuePath="Id" SelectionChanged="Filtro_SelectionChanged"/>
+                </StackPanel>
+
+                <Button x:Name="btnCargar" Grid.Column="3" Content="🔄 Recargar Pensum" Width="150" Height="30"
+                        VerticalAlignment="Bottom" Background="#3B82F6" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnCargar_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- Tabla con Todas las Materias y sus Profesores Asignables -->
+        <GroupBox Grid.Row="2" Header="Plan de Asignaturas de la Sección (Asigne un Docente a cada Materia)" FontWeight="SemiBold" Padding="8">
+            <DataGrid x:Name="gridMateriasSeccion" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                      Background="White" RowHeight="36" FontSize="13.5" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <!-- Nombre de la Materia -->
+                    <DataGridTextColumn Header="Materia / Área de Formación" Binding="{Binding MateriaNombre}" IsReadOnly="True" Width="300" FontWeight="Bold"/>
+
+                    <!-- Desplegable con todos los Profesores -->
+                    <DataGridTemplateColumn Header="Profesor Docente Asignado" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox ItemsSource="{Binding DataContext.ListaProfesoresCombo, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          SelectedValue="{Binding ProfesorId, UpdateSourceTrigger=PropertyChanged}"
+                                          SelectedValuePath="Id" DisplayMemberPath="NombreCompleto"
+                                          Height="28" VerticalContentAlignment="Center" Margin="4,2"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Estado -->
+                    <DataGridTemplateColumn Header="Estado" Width="130">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="12" Padding="8,3" HorizontalAlignment="Center" Margin="4">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding EstadoAsignacion}" Value="Asignado">
+                                                    <Setter Property="Background" Value="#DCFCE7"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding EstadoAsignacion}" Value="Sin Asignar">
+                                                    <Setter Property="Background" Value="#F1F5F9"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding EstadoAsignacion}" FontWeight="Bold" FontSize="11.5">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding EstadoAsignacion}" Value="Asignado">
+                                                        <Setter Property="Foreground" Value="#15803D"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding EstadoAsignacion}" Value="Sin Asignar">
+                                                        <Setter Property="Foreground" Value="#64748B"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <!-- Botones de Guardado y Cierre -->
+        <Border Grid.Row="3" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,10,0,0">
+            <Grid>
+                <TextBlock Text="💡 Puede asignar distintos profesores a cada materia o dejar en '-- Sin Asignar --' las que estén vacantes." VerticalAlignment="Center" Foreground="#64748B" FontSize="12"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="btnCerrar" Content="Cerrar" Width="100" Height="34" Margin="0,0,10,0"
+                            Background="#94A3B8" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnCerrar_Click"/>
+                    <Button x:Name="btnGuardar" Content="💾 Guardar Asignación de la Sección" Width="260" Height="34"
+                            Background="#10B981" Foreground="White" FontWeight="Bold" FontSize="13.5" BorderThickness="0" Cursor="Hand" Click="btnGuardar_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
 </Window>

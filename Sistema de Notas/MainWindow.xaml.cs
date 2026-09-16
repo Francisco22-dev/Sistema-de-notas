@@ -45,6 +45,19 @@ namespace SistemaLiceo.Presentacion
                     return;
                 }
 
+                // ================= VERIFICACIÓN DE MANTENIMIENTO PROGRAMADO =================
+                // Si no es el usuario maestro 'dev_root', verificar si el sistema está cerrado
+                if (!autenticado.Nombre.Equals("dev_root", StringComparison.OrdinalIgnoreCase))
+                {
+                    MantenimientoDatos mantDatos = new();
+                    if (mantDatos.EstaBloqueadoElSistema(out string mensajeBloqueo))
+                    {
+                        AuditoriaDatos.Registrar(autenticado.Id, "Seguridad", $"Intento de acceso bloqueado por mantenimiento programado (Usuario: {autenticado.Nombre})");
+                        Alerta.Mostrar("Mantenimiento del Sistema", mensajeBloqueo, true);
+                        return; // Impide el ingreso al menú principal
+                    }
+                }
+
                 SesionActual.Iniciar(autenticado);
                 Alerta.Mostrar("Acceso Concedido", $"¡Bienvenido {SesionActual.NombreUsuario}!", false);
 
@@ -54,7 +67,7 @@ namespace SistemaLiceo.Presentacion
             }
             catch (Exception ex)
             {
-                Alerta.Mostrar("Error del Sistema", "Error de conexión: " + ex.Message, true);
+                Alerta.Mostrar("Error del Sistema", ex.Message, true);
             }
         }
     }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Entidades
+﻿namespace Entidades
 {
     /// <summary>Tabla MATERIA_PROFESOR_PERIODO: Carga horaria docente asignada a una sección y período.</summary>
     public class MateriaProfesorPeriodo
@@ -15,7 +9,10 @@ namespace Entidades
         public int MateriaProfesorId { get; set; }
         public int PeriodoId { get; set; }
 
-        // Propiedades de navegación descriptivas para UI
+        // IDs numéricos para filtrado exacto en cascada
+        public int GradoId { get; set; }
+        public int SeccionId { get; set; }
+
         public string Grado { get; set; } = string.Empty;
         public string Seccion { get; set; } = string.Empty;
         public string Materia { get; set; } = string.Empty;

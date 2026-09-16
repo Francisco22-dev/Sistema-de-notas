@@ -252,22 +252,23 @@ namespace SistemaLiceo.Datos
             List<MateriaProfesorPeriodo> lista = new List<MateriaProfesorPeriodo>();
 
             const string consulta = @"
-                SELECT mpp.id, mpp.grado_seccion_id, mpp.grado_materia_id, mpp.materia_profesor_id, mpp.periodo_id,
-                       g.nombre AS grado, s.nombre AS seccion, m.nombre AS materia,
-                       CONCAT_WS(' ', p.nombre_1, p.apellido_1) AS docente,
-                       pa.nombre AS periodo
-                FROM MATERIA_PROFESOR_PERIODO mpp
-                INNER JOIN GRADO_SECCION gs ON gs.id = mpp.grado_seccion_id
-                INNER JOIN GRADO g ON g.id = gs.grado_id
-                INNER JOIN SECCION s ON s.id = gs.seccion_id
-                INNER JOIN GRADO_MATERIA gm ON gm.id = mpp.grado_materia_id
-                INNER JOIN MATERIA m ON m.id = gm.materia_id
-                INNER JOIN MATERIA_PROFESOR mp ON mp.id = mpp.materia_profesor_id
-                INNER JOIN PROFESOR pr ON pr.id = mp.profesor_id
-                INNER JOIN PERSONA p ON p.id = pr.persona_id
-                INNER JOIN PERIODO_ACADEMICO pa ON pa.id = mpp.periodo_id
-                WHERE mpp.periodo_id = @periodo AND (@gradoSeccion = 0 OR mpp.grado_seccion_id = @gradoSeccion)
-                ORDER BY g.id, s.nombre, m.nombre;";
+        SELECT mpp.id, mpp.grado_seccion_id, mpp.grado_materia_id, mpp.materia_profesor_id, mpp.periodo_id,
+               gs.grado_id, gs.seccion_id,
+               g.nombre AS grado, s.nombre AS seccion, m.nombre AS materia,
+               CONCAT_WS(' ', p.nombre_1, p.apellido_1) AS docente,
+               pa.nombre AS periodo
+        FROM MATERIA_PROFESOR_PERIODO mpp
+        INNER JOIN GRADO_SECCION gs ON gs.id = mpp.grado_seccion_id
+        INNER JOIN GRADO g ON g.id = gs.grado_id
+        INNER JOIN SECCION s ON s.id = gs.seccion_id
+        INNER JOIN GRADO_MATERIA gm ON gm.id = mpp.grado_materia_id
+        INNER JOIN MATERIA m ON m.id = gm.materia_id
+        INNER JOIN MATERIA_PROFESOR mp ON mp.id = mpp.materia_profesor_id
+        INNER JOIN PROFESOR pr ON pr.id = mp.profesor_id
+        INNER JOIN PERSONA p ON p.id = pr.persona_id
+        INNER JOIN PERIODO_ACADEMICO pa ON pa.id = mpp.periodo_id
+        WHERE mpp.periodo_id = @periodo AND (@gradoSeccion = 0 OR mpp.grado_seccion_id = @gradoSeccion)
+        ORDER BY g.id, s.nombre, m.nombre;";
 
             using (MySqlConnection conexion = _conexion.AbrirConexion())
             using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
@@ -286,6 +287,8 @@ namespace SistemaLiceo.Datos
                             GradoMateriaId = lector.GetInt32("grado_materia_id"),
                             MateriaProfesorId = lector.GetInt32("materia_profesor_id"),
                             PeriodoId = lector.GetInt32("periodo_id"),
+                            GradoId = lector.GetInt32("grado_id"),
+                            SeccionId = lector.GetInt32("seccion_id"),
                             Grado = lector.GetString("grado"),
                             Seccion = lector.GetString("seccion"),
                             Materia = lector.GetString("materia"),
@@ -297,6 +300,166 @@ namespace SistemaLiceo.Datos
             }
 
             return lista;
+        }
+        /// <summary>
+        /// Obtiene todas las materias de un año/grado con el profesor que tiene asignado actualmente en esa sección.
+        /// </summary>
+        public List<AsignacionMateriaDocenteDto> ObtenerMateriasPensumSeccion(int gradoId, int seccionId, int periodoId)
+        {
+            List<AsignacionMateriaDocenteDto> lista = new List<AsignacionMateriaDocenteDto>();
+
+            const string consulta = @"
+        SELECT 
+            m.id AS materia_id,
+            m.nombre AS materia_nombre,
+            IFNULL(gm.id, 0) AS grado_materia_id,
+            mpp.id AS mpp_id,
+            IFNULL(mp.profesor_id, 0) AS profesor_id
+        FROM MATERIA m
+        LEFT JOIN GRADO_MATERIA gm ON gm.materia_id = m.id AND gm.grado_id = @gradoId
+        LEFT JOIN GRADO_SECCION gs ON gs.grado_id = @gradoId AND gs.seccion_id = @seccionId
+        LEFT JOIN MATERIA_PROFESOR_PERIODO mpp ON mpp.grado_seccion_id = gs.id 
+                                              AND mpp.grado_materia_id = gm.id
+                                              AND mpp.periodo_id = @periodoId
+        LEFT JOIN MATERIA_PROFESOR mp ON mp.id = mpp.materia_profesor_id
+        ORDER BY m.nombre ASC;";
+
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlCommand comando = new MySqlCommand(consulta, conexion))
+            {
+                comando.Parameters.AddWithValue("@gradoId", gradoId);
+                comando.Parameters.AddWithValue("@seccionId", seccionId);
+                comando.Parameters.AddWithValue("@periodoId", periodoId);
+
+                using (MySqlDataReader lector = comando.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lista.Add(new AsignacionMateriaDocenteDto
+                        {
+                            MateriaId = lector.GetInt32("materia_id"),
+                            MateriaNombre = lector.GetString("materia_nombre"),
+                            GradoMateriaId = lector.GetInt32("grado_materia_id"),
+                            MateriaProfesorPeriodoId = lector.IsDBNull(lector.GetOrdinal("mpp_id")) ? null : lector.GetInt32("mpp_id"),
+                            ProfesorId = lector.GetInt32("profesor_id")
+                        });
+                    }
+                }
+            }
+
+            return lista;
+        }
+
+        /// <summary>
+        /// Guarda o actualiza a todos los profesores asignados a las distintas materias de una sección en una sola transacción.
+        /// </summary>
+        public void GuardarAsignacionCompletaSeccion(int gradoId, int seccionId, int periodoId, List<AsignacionMateriaDocenteDto> asignaciones)
+        {
+            using (MySqlConnection conexion = _conexion.AbrirConexion())
+            using (MySqlTransaction transaccion = conexion.BeginTransaction())
+            {
+                try
+                {
+                    int gradoSeccionId = new CatalogoDatos().ObtenerOCrearGradoSeccion(gradoId, seccionId);
+
+                    foreach (var item in asignaciones)
+                    {
+                        // 1. Obtener o crear GRADO_MATERIA
+                        int gradoMateriaId = item.GradoMateriaId;
+                        if (gradoMateriaId == 0)
+                        {
+                            const string qBuscarGm = "SELECT id FROM GRADO_MATERIA WHERE grado_id = @g AND materia_id = @m LIMIT 1;";
+                            using (MySqlCommand cmdB = new MySqlCommand(qBuscarGm, conexion, transaccion))
+                            {
+                                cmdB.Parameters.AddWithValue("@g", gradoId);
+                                cmdB.Parameters.AddWithValue("@m", item.MateriaId);
+                                object? res = cmdB.ExecuteScalar();
+                                if (res != null && res != DBNull.Value)
+                                    gradoMateriaId = Convert.ToInt32(res);
+                            }
+
+                            if (gradoMateriaId == 0)
+                            {
+                                const string qInsGm = "INSERT INTO GRADO_MATERIA (grado_id, materia_id) VALUES (@g, @m); SELECT LAST_INSERT_ID();";
+                                using (MySqlCommand cmdI = new MySqlCommand(qInsGm, conexion, transaccion))
+                                {
+                                    cmdI.Parameters.AddWithValue("@g", gradoId);
+                                    cmdI.Parameters.AddWithValue("@m", item.MateriaId);
+                                    gradoMateriaId = Convert.ToInt32(cmdI.ExecuteScalar());
+                                }
+                            }
+                        }
+
+                        if (item.ProfesorId > 0)
+                        {
+                            // 2. Obtener o crear MATERIA_PROFESOR
+                            int materiaProfesorId = 0;
+                            const string qBuscarMp = "SELECT id FROM MATERIA_PROFESOR WHERE profesor_id = @p AND materia_id = @m LIMIT 1;";
+                            using (MySqlCommand cmdBmp = new MySqlCommand(qBuscarMp, conexion, transaccion))
+                            {
+                                cmdBmp.Parameters.AddWithValue("@p", item.ProfesorId);
+                                cmdBmp.Parameters.AddWithValue("@m", item.MateriaId);
+                                object? res = cmdBmp.ExecuteScalar();
+                                if (res != null && res != DBNull.Value)
+                                    materiaProfesorId = Convert.ToInt32(res);
+                            }
+
+                            if (materiaProfesorId == 0)
+                            {
+                                const string qInsMp = "INSERT INTO MATERIA_PROFESOR (profesor_id, materia_id) VALUES (@p, @m); SELECT LAST_INSERT_ID();";
+                                using (MySqlCommand cmdImp = new MySqlCommand(qInsMp, conexion, transaccion))
+                                {
+                                    cmdImp.Parameters.AddWithValue("@p", item.ProfesorId);
+                                    cmdImp.Parameters.AddWithValue("@m", item.MateriaId);
+                                    materiaProfesorId = Convert.ToInt32(cmdImp.ExecuteScalar());
+                                }
+                            }
+
+                            // 3. Asignar o reemplazar docente en MATERIA_PROFESOR_PERIODO
+                            const string qUpsertMpp = @"
+                        INSERT INTO MATERIA_PROFESOR_PERIODO (grado_seccion_id, grado_materia_id, materia_profesor_id, periodo_id)
+                        VALUES (@gs, @gm, @mp, @per)
+                        ON DUPLICATE KEY UPDATE materia_profesor_id = @mp;";
+
+                            using (MySqlCommand cmdMpp = new MySqlCommand(qUpsertMpp, conexion, transaccion))
+                            {
+                                cmdMpp.Parameters.AddWithValue("@gs", gradoSeccionId);
+                                cmdMpp.Parameters.AddWithValue("@gm", gradoMateriaId);
+                                cmdMpp.Parameters.AddWithValue("@mp", materiaProfesorId);
+                                cmdMpp.Parameters.AddWithValue("@per", periodoId);
+                                cmdMpp.ExecuteNonQuery();
+                            }
+                        }
+                        else
+                        {
+                            // Si seleccionó "-- Sin Asignar --", elimina la asignación de esa materia en esta aula
+                            const string qDel = @"
+                        DELETE FROM MATERIA_PROFESOR_PERIODO 
+                        WHERE grado_seccion_id = @gs AND grado_materia_id = @gm AND periodo_id = @per;";
+
+                            using (MySqlCommand cmdDel = new MySqlCommand(qDel, conexion, transaccion))
+                            {
+                                cmdDel.Parameters.AddWithValue("@gs", gradoSeccionId);
+                                cmdDel.Parameters.AddWithValue("@gm", gradoMateriaId);
+                                cmdDel.Parameters.AddWithValue("@per", periodoId);
+                                cmdDel.ExecuteNonQuery();
+                            }
+                        }
+                    }
+
+                    transaccion.Commit();
+                }
+                catch (MySqlException ex)
+                {
+                    transaccion.Rollback();
+                    throw new Exception(ConexionBD.TraducirError(ex), ex);
+                }
+                catch
+                {
+                    transaccion.Rollback();
+                    throw;
+                }
+            }
         }
     }
 }
