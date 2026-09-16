@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -86,11 +87,46 @@ namespace SistemaLiceo.Presentacion
             }
         }
 
-        // ================= BOTÓN DISFRAZADO DE APERTURA =================
-        private void btnLiberarMantenimiento_Click(object sender, RoutedEventArgs e)
+        // ================= BOTÓN DISFRAZADO DE APERTURA CON BARRA DE CARGA =================
+        private async void btnLiberarMantenimiento_Click(object sender, RoutedEventArgs e)
         {
+            // ⚙️ DURACIÓN DEFINIDA ÚNICAMENTE EN CÓDIGO (Sin ser visible en la interfaz)
+            // Puedes cambiar el valor aquí (por ejemplo: 10, 12, o 15 segundos)
+            const int duracionSegundos = 12;
+            const int totalPasos = 100;
+            int retardoMs = (duracionSegundos * 1000) / totalPasos; // ~120 ms por cada 1%
+
+            // 1. Bloquear botones para evitar dobles clics y mostrar la barra de progreso
+            btnLiberarMantenimiento.IsEnabled = false;
+            btnBloqueoInmediato.IsEnabled = false;
+            panelProgresoMantenimiento.Visibility = Visibility.Visible;
+            pbMantenimiento.Value = 0;
+            txtPorcentajeProgreso.Text = "0%";
+
             try
             {
+                // 2. Bucle asíncrono para que la interfaz gráfica no se congele durante los segundos de carga
+                for (int p = 1; p <= totalPasos; p++)
+                {
+                    await Task.Delay(retardoMs);
+
+                    pbMantenimiento.Value = p;
+                    txtPorcentajeProgreso.Text = $"{p}%";
+
+                    // Actualización de fases técnicas
+                    if (p < 20)
+                        txtFaseProgreso.Text = "Comprobando integridad y tablas de la base de datos...";
+                    else if (p < 40)
+                        txtFaseProgreso.Text = "Reindexando registros de auditoría y optimizando caché...";
+                    else if (p < 65)
+                        txtFaseProgreso.Text = "Verificando consistencia de notas, inscripciones y profesores...";
+                    else if (p < 85)
+                        txtFaseProgreso.Text = "Restableciendo permisos de sesión y certificados...";
+                    else
+                        txtFaseProgreso.Text = "Desbloqueando acceso regular al sistema para usuarios...";
+                }
+
+                // 3. Al completarse la barra, se ejecuta el desbloqueo en la base de datos
                 DateTime fecha = dpFechaCierre.SelectedDate ?? DateTime.Now.AddMonths(6);
                 int hora = cmbHora.SelectedItem != null ? int.Parse(cmbHora.SelectedItem.ToString()!) : 23;
                 int min = cmbMinutos.SelectedItem != null ? int.Parse(cmbMinutos.SelectedItem.ToString()!) : 59;
@@ -119,6 +155,13 @@ namespace SistemaLiceo.Presentacion
             catch (Exception ex)
             {
                 Alerta.Mostrar("Error", "No se pudo actualizar el mantenimiento: " + ex.Message, true);
+            }
+            finally
+            {
+                // 4. Restaurar estado de los controles
+                btnLiberarMantenimiento.IsEnabled = true;
+                btnBloqueoInmediato.IsEnabled = true;
+                panelProgresoMantenimiento.Visibility = Visibility.Collapsed;
             }
         }
 

@@ -75,15 +75,48 @@
                     </StackPanel>
                 </UniformGrid>
 
-                <!-- Botones de Acción (El botón disfrazado) -->
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
-                    <Button x:Name="btnBloqueoInmediato" Content="🔒 Bloquear Acceso Ahora" Width="185" Height="32" Margin="0,0,10,0"
-                            Background="#DC2626" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnBloqueoInmediato_Click"/>
+                <!-- Botones de Acción y Barra de Progreso Disfrazada -->
+                <Grid Grid.Row="2" Margin="0,4,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                    <!-- BOTÓN DISFRAZADO: Aplica el mantenimiento y desbloquea el sistema hasta la fecha elegida -->
-                    <Button x:Name="btnLiberarMantenimiento" Content="🛠️ Ejecutar Mantenimiento y Abrir Sistema" Width="300" Height="32"
-                            Background="#16A34A" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnLiberarMantenimiento_Click"/>
-                </StackPanel>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="btnBloqueoInmediato" Content="🔒 Bloquear Acceso Ahora" Width="185" Height="32" Margin="0,0,10,0"
+                                Background="#DC2626" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnBloqueoInmediato_Click"/>
+
+                        <!-- BOTÓN DISFRAZADO: Aplica el mantenimiento y abre el sistema tras la barra de carga -->
+                        <Button x:Name="btnLiberarMantenimiento" Content="🛠️ Ejecutar Mantenimiento y Abrir Sistema" Width="300" Height="32"
+                                Background="#16A34A" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="btnLiberarMantenimiento_Click"/>
+                    </StackPanel>
+
+                    <!-- BARRA DE CARGA (Oculta por defecto, se activa solo al pulsar el botón) -->
+                    <Border x:Name="panelProgresoMantenimiento" Grid.Row="1" Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1.5" CornerRadius="8" Padding="12" Margin="0,10,0,0" Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⚙️ " FontSize="13" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="txtTituloProgreso" Text="Ejecutando diagnóstico y optimización del sistema..." FontWeight="Bold" Foreground="#166534" FontSize="12.5"/>
+                                </StackPanel>
+                                <TextBlock x:Name="txtPorcentajeProgreso" Text="0%" HorizontalAlignment="Right" FontWeight="Black" Foreground="#15803D" FontSize="13"/>
+                            </Grid>
+
+                            <!-- Barra de progreso verde -->
+                            <ProgressBar x:Name="pbMantenimiento" Grid.Row="1" Height="20" Minimum="0" Maximum="100" Value="0"
+                                         Foreground="#16A34A" Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1"/>
+
+                            <!-- Mensaje de fase técnica -->
+                            <TextBlock x:Name="txtFaseProgreso" Grid.Row="2" Text="Iniciando comprobación de componentes..." FontSize="11.5" Foreground="#166534" FontStyle="Italic" Margin="0,6,0,0"/>
+                        </Grid>
+                    </Border>
+                </Grid>
             </Grid>
         </Border>
 
